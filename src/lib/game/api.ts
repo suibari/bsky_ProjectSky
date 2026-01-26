@@ -4,11 +4,27 @@ import { publicAgent, getPdsEndpoint } from '$lib/atproto';
 
 export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
   try {
-    const res = await publicAgent.getFollows({ actor, limit: 25 });
-    const follows = res.data.follows;
+    // Fetch up to 2000 follows
+    let allFollows: any[] = [];
+    let cursor: string | undefined;
+
+    while (allFollows.length < 2000) {
+      const res = await publicAgent.getFollows({
+        actor,
+        limit: 100,
+        cursor
+      });
+      allFollows = [...allFollows, ...res.data.follows];
+      cursor = res.data.cursor;
+
+      if (!cursor) break;
+    }
+
+    // Shuffle and pick 25 randomly
+    const selectedFollows = allFollows.sort(() => Math.random() - 0.5).slice(0, 25);
 
     // Calculate Buzz Power in parallel
-    const cards = await Promise.all(follows.map(async f => {
+    const cards = await Promise.all(selectedFollows.map(async f => {
       let buzzPower = 1;
 
       try {
