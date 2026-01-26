@@ -41,7 +41,14 @@
   }
 
   function endTurn() {
-    engine.endTurn();
+    const success = engine.endTurn();
+    if (!success) {
+      if (gameState.phase === "main") {
+        alert("You must play an Avatar card this turn!");
+      }
+      return;
+    }
+
     if (gameState.victory) {
       alert("Victory! 10 Billion Points!");
     } else if (gameState.gameOver) {
@@ -68,6 +75,14 @@
   let progressPercent = $derived(
     Math.min(100, (gameState.player.buzzPoints / 10_000_000_000) * 100),
   );
+
+  let currentSlotLimit = $derived(
+    gameState.player.turnCount >= 7
+      ? 3
+      : gameState.player.turnCount >= 4
+        ? 2
+        : 1,
+  );
 </script>
 
 <div
@@ -92,8 +107,18 @@
         >
           Turn {gameState.player.turnCount}
         </h1>
-        <div class="text-sm opacity-70 uppercase tracking-widest">
-          {gameState.phase} Phase
+        <div
+          class="flex flex-col text-xs uppercase tracking-widest text-slate-400 font-bold"
+        >
+          <span>{gameState.phase} Phase</span>
+          <span class="text-blue-400">
+            Level {Math.ceil(gameState.player.turnCount / 3)} (Max {gameState
+              .player.turnCount >= 7
+              ? 3
+              : gameState.player.turnCount >= 4
+                ? 2
+                : 1} Slots)
+          </span>
         </div>
       </div>
 
@@ -162,7 +187,7 @@
             {/each}
 
             <!-- Empty slots indicators -->
-            {#if lane.contents.length < 3}
+            {#if lane.contents.length < currentSlotLimit}
               <div
                 class="w-32 h-48 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center opacity-30 text-xs"
               >

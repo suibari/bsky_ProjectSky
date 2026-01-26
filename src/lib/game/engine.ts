@@ -102,9 +102,14 @@ export class GameEngine {
       return;
     }
 
-    // Rule: 1 Avatar can have max 3 contents
-    if (lane.contents.length >= 3) {
-      console.warn("Lane full");
+    // Rule: Level System (Content Limit)
+    // 1-3: 1, 4-6: 2, 7+: 3
+    let limit = 1;
+    if (this.state.player.turnCount >= 7) limit = 3;
+    else if (this.state.player.turnCount >= 4) limit = 2;
+
+    if (lane.contents.length >= limit) {
+      console.warn("Lane full (Level limit)");
       return;
     }
 
@@ -161,8 +166,16 @@ export class GameEngine {
     lane.contents.splice(contentIndex, 1);
   }
 
-  endTurn() {
-    if (this.state.phase !== 'main') return;
+  endTurn(): boolean {
+    if (this.state.phase !== 'main') return false;
+
+    // Rule: Must play Avatar every turn
+    const latestLane = this.state.player.field[0];
+    if (!latestLane || latestLane.turnCreated !== this.state.player.turnCount) {
+      console.warn("Must play an Avatar this turn");
+      return false;
+    }
+
     this.state.phase = 'end';
 
     // 1. Calculate Score
@@ -190,12 +203,18 @@ export class GameEngine {
     this.state.player.buzzPoints += turnScore;
     this.state.buzzHistory.push(this.state.player.buzzPoints);
 
-    // 2. Apply Decay
+    // 2. Apply Decay (Content) and Aging (Avatar)
     // Rule: "コンテンツカードのバズ係数は、引いた次のターンからターンごとに80%になる"
     // Apply to HAND contents.
     for (const content of this.state.player.hand.contents) {
       content.buzzFactor = Math.floor(content.buzzFactor * 0.8);
       if (content.buzzFactor < 1) content.buzzFactor = 1; // Minimum 1?
+    }
+
+    // Rule: "アバターカードのバズパワーは、引いた次のターンからターンごとに倍になる"
+    // Apply to HAND avatars.
+    for (const avatar of this.state.player.hand.avatars) {
+      avatar.buzzPower = Math.ceil(avatar.buzzPower * 2);
     }
 
     // 3. Check Victory
@@ -207,5 +226,7 @@ export class GameEngine {
       // Rule says Game Over if Deck becomes 0.
       // Usually checked at draw, but keeping eye on it.
     }
+
+    return true;
   }
 }
