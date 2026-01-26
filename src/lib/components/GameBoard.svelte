@@ -1,0 +1,195 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { GameEngine } from "../game/engine";
+  import type { GameState, AvatarCard, ContentCard } from "../game/types";
+  import Card from "./Card.svelte";
+  import gsap from "gsap";
+
+  let { did, handle, avatarDeck, contentDeck } = $props<{
+    did: string;
+    handle: string;
+    avatarDeck: AvatarCard[];
+    contentDeck: ContentCard[];
+  }>();
+
+  // Svelte 5 Reactivity
+  let gameState = $state<GameState>(
+    GameEngine.createInitialState(did, handle, avatarDeck, contentDeck),
+  );
+
+  const engine = new GameEngine(gameState);
+
+  // Actions
+  function startTurn() {
+    engine.startTurn();
+  }
+
+  function playAvatar(index: number) {
+    engine.playAvatar(index);
+  }
+
+  function playContent(cardIndex: number) {
+    engine.playContent(cardIndex);
+  }
+
+  function endTurn() {
+    engine.endTurn();
+    if (gameState.victory) {
+      alert("Victory! 10 Billion Points!");
+    } else if (gameState.gameOver) {
+      alert("Game Over! Deck Empty.");
+    }
+  }
+</script>
+
+<div
+  class="h-screen w-full bg-slate-900 text-white flex flex-col overflow-hidden relative"
+>
+  <!-- HUD -->
+  <div
+    class="h-16 w-full flex items-center justify-between px-8 bg-slate-800 border-b border-slate-700 z-20 shrink-0"
+  >
+    <div class="flex items-center gap-4">
+      <h1
+        class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
+      >
+        Turn {gameState.player.turnCount}
+      </h1>
+      <div class="text-sm opacity-70 uppercase tracking-widest">
+        {gameState.phase} Phase
+      </div>
+    </div>
+    <div
+      class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+    >
+      {gameState.player.buzzPoints.toLocaleString()} BP
+    </div>
+    <button
+      class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      onclick={gameState.phase === "draw" || gameState.phase === "end"
+        ? startTurn
+        : endTurn}
+      disabled={gameState.gameOver || gameState.victory}
+    >
+      {gameState.phase === "draw" || gameState.phase === "end"
+        ? "Start Next Turn"
+        : "End Turn"}
+    </button>
+  </div>
+
+  <!-- Main Game Area -->
+  <div class="flex-grow flex relative overflow-hidden">
+    <!-- Field (Timeline) -->
+    <div
+      class="flex-grow relative overflow-y-auto p-8 flex flex-col gap-6 items-center bg-slate-900/50 pb-32"
+    >
+      {#if gameState.player.field.length === 0}
+        <div class="text-slate-600 font-bold text-2xl mt-20">
+          Timeline Empty. Play an Avatar!
+        </div>
+      {/if}
+
+      {#each gameState.player.field as lane, index (lane.id)}
+        <!-- Lane -->
+        <div
+          class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50"
+        >
+          <!-- Avatar Slot -->
+          <div class="shrink-0 scale-75 origin-top-left -mr-8">
+            <Card card={lane.avatar} interactive={false} />
+          </div>
+
+          <!-- Content Slots -->
+          <div class="flex-grow flex gap-2 items-center overflow-x-auto p-2">
+            {#each lane.contents as content, cIndex (content.uuid || content.id)}
+              <div class="shrink-0 scale-75 origin-left">
+                <Card card={content} interactive={false} />
+              </div>
+            {/each}
+
+            <!-- Empty slots indicators -->
+            {#if lane.contents.length < 3}
+              <div
+                class="w-32 h-48 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center opacity-30 text-xs"
+              >
+                Slot
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/each}
+    </div>
+  </div>
+
+  <!-- Hand (Bottom) -->
+  <div
+    class="h-80 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0"
+  >
+    <div
+      class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
+    >
+      <span>Hand</span>
+      <span
+        >Avatars: {gameState.player.hand.avatars.length} / Deck: {gameState
+          .player.deck.avatars.length}</span
+      >
+      <span
+        >Content: {gameState.player.hand.contents.length} / Deck: {gameState
+          .player.deck.contents.length}</span
+      >
+    </div>
+    <div class="flex-grow flex items-center px-8 gap-8 overflow-x-auto">
+      <!-- Avatars -->
+      <div class="flex gap-4 pr-8 border-r border-slate-600/50">
+        {#each gameState.player.hand.avatars as card, i (card.uuid || card.id)}
+          <div
+            class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+          >
+            <Card
+              {card}
+              interactive={gameState.phase === "main"}
+              onClick={() => playAvatar(i)}
+            />
+          </div>
+        {/each}
+      </div>
+
+      <!-- Contents -->
+      <div class="flex gap-4">
+        {#each gameState.player.hand.contents as card, i (card.uuid || card.id)}
+          <div
+            class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+          >
+            <Card
+              {card}
+              interactive={gameState.phase === "main"}
+              onClick={() => playContent(i)}
+            />
+          </div>
+        {/each}
+      </div>
+    </div>
+  </div>
+
+  <!-- Victory/Loss Overlay -->
+  {#if gameState.victory || gameState.gameOver}
+    <div
+      class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center flex-col gap-4 backdrop-blur-sm"
+    >
+      <h1
+        class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-red-600"
+      >
+        {gameState.victory ? "YOU WENT VIRAL!" : "FADED INTO OBSCURITY"}
+      </h1>
+      <p class="text-2xl text-white font-bold">
+        Final Score: {gameState.player.buzzPoints.toLocaleString()}
+      </p>
+      <button
+        class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition"
+        onclick={() => location.reload()}
+      >
+        Play Again
+      </button>
+    </div>
+  {/if}
+</div>

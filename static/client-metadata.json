@@ -1,0 +1,20 @@
+{
+  "client_id": "http://localhost?redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&scope=atproto%20transition",
+  "client_name": "AT Battlers",
+  "client_uri": "http://localhost:5173",
+  "logo_uri": "http://localhost:5173/favicon.png",
+  "redirect_uris": [
+    "http://localhost:5173/"
+  ],
+  "scope": "atproto transition:generic",
+  "grant_types": [
+    "authorization_code",
+    "refresh_token"
+  ],
+  "response_types": [
+    "code"
+  ],
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

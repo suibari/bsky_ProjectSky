@@ -21,5 +21,10 @@
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1"
+	},
+	"dependencies": {
+		"@atproto/api": "^0.18.17",
+		"@atproto/oauth-client-browser": "^0.3.39",
+		"gsap": "^3.14.2"
 	}
 }
