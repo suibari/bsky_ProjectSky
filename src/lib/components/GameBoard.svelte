@@ -4,6 +4,26 @@
   import type { GameState, AvatarCard, ContentCard } from "../game/types";
   import Card from "./Card.svelte";
   import gsap from "gsap";
+  import { crossfade } from "svelte/transition";
+  import { quintOut } from "svelte/easing";
+  import { flip } from "svelte/animate";
+
+  const [send, receive] = crossfade({
+    duration: (d) => Math.sqrt(d * 200),
+    fallback(node, params) {
+      const style = getComputedStyle(node);
+      const transform = style.transform === "none" ? "" : style.transform;
+
+      return {
+        duration: 600,
+        easing: quintOut,
+        css: (t) => `
+          transform: ${transform} scale(${t});
+          opacity: ${t}
+        `,
+      };
+    },
+  });
 
   let { did, handle, avatarDeck, contentDeck } = $props<{
     did: string;
@@ -164,7 +184,13 @@
         >
           <!-- Avatar Slot -->
           <!-- Interactive if created this turn (can return to hand) -->
-          <div class="shrink-0 scale-75 origin-top-left -mr-8">
+          <!-- Avatar Slot -->
+          <!-- Interactive if created this turn (can return to hand) -->
+          <div
+            class="shrink-0 scale-75 origin-top-left -mr-8"
+            in:receive={{ key: lane.avatar.uuid || lane.avatar.id }}
+            out:send={{ key: lane.avatar.uuid || lane.avatar.id }}
+          >
             <Card
               card={lane.avatar}
               interactive={gameState.phase === "main" &&
@@ -176,7 +202,12 @@
           <!-- Content Slots -->
           <div class="flex-grow flex gap-2 items-center overflow-x-auto p-2">
             {#each lane.contents as content, cIndex (content.uuid || content.id)}
-              <div class="shrink-0 scale-75 origin-left">
+              <div
+                class="shrink-0 scale-75 origin-left"
+                in:receive={{ key: content.uuid || content.id }}
+                out:send={{ key: content.uuid || content.id }}
+                animate:flip
+              >
                 <Card
                   card={content}
                   interactive={gameState.phase === "main" &&
@@ -243,6 +274,9 @@
         {#each gameState.player.hand.avatars as card, i (card.uuid || card.id)}
           <div
             class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+            in:receive={{ key: card.uuid || card.id }}
+            out:send={{ key: card.uuid || card.id }}
+            animate:flip
           >
             <Card
               {card}
@@ -258,6 +292,9 @@
         {#each gameState.player.hand.contents as card, i (card.uuid || card.id)}
           <div
             class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+            in:receive={{ key: card.uuid || card.id }}
+            out:send={{ key: card.uuid || card.id }}
+            animate:flip
           >
             <Card
               {card}
