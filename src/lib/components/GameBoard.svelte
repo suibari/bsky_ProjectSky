@@ -32,6 +32,14 @@
     engine.playContent(cardIndex);
   }
 
+  function returnAvatar(laneIndex: number) {
+    engine.returnAvatar(laneIndex);
+  }
+
+  function returnContent(laneIndex: number, contentIndex: number) {
+    engine.returnContent(laneIndex, contentIndex);
+  }
+
   function endTurn() {
     engine.endTurn();
     if (gameState.victory) {
@@ -40,6 +48,26 @@
       alert("Game Over! Deck Empty.");
     }
   }
+
+  function formatScore(score: number): string {
+    if (score < 1000) return score.toString();
+
+    const suffixes = ["K", "M", "G", "T"];
+    const suffixNum = Math.floor(("" + Math.floor(score)).length / 3);
+
+    // Handle case for exactly 1000, 1000000 etc where length/3 might align such that we need index-1
+    // Actually easier logic:
+    if (score >= 1_000_000_000) return (score / 1_000_000_000).toFixed(3) + "G";
+    if (score >= 1_000_000) return (score / 1_000_000).toFixed(3) + "M";
+    if (score >= 1_000) return (score / 1_000).toFixed(3) + "K";
+
+    return score.toString();
+  }
+
+  // Progress to 10G
+  let progressPercent = $derived(
+    Math.min(100, (gameState.player.buzzPoints / 10_000_000_000) * 100),
+  );
 </script>
 
 <div
@@ -47,34 +75,49 @@
 >
   <!-- HUD -->
   <div
-    class="h-16 w-full flex items-center justify-between px-8 bg-slate-800 border-b border-slate-700 z-20 shrink-0"
+    class="h-20 w-full flex flex-col bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
   >
-    <div class="flex items-center gap-4">
-      <h1
-        class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
-      >
-        Turn {gameState.player.turnCount}
-      </h1>
-      <div class="text-sm opacity-70 uppercase tracking-widest">
-        {gameState.phase} Phase
+    <!-- Progress Bar Background -->
+    <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
+      <div
+        class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+        style="width: {progressPercent}%"
+      ></div>
+    </div>
+
+    <div class="flex-grow flex items-center justify-between px-8">
+      <div class="flex items-center gap-4">
+        <h1
+          class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
+        >
+          Turn {gameState.player.turnCount}
+        </h1>
+        <div class="text-sm opacity-70 uppercase tracking-widest">
+          {gameState.phase} Phase
+        </div>
       </div>
+
+      <div class="flex flex-col items-end">
+        <div
+          class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+        >
+          {formatScore(gameState.player.buzzPoints)} BP
+        </div>
+        <div class="text-xs text-slate-500 font-mono">Goal: 10.000G</div>
+      </div>
+
+      <button
+        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        onclick={gameState.phase === "draw" || gameState.phase === "end"
+          ? startTurn
+          : endTurn}
+        disabled={gameState.gameOver || gameState.victory}
+      >
+        {gameState.phase === "draw" || gameState.phase === "end"
+          ? "Start Next Turn"
+          : "End Turn"}
+      </button>
     </div>
-    <div
-      class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-    >
-      {gameState.player.buzzPoints.toLocaleString()} BP
-    </div>
-    <button
-      class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-      onclick={gameState.phase === "draw" || gameState.phase === "end"
-        ? startTurn
-        : endTurn}
-      disabled={gameState.gameOver || gameState.victory}
-    >
-      {gameState.phase === "draw" || gameState.phase === "end"
-        ? "Start Next Turn"
-        : "End Turn"}
-    </button>
   </div>
 
   <!-- Main Game Area -->
@@ -95,15 +138,26 @@
           class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50"
         >
           <!-- Avatar Slot -->
+          <!-- Interactive if created this turn (can return to hand) -->
           <div class="shrink-0 scale-75 origin-top-left -mr-8">
-            <Card card={lane.avatar} interactive={false} />
+            <Card
+              card={lane.avatar}
+              interactive={gameState.phase === "main" &&
+                lane.turnCreated === gameState.player.turnCount}
+              onClick={() => returnAvatar(index)}
+            />
           </div>
 
           <!-- Content Slots -->
           <div class="flex-grow flex gap-2 items-center overflow-x-auto p-2">
             {#each lane.contents as content, cIndex (content.uuid || content.id)}
               <div class="shrink-0 scale-75 origin-left">
-                <Card card={content} interactive={false} />
+                <Card
+                  card={content}
+                  interactive={gameState.phase === "main" &&
+                    lane.turnCreated === gameState.player.turnCount}
+                  onClick={() => returnContent(index, cIndex)}
+                />
               </div>
             {/each}
 

@@ -49,7 +49,7 @@ export class GameEngine {
     this.state.player.turnCount++;
 
     const newAvatars = this.state.player.deck.avatars.splice(0, 1); // Draw 1 avatar
-    const newContents = this.state.player.deck.contents.splice(0, 3); // Draw 3 contents
+    const newContents = this.state.player.deck.contents.splice(0, 1); // Draw 1 contents
 
     this.state.player.hand.avatars.push(...newAvatars);
     this.state.player.hand.contents.push(...newContents);
@@ -117,6 +117,48 @@ export class GameEngine {
     // Add to lane
     // Note: The combo effect (2nd^2, 3rd^3) is calculated during scoring based on position.
     lane.contents.push(card);
+  }
+
+  returnAvatar(laneIndex: number) {
+    if (this.state.phase !== 'main') return;
+    const lane = this.state.player.field[laneIndex];
+    if (!lane) return;
+
+    // Rule: Can only return cards played THIS turn
+    if (lane.turnCreated !== this.state.player.turnCount) {
+      console.warn("Cannot return past cards");
+      return;
+    }
+
+    // Return contents to hand
+    this.state.player.hand.contents.push(...lane.contents);
+
+    // Return avatar to hand
+    this.state.player.hand.avatars.push(lane.avatar);
+
+    // Remove lane
+    this.state.player.field.splice(laneIndex, 1);
+  }
+
+  returnContent(laneIndex: number, contentIndex: number) {
+    if (this.state.phase !== 'main') return;
+    const lane = this.state.player.field[laneIndex];
+    if (!lane) return;
+
+    // Rule: Check recursion/turn
+    if (lane.turnCreated !== this.state.player.turnCount) {
+      console.warn("Cannot return past cards");
+      return;
+    }
+
+    const content = lane.contents[contentIndex];
+    if (!content) return;
+
+    // Return to hand
+    this.state.player.hand.contents.push(content);
+
+    // Remove from lane
+    lane.contents.splice(contentIndex, 1);
   }
 
   endTurn() {
