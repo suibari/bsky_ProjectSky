@@ -59,6 +59,7 @@ export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
         id: f.did,
         type: 'avatar' as const,
         handle: f.handle,
+        displayName: f.displayName, // Map displayName
         avatarUrl: f.avatar,
         buzzPower,
         originalBuzzFactor: 0,
@@ -100,6 +101,7 @@ export async function fetchContentDeck(ag: Agent, actor: string): Promise<Conten
         id: post.uri,
         type: 'content',
         authorHandle: post.author.handle,
+        authorDisplayName: post.author.displayName, // Map displayName
         text: (post.record as any).text,
         imageUrl,
         buzzFactor,

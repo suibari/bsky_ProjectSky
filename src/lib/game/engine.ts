@@ -68,6 +68,14 @@ export class GameEngine {
 
   playAvatar(cardIndex: number) {
     if (this.state.phase !== 'main') return;
+
+    // Rule: One Avatar per turn
+    const alreadyPlayedAvatar = this.state.player.field.some(lane => lane.turnCreated === this.state.player.turnCount);
+    if (alreadyPlayedAvatar) {
+      console.warn("Already played an Avatar this turn");
+      return;
+    }
+
     const card = this.state.player.hand.avatars[cardIndex];
     if (!card) return;
 

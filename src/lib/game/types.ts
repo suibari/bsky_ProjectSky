@@ -26,6 +26,7 @@ export interface AvatarCard {
   id: string; // did
   type: 'avatar';
   handle: string;
+  displayName?: string; // Add displayName
   avatarUrl?: string;
   buzzPower: number; // likes per day + 1
   description?: string;
@@ -37,6 +38,7 @@ export interface ContentCard {
   id: string; // uri
   type: 'content';
   authorHandle: string;
+  authorDisplayName?: string; // Add authorDisplayName
   text: string;
   imageUrl?: string;
   buzzFactor: number; // likes + 1

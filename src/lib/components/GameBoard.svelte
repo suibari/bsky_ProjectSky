@@ -160,7 +160,7 @@
       {#each gameState.player.field as lane, index (lane.id)}
         <!-- Lane -->
         <div
-          class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50"
+          class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50 relative"
         >
           <!-- Avatar Slot -->
           <!-- Interactive if created this turn (can return to hand) -->
@@ -194,6 +194,26 @@
                 Slot
               </div>
             {/if}
+          </div>
+
+          <!-- Lane Score Display -->
+          <div
+            class="absolute bottom-4 right-4 text-right z-10 pointer-events-none"
+          >
+            <div
+              class="text-xs text-slate-400 font-bold uppercase tracking-wider"
+            >
+              Buzz
+            </div>
+            <div class="text-2xl font-black text-blue-400 drop-shadow-md">
+              {formatScore(
+                lane.avatar.buzzPower *
+                  lane.contents.reduce(
+                    (acc, c, i) => acc * Math.pow(c.buzzFactor, i + 1),
+                    1,
+                  ),
+              )}
+            </div>
           </div>
         </div>
       {/each}

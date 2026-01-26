@@ -40,18 +40,15 @@
   <div
     class="absolute w-full h-full bg-white/90 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden backface-hidden flex flex-col p-3 text-black"
   >
-    <div
-      class="absolute top-2 left-3 text-xs font-bold z-10 drop-shadow-md text-slate-800"
-    >
-      {#if card.type === "avatar"}
-        @{card.handle}
-      {:else}
-        @{card.authorHandle}
-      {/if}
-    </div>
+    {#if card.type === "avatar"}
+      <!-- Avatar Design -->
+      <div
+        class="absolute top-2 left-3 text-xs font-bold z-10 drop-shadow-md text-slate-800"
+      >
+        {card.displayName || "@" + card.handle}
+      </div>
 
-    <div class="flex-grow flex items-center justify-center relative mt-4">
-      {#if card.type === "avatar"}
+      <div class="flex-grow flex items-center justify-center relative mt-4">
         {#if card.avatarUrl}
           <img
             src={card.avatarUrl}
@@ -65,30 +62,44 @@
             No Image
           </div>
         {/if}
-      {:else}
-        <!-- Content Card -->
-        <div class="w-full h-full flex flex-col gap-2 overflow-hidden text-sm">
-          {#if card.imageUrl}
-            <img
-              src={card.imageUrl}
-              alt="Content"
-              class="w-full h-32 object-cover rounded-md"
-            />
-          {/if}
-          <p class="line-clamp-6 leading-snug">{card.text}</p>
-        </div>
-      {/if}
-    </div>
+      </div>
 
-    <div
-      class="absolute bottom-2 right-3 text-2xl font-black text-blue-600 drop-shadow-sm"
-    >
-      {#if card.type === "avatar"}
+      <!-- Stats (Avatar) -->
+      <div
+        class="absolute bottom-2 right-3 text-2xl font-black text-blue-600 drop-shadow-sm"
+      >
         {card.buzzPower}
-      {:else}
-        {card.buzzFactor}
-      {/if}
-    </div>
+      </div>
+    {:else}
+      <!-- Content Card (MtG Style) -->
+      <div
+        class="absolute inset-0 p-4 flex flex-col items-center justify-center z-0"
+      >
+        <div
+          class="flex flex-col gap-2 w-full max-h-[80%] overflow-hidden justify-center items-center"
+        >
+          <!-- Text -->
+          <p
+            class="font-serif italic text-slate-900 text-center leading-relaxed text-xs break-words w-full"
+          >
+            "{card.text}"
+          </p>
+          <!-- Name -->
+          <div
+            class="w-full text-right text-[10px] font-serif font-bold text-slate-600 shrink-0"
+          >
+            ―― {card.authorDisplayName || "@" + card.authorHandle}
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats (Content) -->
+      <div
+        class="absolute bottom-2 right-3 text-2xl font-black text-blue-600 drop-shadow-sm"
+      >
+        x{card.buzzFactor}
+      </div>
+    {/if}
 
     <!-- Decoration -->
     <div
