@@ -60,7 +60,7 @@ const translations = {
     users: 'Users',
     goal: 'Goal: 1億(100M) Users',
     gameStart: 'ゲームスタート',
-    nextTurn: 'ターン終了',
+    nextTurn: 'ターン開始',
     endTurn: 'ターン終了',
     timelineEmpty: 'タイムラインが空です',
     hand: '手札',

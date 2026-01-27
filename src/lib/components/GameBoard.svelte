@@ -189,27 +189,7 @@
   <div
     class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
   >
-    <!-- Settings Button (Top Right Absolute) -->
-    <button
-      class="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors z-50 bg-slate-800/50 rounded-full backdrop-blur-md"
-      onclick={() => (showSettings = true)}
-      aria-label={$t("settings")}
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        ><circle cx="12" cy="12" r="3"></circle><path
-          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-        ></path></svg
-      >
-    </button>
+    <!-- Moved Settings Button to Grid -->
     <!-- Progress Bar Background -->
     <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
       <div
@@ -219,9 +199,9 @@
     </div>
 
     <div
-      class="grid grid-cols-2 md:flex md:items-center md:justify-between px-4 py-4 md:px-8 gap-4 w-full"
+      class="grid grid-cols-[1fr_auto_auto] md:flex md:items-center md:justify-between px-2 py-2 md:px-8 gap-2 w-full"
     >
-      <div class="flex items-center gap-4 md:order-1 col-span-1">
+      <div class="flex items-center gap-4 col-span-1">
         <h1
           class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
         >
@@ -229,33 +209,55 @@
           {gameState.player.turnCount}
         </h1>
         <div
-          class="flex flex-col text-xs uppercase tracking-widest text-slate-400 font-bold"
+          class="flex flex-col text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold leading-tight"
         >
           <span>{gameState.phase} {$t("phase")}</span>
-          <span class="text-blue-400">
+          <span class="text-blue-400 whitespace-nowrap">
             Lv {Math.ceil(gameState.player.turnCount / 3)} ({$t("slot")}
-            {gameState.player.turnCount >= 7
-              ? 3
-              : gameState.player.turnCount >= 4
-                ? 2
-                : 1})
+            {currentSlotLimit})
           </span>
         </div>
       </div>
 
-      <!-- Button Removed from HUD -->
-
-      <!-- Score -->
+      <!-- Score Centralized (Absolute on Desktop, Flex Item on Mobile) -->
       <div
-        class="col-span-2 flex flex-col items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto"
+        class="flex flex-col items-center justify-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto"
       >
         <div
-          class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+          class="text-xl md:text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
           <AnimatedNumber value={gameState.player.buzzPoints} />
-          {$t("users")}
+          <span class="text-sm md:text-xl">{$t("users")}</span>
         </div>
-        <div class="text-xs text-slate-500 font-mono">{$t("goal")}</div>
+        <div
+          class="text-[10px] md:text-xs text-slate-500 font-mono text-center"
+        >
+          {$t("goal")}
+        </div>
+      </div>
+
+      <!-- Settings Button (Right) -->
+      <div class="flex justify-end col-span-1 md:w-auto">
+        <button
+          class="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-full backdrop-blur-md"
+          onclick={() => (showSettings = true)}
+          aria-label={$t("settings")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            ><circle cx="12" cy="12" r="3"></circle><path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path></svg
+          >
+        </button>
       </div>
     </div>
   </div>
@@ -264,7 +266,7 @@
   <div class="flex-grow flex relative overflow-hidden">
     <!-- Field (Timeline) -->
     <div
-      class="flex-grow relative overflow-y-auto p-8 flex flex-col gap-6 items-center bg-slate-900/50 pb-32"
+      class="flex-grow relative overflow-y-auto p-2 md:p-8 flex flex-col gap-6 items-center bg-slate-900/50 pb-32"
     >
       {#if gameState.player.field.length === 0}
         <div class="text-slate-600 font-bold text-2xl mt-20">
@@ -349,7 +351,7 @@
 
   <!-- Hand (Bottom) -->
   <div
-    class="h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden"
+    class="h-64 md:h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden"
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
@@ -380,9 +382,9 @@
           >
             <!-- Card Itself -->
             <div
-              class="{avatarSelection === i
-                ? '-translate-y-8 scale-105 z-10'
-                : 'group-hover:-translate-y-4'} transition-all duration-300"
+              class="scale-75 md:scale-100 origin-center {avatarSelection === i
+                ? '-translate-y-1 md:-translate-y-8 z-10'
+                : 'translate-y-10 md:translate-y-0 group-hover:md:-translate-y-4'} transition-all duration-300"
             >
               <Card
                 {card}
@@ -439,9 +441,9 @@
           >
             <!-- Card Itself -->
             <div
-              class="{contentSelection === i
-                ? '-translate-y-8 scale-105 z-10'
-                : 'group-hover:-translate-y-4'} transition-all duration-300"
+              class="scale-75 md:scale-100 origin-center {contentSelection === i
+                ? '-translate-y-1 md:-translate-y-8 z-10'
+                : 'translate-y-10 md:translate-y-0 group-hover:md:-translate-y-4'} transition-all duration-300"
             >
               <Card
                 {card}
