@@ -282,6 +282,12 @@ export class GameEngine {
       turnScore += laneTotal;
     }
 
+    // Snowball Rule: Add current Total Score to this turn's gain
+    // "2ターン目にトータルスコア100が加算され" -> New Gain = TurnScore + CurrentTotal
+    if (this.state.player.buzzPoints > 0) {
+      turnScore += this.state.player.buzzPoints;
+    }
+
     this.state.player.buzzPoints += turnScore;
     this.state.buzzHistory.push(this.state.player.buzzPoints);
 

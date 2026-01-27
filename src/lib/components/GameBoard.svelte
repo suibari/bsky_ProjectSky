@@ -327,6 +327,11 @@
             <div class="text-2xl font-black text-blue-400 drop-shadow-md">
               {formatScore(calculateLaneScore(lane))}
             </div>
+            {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0}
+              <div class="text-sm font-bold text-green-400 drop-shadow-md mt-1">
+                + {formatScore(gameState.player.buzzPoints)} (Total)
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
