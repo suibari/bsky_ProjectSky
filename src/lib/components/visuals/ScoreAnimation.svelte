@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import gsap from "gsap";
   import type { AvatarCard, ContentCard } from "../../game/types";
-  import Card from "../Card.svelte";
   import { t } from "$lib/i18n";
 
   let { lanes, previousTotal, onComplete } = $props<{
@@ -17,10 +16,10 @@
 
   let container: HTMLDivElement;
   let laneElements: HTMLDivElement[] = $state([]);
+  let snowballElement: HTMLDivElement;
   let totalScoreElement: HTMLDivElement;
   let finalScore = $state(previousTotal);
   let displayScore = $state(previousTotal);
-  let showResult = $state(false);
 
   // Helper to calculate lane score specifics
   function getLaneDetails(lane: (typeof lanes)[0]) {
@@ -124,14 +123,7 @@
         {
           duration: 0.8,
           ease: "power2.out",
-          onUpdate: function () {
-            // Manually lerp for visual effect if needed, usually we trigger state updates or use text plugin
-            // Simple approach: we just update the derived 'displayScore' via state?
-            // GSAP changing state directly in onUpdate can be jerky in Svelte 5 without care.
-            // Better: animate a proxy object.
-          },
           onStart: () => {
-            // We use a separate tween for the number to ensure smoothness
             gsap.to(proxy, {
               val: currentRunningTotal,
               duration: 0.8,
@@ -146,8 +138,36 @@
       );
     });
 
-    // 3. Snowball effect specific text if relevant?
-    // Already handled by accumulating to currentRunningTotal above.
+    // 3. Snowball effect specific text if relevant
+    if (previousTotal > 0) {
+      currentRunningTotal += previousTotal;
+
+      // Show Snowball Row
+      tl.fromTo(
+        snowballElement,
+        { x: -50, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" },
+      );
+
+      // Animate adding snowball to total
+      tl.to(
+        {},
+        {
+          duration: 1.0,
+          ease: "power2.out",
+          onStart: () => {
+            gsap.to(proxy, {
+              val: currentRunningTotal,
+              duration: 1.0,
+              ease: "power2.out",
+              onUpdate: () => {
+                displayScore = Math.round(proxy.val);
+              },
+            });
+          },
+        },
+      );
+    }
 
     // 4. Final fanfare
     tl.to(totalScoreElement, {
@@ -184,10 +204,9 @@
             <div
               class="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-400"
             >
-              <!-- Using a small preview or just Avatar name/Icon if Card component too big -->
-              {#if lane.avatar.avatar}
+              {#if lane.avatar.avatarUrl}
                 <img
-                  src={lane.avatar.avatar}
+                  src={lane.avatar.avatarUrl}
                   alt={lane.avatar.handle}
                   class="w-full h-full object-cover"
                 />
@@ -241,6 +260,25 @@
         </div>
       {/each}
     </div>
+
+    <!-- Snowball Bonus Row -->
+    {#if previousTotal > 0}
+      <div
+        bind:this={snowballElement}
+        class="flex items-center justify-between bg-slate-800/50 p-4 rounded-xl border border-blue-500/30 w-full"
+      >
+        <div class="flex items-center gap-2">
+          <div
+            class="text-blue-300 font-bold uppercase tracking-wider text-sm md:text-base"
+          >
+            Snowball Bonus (Previous Users)
+          </div>
+        </div>
+        <div class="text-3xl font-black text-blue-400 min-w-[100px] text-right">
+          +{previousTotal.toLocaleString()}
+        </div>
+      </div>
+    {/if}
 
     <div class="mt-8 flex flex-col items-center">
       <div class="text-slate-400 text-sm uppercase tracking-wider">

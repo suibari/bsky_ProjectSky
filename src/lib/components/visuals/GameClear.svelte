@@ -29,9 +29,7 @@
   class="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center overflow-hidden"
 >
   <!-- Confetti Cannon -->
-  <div
-    class="absolute inset-0 flex items-center justify-center pointer-events-none"
-  >
+  <div class="absolute -top-50 inset-0 flex h-full w-full pointer-events-none">
     <Confetti
       x={[-5, 5]}
       y={[0, 0.1]}
