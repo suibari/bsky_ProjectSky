@@ -131,7 +131,7 @@
           ? 'text-blue-300'
           : 'text-blue-600'}"
       >
-        x{card.buzzFactor}
+        x<AnimatedNumber value={card.buzzFactor} />
       </div>
     {/if}
 
