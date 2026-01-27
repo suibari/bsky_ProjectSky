@@ -45,6 +45,9 @@ export interface ContentCard {
   originalBuzzFactor: number; // to track decay base if needed, or just mutate buzzFactor
   // Runtime props
   uuid?: string;
+  // New props
+  authorDid?: string;
+  metadata?: string[]; // 'quote' | 'mention' | 'image' | 'link'
 }
 
 export interface GameState {
@@ -53,4 +56,5 @@ export interface GameState {
   gameOver: boolean;
   victory: boolean;
   buzzHistory: number[]; // For graph/tracking
+  nextTurnContentDrawBonus: number; // For Release system
 }

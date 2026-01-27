@@ -60,6 +60,65 @@
     engine.returnContent(laneIndex, contentIndex);
   }
 
+  function releaseAvatar(index: number) {
+    engine.releaseAvatar(index);
+    avatarSelection = null; // Close menu
+  }
+
+  // UI State for Avatar Menu
+  let avatarSelection = $state<number | null>(null);
+
+  function handleAvatarClick(index: number) {
+    if (gameState.phase !== "main") return;
+    if (avatarSelection === index) {
+      avatarSelection = null; // Toggle off
+    } else {
+      avatarSelection = index;
+    }
+  }
+
+  function confirmPlayAvatar(index: number) {
+    playAvatar(index);
+    avatarSelection = null;
+  }
+
+  function confirmReleaseAvatar(index: number) {
+    releaseAvatar(index);
+  }
+
+  // Helper for Score Preview (Mirrors Engine Logic)
+  function calculateLaneScore(
+    lane: (typeof gameState.player.field)[0],
+  ): number {
+    const avatarPower = lane.avatar.buzzPower;
+    const tagCounts: Record<string, number> = {};
+    lane.contents.forEach((c) => {
+      c.metadata?.forEach((tag) => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+
+    let contentSum = 1;
+
+    lane.contents.forEach((content) => {
+      let cardScore = content.buzzFactor;
+
+      // Metadata Bonus (x2)
+      if (content.metadata?.some((tag) => tagCounts[tag] > 1)) {
+        cardScore *= 2;
+      }
+
+      // Account Match Bonus (^2)
+      if (content.authorDid && content.authorDid === lane.avatar.id) {
+        cardScore = Math.pow(cardScore, 2);
+      }
+
+      contentSum *= cardScore;
+    });
+
+    return avatarPower * contentSum;
+  }
+
   function endTurn() {
     const success = engine.endTurn();
     if (!success) {
@@ -70,7 +129,7 @@
     }
 
     if (gameState.victory) {
-      alert("Victory! 10 Billion Points!");
+      alert("Victory! 100 Million Users!");
     } else if (gameState.gameOver) {
       alert("Game Over! Deck Empty.");
     }
@@ -93,7 +152,7 @@
 
   // Progress to 10G
   let progressPercent = $derived(
-    Math.min(100, (gameState.player.buzzPoints / 10_000_000_000) * 100),
+    Math.min(100, (gameState.player.buzzPoints / 100_000_000) * 100),
   );
 
   let currentSlotLimit = $derived(
@@ -146,9 +205,9 @@
         <div
           class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
-          {formatScore(gameState.player.buzzPoints)} BP
+          {formatScore(gameState.player.buzzPoints)} Users
         </div>
-        <div class="text-xs text-slate-500 font-mono">Goal: 10.000G</div>
+        <div class="text-xs text-slate-500 font-mono">Goal: 100M Users</div>
       </div>
 
       <button
@@ -200,7 +259,9 @@
           </div>
 
           <!-- Content Slots -->
-          <div class="flex-grow flex gap-2 items-center overflow-x-auto p-2">
+          <div
+            class="flex-grow flex gap-2 items-center overflow-x-auto overflow-y-hidden p-2"
+          >
             {#each lane.contents as content, cIndex (content.uuid || content.id)}
               <div
                 class="shrink-0 scale-75 origin-left"
@@ -234,16 +295,10 @@
             <div
               class="text-xs text-slate-400 font-bold uppercase tracking-wider"
             >
-              Buzz
+              Users
             </div>
             <div class="text-2xl font-black text-blue-400 drop-shadow-md">
-              {formatScore(
-                lane.avatar.buzzPower *
-                  lane.contents.reduce(
-                    (acc, c, i) => acc * Math.pow(c.buzzFactor, i + 1),
-                    1,
-                  ),
-              )}
+              {formatScore(calculateLaneScore(lane))}
             </div>
           </div>
         </div>
@@ -253,7 +308,7 @@
 
   <!-- Hand (Bottom) -->
   <div
-    class="h-80 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0"
+    class="h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden"
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
@@ -268,21 +323,62 @@
           .player.deck.contents.length}</span
       >
     </div>
-    <div class="flex-grow flex items-center px-8 gap-8 overflow-x-auto">
+    <div
+      class="flex-grow flex items-end px-8 gap-8 overflow-x-auto overflow-y-hidden pb-4 pt-20"
+    >
       <!-- Avatars -->
-      <div class="flex gap-4 pr-8 border-r border-slate-600/50">
+      <div class="flex gap-4 pr-8 border-r border-slate-600/50 relative">
         {#each gameState.player.hand.avatars as card, i (card.uuid || card.id)}
+          <!-- Avatar Card Container -->
           <div
-            class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+            class="relative transition-transform duration-200 z-0 flex flex-col gap-2 items-center group"
             in:receive={{ key: card.uuid || card.id }}
             out:send={{ key: card.uuid || card.id }}
             animate:flip
           >
-            <Card
-              {card}
-              interactive={gameState.phase === "main"}
-              onClick={() => playAvatar(i)}
-            />
+            <!-- Card Itself -->
+            <div
+              class="{avatarSelection === i
+                ? '-translate-y-8 scale-105 z-10'
+                : 'group-hover:-translate-y-4'} transition-all duration-300"
+            >
+              <Card
+                {card}
+                interactive={gameState.phase === "main"}
+                onClick={() => handleAvatarClick(i)}
+              />
+            </div>
+
+            <!-- Action Menu (Visible if selected) -->
+            <!-- Action Menu (Bottom Horizontal) -->
+            {#if avatarSelection === i}
+              <div
+                class="absolute bottom-16 left-0 w-full z-50 flex flex-row items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 px-2 pointer-events-auto"
+                role="group"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
+              >
+                <button
+                  class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow-lg hover:scale-105 transition-all border border-blue-400"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    confirmPlayAvatar(i);
+                  }}
+                >
+                  OPEN
+                </button>
+                <button
+                  class="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg shadow-lg hover:scale-105 transition-all border border-red-400 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                  disabled={gameState.player.hand.avatars.length <= 1}
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    confirmReleaseAvatar(i);
+                  }}
+                >
+                  RELEASE
+                </button>
+              </div>
+            {/if}
           </div>
         {/each}
       </div>
@@ -315,7 +411,7 @@
       <h1
         class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-red-600"
       >
-        {gameState.victory ? "YOU WENT VIRAL!" : "FADED INTO OBSCURITY"}
+        {gameState.victory ? "YOU ENLIVENED BLUESKY!" : "FADED INTO OBSCURITY"}
       </h1>
       <p class="text-2xl text-white font-bold">
         Final Score: {gameState.player.buzzPoints.toLocaleString()}

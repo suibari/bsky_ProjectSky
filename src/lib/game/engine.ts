@@ -38,7 +38,8 @@ export class GameEngine {
       phase: 'draw',
       gameOver: false,
       victory: false,
-      buzzHistory: [0]
+      buzzHistory: [0],
+      nextTurnContentDrawBonus: 0
     };
   }
 
@@ -48,17 +49,20 @@ export class GameEngine {
     this.state.phase = 'draw';
     this.state.player.turnCount++;
 
+    const baseContentDraw = 1;
+    const bonusDraw = this.state.nextTurnContentDrawBonus;
+    const totalContentDraw = baseContentDraw + bonusDraw;
+
+    // Reset bonus
+    this.state.nextTurnContentDrawBonus = 0;
+
     const newAvatars = this.state.player.deck.avatars.splice(0, 1); // Draw 1 avatar
-    const newContents = this.state.player.deck.contents.splice(0, 1); // Draw 1 contents
+    const newContents = this.state.player.deck.contents.splice(0, totalContentDraw); // Draw 1 + bonus contents
 
     this.state.player.hand.avatars.push(...newAvatars);
     this.state.player.hand.contents.push(...newContents);
 
     // Rule: Game Over if Avatar Deck becomes 0.
-    // If we tried to draw and deck is now empty?
-    // Or if we couldn't draw full amount?
-    // "アバターデッキが0枚になったらゲームオーバー"
-    // Let's assume strict empty check.
     if (this.state.player.deck.avatars.length === 0 && newAvatars.length === 0) {
       this.state.gameOver = true;
     }
@@ -83,14 +87,34 @@ export class GameEngine {
     this.state.player.hand.avatars.splice(cardIndex, 1);
 
     // Add to field as new Lane
-    // Add to TOP (beginning) of field to simulate timeline? Or bottom?
-    // Usually timeline adds to top.
     this.state.player.field.unshift({
       id: crypto.randomUUID(),
       avatar: card,
       contents: [],
       turnCreated: this.state.player.turnCount
     });
+  }
+
+  releaseAvatar(cardIndex: number) {
+    if (this.state.phase !== 'main') return;
+
+    const card = this.state.player.hand.avatars[cardIndex];
+    if (!card) return;
+
+    // Rule: Cannot release if only 1 avatar remains (in hand/total checks?)
+    // Prompt: "アバターが残り1枚のときは、リリースはできない"
+    // Assuming this means "If you don't have enough avatars to continue playing if you release this one".
+    // Or simpliest: If Hand has 1 card.
+    if (this.state.player.hand.avatars.length <= 1) {
+      console.warn("Cannot release, must have at least one avatar to play or keep.");
+      return;
+    }
+
+    // Remove from hand (discard/release)
+    this.state.player.hand.avatars.splice(cardIndex, 1);
+
+    // Bonus for next turn
+    this.state.nextTurnContentDrawBonus += 1;
   }
 
   playContent(cardIndex: number) {
@@ -128,7 +152,6 @@ export class GameEngine {
     this.state.player.hand.contents.splice(cardIndex, 1);
 
     // Add to lane
-    // Note: The combo effect (2nd^2, 3rd^3) is calculated during scoring based on position.
     lane.contents.push(card);
   }
 
@@ -190,20 +213,50 @@ export class GameEngine {
     let turnScore = 0;
 
     for (const lane of this.state.player.field) {
-      // Rule: Only score cards played THIS turn?
-      // "Timeline" is history. 
-      // User feedback: "Should be +1 BP" when playing 1-power card after previous massive turns.
-      // This implies past turns DO NOT score again.
+      // ONLY score cards played THIS turn
       if (lane.turnCreated !== this.state.player.turnCount) continue;
 
-      const avatarPower = lane.avatar.buzzPower;
-      let contentSum = 1;
-      lane.contents.forEach((content, index) => {
-        const exponent = index + 1; // 1, 2, 3
-        contentSum *= Math.pow(content.buzzFactor, exponent);
+      const avatar = lane.avatar;
+      const avatarPower = avatar.buzzPower;
+
+      // Collect all metadata in this lane for "Metadata Match" check
+      // Logic: If "metadata of issued content cards matches"
+      // Interpretation: Check intersection of metadata across ALL content cards in lane.
+      // Or check if a tag appears > 1 times? "Match" usually implies "Same as another".
+      // "matched card each USER becomes double".
+      // Let's count occurrence of each tag.
+      const tagCounts: Record<string, number> = {};
+      lane.contents.forEach(c => {
+        c.metadata?.forEach(tag => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
       });
 
-      // Validated: 31 * 4 * 25 * 2197 = 6,810,700
+      let contentSum = 1;
+
+      lane.contents.forEach((content) => {
+        let cardScore = content.buzzFactor;
+
+        // 1. Metadata Bonus (Double)
+        // If this card has a tag that appears more than once in the lane (matches another card)
+        const hasMatch = content.metadata?.some(tag => tagCounts[tag] > 1);
+        if (hasMatch) {
+          cardScore *= 2;
+        }
+
+        // 2. Account Match Bonus (Square)
+        // If Avatar DID == Content Author DID
+        // "USER becomes squared" -> implying the RESULTING score of this card is squared.
+        // Prompt: "倍にした後2乗する" (After doubling, square it).
+        if (content.authorDid && content.authorDid === avatar.id) {
+          // Apply square
+          cardScore = Math.pow(cardScore, 2);
+        }
+
+        contentSum *= cardScore;
+      });
+
+      // Simple multiplication
       const laneTotal = avatarPower * contentSum;
       turnScore += laneTotal;
     }
@@ -225,8 +278,8 @@ export class GameEngine {
       avatar.buzzPower = Math.ceil(avatar.buzzPower * 2);
     }
 
-    // 3. Check Victory
-    if (this.state.player.buzzPoints >= 10_000_000_000) {
+    // 3. Check Victory (100M Users)
+    if (this.state.player.buzzPoints >= 100_000_000) {
       this.state.victory = true;
     }
 

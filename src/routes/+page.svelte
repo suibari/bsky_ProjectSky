@@ -129,7 +129,7 @@
             class="text-slate-400 text-xl mt-4 max-w-lg mx-auto leading-relaxed"
           >
             The Single-Player SNS Card Game.<br />
-            Battle with your graph. Go viral.
+            Battle with your graph. Enliven Bluesky.
           </p>
         </div>
 

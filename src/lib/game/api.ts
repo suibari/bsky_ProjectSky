@@ -105,12 +105,45 @@ export async function fetchContentDeck(ag: Agent, actor: string): Promise<Conten
       const likeCount = post.likeCount || 0;
       const buzzFactor = likeCount + 1;
 
-      // Extract text or image
+      // Extract Metadata
+      const metadata: string[] = [];
+      const record = post.record as any;
+
+      // Image
+      // @ts-ignore
       let imageUrl = undefined;
       // @ts-ignore
       if (post.embed && post.embed.images && post.embed.images.length > 0) {
         // @ts-ignore
         imageUrl = post.embed.images[0].fullsize;
+        metadata.push('image');
+      } else if (post.embed && (post.embed as any).media && (post.embed as any).media.images && (post.embed as any).media.images.length > 0) {
+        // RecordWithMedia
+        // @ts-ignore
+        imageUrl = (post.embed as any).media.images[0].fullsize;
+        metadata.push('image');
+      }
+
+      // Quote
+      // @ts-ignore
+      if (post.embed && (post.embed.$type === 'app.bsky.embed.record' || post.embed.$type === 'app.bsky.embed.recordWithMedia')) {
+        metadata.push('quote');
+      }
+
+      // Link & Mention (Facets)
+      if (record.facets) {
+        for (const facet of record.facets) {
+          if (facet.features) {
+            for (const feature of facet.features) {
+              if (feature.$type === 'app.bsky.richtext.facet#link') {
+                if (!metadata.includes('link')) metadata.push('link');
+              }
+              if (feature.$type === 'app.bsky.richtext.facet#mention') {
+                if (!metadata.includes('mention')) metadata.push('mention');
+              }
+            }
+          }
+        }
       }
 
       return {
@@ -118,10 +151,12 @@ export async function fetchContentDeck(ag: Agent, actor: string): Promise<Conten
         type: 'content',
         authorHandle: post.author.handle,
         authorDisplayName: post.author.displayName, // Map displayName
+        authorDid: post.author.did,
         text: (post.record as any).text,
         imageUrl,
         buzzFactor,
-        originalBuzzFactor: buzzFactor
+        originalBuzzFactor: buzzFactor,
+        metadata
       };
     });
   } catch (e) {

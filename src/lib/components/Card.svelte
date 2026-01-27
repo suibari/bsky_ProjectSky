@@ -38,7 +38,7 @@
 >
   <!-- Front -->
   <div
-    class="absolute w-full h-full bg-white/90 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden backface-hidden flex flex-col p-3 text-black"
+    class="absolute w-full h-full bg-white/90 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden backface-hidden flex flex-col items-center justify-between text-black relative group"
   >
     {#if card.type === "avatar"}
       <!-- Avatar Design -->
@@ -48,7 +48,9 @@
         {card.displayName || "@" + card.handle}
       </div>
 
-      <div class="flex-grow flex items-center justify-center relative mt-4">
+      <div
+        class="flex-grow flex items-center justify-center relative mt-4 w-full px-2"
+      >
         {#if card.avatarUrl}
           <img
             src={card.avatarUrl}
@@ -57,7 +59,7 @@
           />
         {:else}
           <div
-            class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center"
+            class="w-full aspect-square bg-gray-200 rounded-full flex items-center justify-center border-4 border-white"
           >
             No Image
           </div>
@@ -71,22 +73,51 @@
         {card.buzzPower}
       </div>
     {:else}
-      <!-- Content Card (MtG Style) -->
-      <div
-        class="absolute inset-0 p-4 flex flex-col items-center justify-center z-0"
-      >
+      <!-- Content Card -->
+      <!-- Image Background -->
+      {#if card.imageUrl}
+        <img
+          src={card.imageUrl}
+          alt="Background"
+          class="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        <div class="absolute inset-0 bg-black/60 z-0"></div>
+        <!-- Scrim -->
+      {/if}
+
+      <div class="relative z-10 p-4 flex flex-col h-full w-full">
+        <!-- Metadata Tags -->
+        <div class="flex flex-wrap gap-1 mb-2">
+          {#if card.metadata}
+            {#each card.metadata as tag}
+              <span
+                class="px-1.5 py-0.5 rounded-md text-[10px] uppercase font-bold tracking-wider
+                        {card.imageUrl
+                  ? 'bg-white/20 text-white backdrop-blur-sm'
+                  : 'bg-slate-200 text-slate-600'}"
+              >
+                #{tag}
+              </span>
+            {/each}
+          {/if}
+        </div>
+
         <div
-          class="flex flex-col gap-2 w-full max-h-[80%] overflow-hidden justify-center items-center"
+          class="flex-grow flex flex-col justify-center items-center overflow-hidden"
         >
           <!-- Text -->
           <p
-            class="font-serif italic text-slate-900 text-center leading-relaxed text-xs break-words w-full"
+            class="font-serif italic text-center leading-relaxed text-xs break-words w-full {card.imageUrl
+              ? 'text-white drop-shadow-md font-medium'
+              : 'text-slate-900'}"
           >
             "{card.text}"
           </p>
           <!-- Name -->
           <div
-            class="w-full text-right text-[10px] font-serif font-bold text-slate-600 shrink-0"
+            class="w-full text-right text-[10px] font-serif font-bold text-slate-600 shrink-0 {card.imageUrl
+              ? 'text-white'
+              : ''}"
           >
             ―― {card.authorDisplayName || "@" + card.authorHandle}
           </div>
@@ -95,7 +126,9 @@
 
       <!-- Stats (Content) -->
       <div
-        class="absolute bottom-2 right-3 text-2xl font-black text-blue-600 drop-shadow-sm"
+        class="absolute bottom-2 right-3 text-2xl font-black z-20 drop-shadow-md {card.imageUrl
+          ? 'text-blue-300'
+          : 'text-blue-600'}"
       >
         x{card.buzzFactor}
       </div>
