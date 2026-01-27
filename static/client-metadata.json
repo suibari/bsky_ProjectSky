@@ -1,6 +1,6 @@
 {
   "client_id": "http://localhost?redirect_uri=http%3A%2F%2Flocalhost%3A5173%2F&scope=atproto%20transition",
-  "client_name": "AT Battlers",
+  "client_name": "Project Sky",
   "client_uri": "http://localhost:5173",
   "logo_uri": "http://localhost:5173/favicon.png",
   "redirect_uris": [
