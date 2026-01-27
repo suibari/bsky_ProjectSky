@@ -40,9 +40,20 @@ export async function fetchAvatarDeck(ag: Agent, actor: string): Promise<AvatarC
     // Shuffle and pick 25 randomly
     const selectedAuthors = candidates.sort(() => Math.random() - 0.5).slice(0, 25);
 
+    // Fetch full profiles to get followers/follows counts
+    const profileRes = await ag.getProfiles({ actors: selectedAuthors.map(a => a.did) });
+    const profilesMap = new Map<string, any>();
+    profileRes.data.profiles.forEach(p => profilesMap.set(p.did, p));
+
     // Calculate Buzz Power in parallel
     const cards = await Promise.all(selectedAuthors.map(async f => {
       let buzzPower = 1;
+      let lpd = 0;
+
+      // New Formula Stats
+      const profile = profilesMap.get(f.did);
+      const followers = profile?.followersCount || 0;
+      const follows = profile?.followsCount || 0;
 
       try {
         // Resolve PDS for the user
@@ -78,12 +89,27 @@ export async function fetchAvatarDeck(ag: Agent, actor: string): Promise<AvatarC
             const diffDays = safeDiffMs / (1000 * 60 * 60 * 24);
 
             const freq = recs.length / diffDays;
-            buzzPower = Math.floor(freq) + 1;
+
+            // LPD (Likes Per Day)
+            lpd = freq;
           }
         }
       } catch (e) {
         console.warn(`Failed to calc buzz for ${f.handle}`, e);
       }
+
+      // Formula:
+      // resonance = ((followers * follows) / (followers + follows))
+      // power = (log10(resonance+1)+1) * (LPD+1)
+
+      let resonance = 0;
+      if (followers + follows > 0) {
+        resonance = (followers * follows) / (followers + follows);
+      }
+
+      const power = (Math.log10(resonance + 1) + 1) * (lpd + 1);
+      buzzPower = Math.floor(power);
+      if (buzzPower < 1) buzzPower = 1;
 
       return {
         id: f.did,
