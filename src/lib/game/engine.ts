@@ -299,10 +299,10 @@ export class GameEngine {
       if (content.buzzFactor < 1) content.buzzFactor = 1; // Minimum 1?
     }
 
-    // Rule: "アバターカードのバズパワーは、引いた次のターンからターンごとに倍になる"
+    // Rule: "アバターカードのバズパワーは、引いた次のターンからターンごとに増加"
     // Apply to HAND avatars.
     for (const avatar of this.state.player.hand.avatars) {
-      avatar.buzzPower = Math.ceil(avatar.buzzPower * 2);
+      avatar.buzzPower = Math.ceil(avatar.buzzPower * 1.2);
     }
 
     // 3. Check Victory (100M Users)
