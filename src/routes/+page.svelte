@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getClient, publicAgent, signIn, signOut } from "$lib/atproto"; // Import getClient instead of getAgent
+  import { getClient, publicAgent, signIn } from "$lib/atproto"; // Import getClient instead of getAgent
   import { fetchAvatarDeck, fetchContentDeck } from "$lib/game/api";
   import type { AvatarCard, ContentCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
+  import SettingsModal from "$lib/components/SettingsModal.svelte";
+  import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api"; // Class
 
   let agent = $state<Agent | null>(null);
@@ -16,6 +18,7 @@
   let readyToPlay = $state(false);
   let userDid = $state("");
   let userHandle = $state("");
+  let showSettings = $state(false);
 
   onMount(async () => {
     try {
@@ -47,7 +50,7 @@
       }
     } catch (e) {
       console.error("Auth Error:", e);
-      error = "Authentication failed. Please try signing in again.";
+      error = $t("errorAuth");
     } finally {
       loading = false;
     }
@@ -62,9 +65,8 @@
       ]);
 
       if (avatars.length < 10 || contents.length < 10) {
-        if (avatars.length === 0)
-          error = "No followees found. Follow some people!";
-        if (contents.length === 0) error = "No likes found. Like some posts!";
+        if (avatars.length === 0) error = $t("errorFollowees");
+        if (contents.length === 0) error = $t("errorLikes");
       }
 
       avatarDeck = avatars;
@@ -72,7 +74,7 @@
       readyToPlay = true;
     } catch (e) {
       console.error(e);
-      error = "Failed to load game data";
+      error = $t("errorData");
     } finally {
       loading = false;
     }
@@ -86,6 +88,10 @@
   }
 </script>
 
+<svelte:head>
+  <title>{$t("titleMain")} {$t("titleSub")}</title>
+</svelte:head>
+
 <div
   class="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white"
 >
@@ -95,7 +101,7 @@
         class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
       ></div>
       <p class="text-blue-400 font-bold animate-pulse">
-        Loading AT Battlers...
+        {$t("loading")}
       </p>
     </div>
   {:else if readyToPlay && agent}
@@ -116,20 +122,49 @@
         class="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"
       ></div>
 
+      <!-- Settings Button (Top Right) -->
+      <!-- Language Switcher (Top Right) -->
+      <div class="absolute top-4 right-4 z-50 flex gap-2">
+        <button
+          class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
+          'jp'
+            ? 'bg-blue-600 text-white shadow-lg'
+            : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
+          onclick={() => locale.set("jp")}
+        >
+          JP
+        </button>
+        <button
+          class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
+          'en'
+            ? 'bg-blue-600 text-white shadow-lg'
+            : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
+          onclick={() => locale.set("en")}
+        >
+          EN
+        </button>
+      </div>
+
       <div
         class="z-10 text-center flex flex-col items-center gap-8 max-w-2xl px-4"
       >
         <div class="mb-4">
-          <h1
-            class="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl"
-          >
-            AT Battlers
-          </h1>
+          <div class="flex flex-col items-center">
+            <h1
+              class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl leading-tight"
+            >
+              {$t("titleMain")}
+            </h1>
+            <h2
+              class="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-200 to-slate-200 drop-shadow-lg mt-2"
+            >
+              {$t("titleSub")}
+            </h2>
+          </div>
           <p
-            class="text-slate-400 text-xl mt-4 max-w-lg mx-auto leading-relaxed"
+            class="text-slate-400 text-lg md:text-xl mt-4 max-w-lg mx-auto leading-relaxed"
           >
-            The Single-Player SNS Card Game.<br />
-            Battle with your graph. Enliven Bluesky.
+            {$t("subtitle")}
           </p>
         </div>
 
@@ -139,7 +174,7 @@
           >
             {error}
             <button class="ml-4 underline" onclick={() => location.reload()}
-              >Retry</button
+              >{$t("retry")}</button
             >
           </div>
         {/if}
@@ -154,20 +189,22 @@
                 d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99z"
               /></svg
             >
-            Sign in with Bluesky
+            {$t("signIn")}
           </button>
           <p class="text-slate-600 text-sm">
-            Requires a Bluesky account. OAuth 2.0 Secure Login.
+            {$t("signInNote")}
           </p>
         {:else}
-          <button
-            class="px-8 py-3 bg-slate-800 border border-slate-700 hover:border-blue-500 hover:text-blue-400 rounded-lg transition"
-            onclick={() => signOut(userDid).then(() => location.reload())}
-          >
-            Sign Out @{userHandle}
-          </button>
+          <!-- Handled in Settings -->
         {/if}
       </div>
     </div>
   {/if}
+
+  <SettingsModal
+    isOpen={showSettings}
+    onClose={() => (showSettings = false)}
+    did={userDid}
+    handle={userHandle}
+  />
 </div>

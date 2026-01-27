@@ -29,7 +29,7 @@ export function getClient() {
     handleResolver: 'https://bsky.social',
     clientMetadata: {
       client_id,
-      client_name: 'AT Battlers',
+      client_name: 'Project Sky',
       client_uri: origin,
       redirect_uris: [redirect_uri],
       scope: SCOPE,

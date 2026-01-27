@@ -9,6 +9,8 @@
   import { flip } from "svelte/animate";
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
+  import { t, locale } from "$lib/i18n";
+  import SettingsModal from "./SettingsModal.svelte";
 
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
@@ -76,6 +78,8 @@
   let avatarSelection = $state<number | null>(null);
   // UI State for Content Menu
   let contentSelection = $state<number | null>(null);
+
+  let showSettings = $state(false);
 
   function handleAvatarClick(index: number) {
     if (gameState.phase !== "main") return;
@@ -152,15 +156,15 @@
     const success = engine.endTurn();
     if (!success) {
       if (gameState.phase === "main") {
-        alert("You must play an Avatar card this turn!");
+        alert($t("alertPlayAvatar"));
       }
       return;
     }
 
     if (gameState.victory) {
-      alert("Victory! 100 Million Users!");
+      alert($t("victorySub"));
     } else if (gameState.gameOver) {
-      alert("Game Over! Deck Empty.");
+      alert($t("defeatSub"));
     }
   }
 
@@ -185,6 +189,27 @@
   <div
     class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
   >
+    <!-- Settings Button (Top Right Absolute) -->
+    <button
+      class="absolute top-4 right-4 p-2 text-slate-400 hover:text-white transition-colors z-50 bg-slate-800/50 rounded-full backdrop-blur-md"
+      onclick={() => (showSettings = true)}
+      aria-label={$t("settings")}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ><circle cx="12" cy="12" r="3"></circle><path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+        ></path></svg
+      >
+    </button>
     <!-- Progress Bar Background -->
     <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
       <div
@@ -196,20 +221,20 @@
     <div
       class="grid grid-cols-2 md:flex md:items-center md:justify-between px-4 py-4 md:px-8 gap-4 w-full"
     >
-      <!-- Turn Info -->
       <div class="flex items-center gap-4 md:order-1 col-span-1">
         <h1
           class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
         >
-          Turn {gameState.player.turnCount}
+          {$t("turn")}
+          {gameState.player.turnCount}
         </h1>
         <div
           class="flex flex-col text-xs uppercase tracking-widest text-slate-400 font-bold"
         >
-          <span>{gameState.phase} Phase</span>
+          <span>{gameState.phase} {$t("phase")}</span>
           <span class="text-blue-400">
-            Lv {Math.ceil(gameState.player.turnCount / 3)} (SLOT {gameState
-              .player.turnCount >= 7
+            Lv {Math.ceil(gameState.player.turnCount / 3)} ({$t("slot")}
+            {gameState.player.turnCount >= 7
               ? 3
               : gameState.player.turnCount >= 4
                 ? 2
@@ -218,34 +243,19 @@
         </div>
       </div>
 
-      <!-- Button -->
-      <div class="flex justify-end md:order-3 col-span-1">
-        <button
-          class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm md:text-base"
-          onclick={gameState.phase === "draw" || gameState.phase === "end"
-            ? startTurn
-            : endTurn}
-          disabled={gameState.gameOver || gameState.victory}
-        >
-          {gameState.player.turnCount === 0
-            ? "Game Start"
-            : gameState.phase === "draw" || gameState.phase === "end"
-              ? "Next Turn"
-              : "End Turn"}
-        </button>
-      </div>
+      <!-- Button Removed from HUD -->
 
       <!-- Score -->
-      <!-- Score -->
       <div
-        class="col-span-2 flex flex-col items-center md:col-span-1 md:items-end md:order-2 md:w-auto"
+        class="col-span-2 flex flex-col items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto"
       >
         <div
           class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
-          <AnimatedNumber value={gameState.player.buzzPoints} /> Users
+          <AnimatedNumber value={gameState.player.buzzPoints} />
+          {$t("users")}
         </div>
-        <div class="text-xs text-slate-500 font-mono">Goal: 100M Users</div>
+        <div class="text-xs text-slate-500 font-mono">{$t("goal")}</div>
       </div>
     </div>
   </div>
@@ -258,7 +268,7 @@
     >
       {#if gameState.player.field.length === 0}
         <div class="text-slate-600 font-bold text-2xl mt-20">
-          Timeline Empty. Play an Avatar!
+          {$t("timelineEmpty")}
         </div>
       {/if}
 
@@ -267,8 +277,6 @@
         <div
           class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50 relative"
         >
-          <!-- Avatar Slot -->
-          <!-- Interactive if created this turn (can return to hand) -->
           <!-- Avatar Slot -->
           <!-- Interactive if created this turn (can return to hand) -->
           <div
@@ -309,7 +317,7 @@
               <div
                 class="w-32 h-48 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center opacity-30 text-xs"
               >
-                Slot
+                {$t("slot")}
               </div>
             {/if}
           </div>
@@ -346,14 +354,15 @@
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
     >
-      <span>Hand</span>
+      <span>{$t("hand")}</span>
       <span
-        >Avatars: {gameState.player.hand.avatars.length} / Deck: {gameState
+        >{$t("avatars")}: {gameState.player.hand.avatars.length} / {$t("deck")}: {gameState
           .player.deck.avatars.length}</span
       >
       <span
-        >Content: {gameState.player.hand.contents.length} / Deck: {gameState
-          .player.deck.contents.length}</span
+        >{$t("content")}: {gameState.player.hand.contents.length} / {$t(
+          "deck",
+        )}: {gameState.player.deck.contents.length}</span
       >
     </div>
     <div
@@ -398,7 +407,7 @@
                     confirmPlayAvatar(i);
                   }}
                 >
-                  OPEN
+                  {$t("open")}
                 </button>
                 <button
                   class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
@@ -410,7 +419,7 @@
                     confirmReleaseAvatar(i);
                   }}
                 >
-                  RELEASE
+                  {$t("release")}
                 </button>
               </div>
             {/if}
@@ -456,7 +465,7 @@
                     confirmPlayContent(i);
                   }}
                 >
-                  OPEN
+                  {$t("open")}
                 </button>
                 <button
                   class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider"
@@ -465,7 +474,7 @@
                     confirmReleaseContent(i);
                   }}
                 >
-                  RELEASE
+                  {$t("release")}
                 </button>
               </div>
             {/if}
@@ -483,7 +492,7 @@
       <h1
         class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-red-600"
       >
-        {gameState.victory ? "YOU ENLIVENED BLUESKY!" : "FADED INTO OBSCURITY"}
+        {gameState.victory ? $t("victory") : $t("defeat")}
       </h1>
       <p class="text-2xl text-white font-bold">
         Final Score: {gameState.player.buzzPoints.toLocaleString()}
@@ -492,8 +501,36 @@
         class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition"
         onclick={() => location.reload()}
       >
-        Play Again
+        {$t("playAgain")}
       </button>
     </div>
   {/if}
+
+  <!-- Turn Progress Button (Fixed Bottom Right) -->
+  <button
+    class="absolute bottom-8 right-8 z-40 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white text-lg font-black rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 flex items-center gap-2 group disabled:opacity-50 disabled:grayscale"
+    onclick={gameState.phase === "draw" || gameState.phase === "end"
+      ? startTurn
+      : endTurn}
+    disabled={gameState.gameOver || gameState.victory}
+  >
+    {gameState.player.turnCount === 0
+      ? $t("gameStart")
+      : gameState.phase === "draw" || gameState.phase === "end"
+        ? $t("nextTurn")
+        : $t("endTurn")}
+    <svg
+      viewBox="0 0 24 24"
+      class="w-6 h-6 fill-white group-hover:translate-x-1 transition-transform"
+    >
+      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+    </svg>
+  </button>
+
+  <SettingsModal
+    isOpen={showSettings}
+    onClose={() => (showSettings = false)}
+    {did}
+    {handle}
+  />
 </div>

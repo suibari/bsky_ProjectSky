@@ -1,0 +1,87 @@
+
+import { writable, derived } from 'svelte/store';
+
+export const locale = writable<'en' | 'jp'>('jp');
+
+const translations = {
+  en: {
+    titleMain: 'Project Sky',
+    titleSub: '-Road to 100M-',
+    subtitle: 'The Single-Player SNS Card Game. Battle with your graph. Enliven Bluesky.',
+    loading: 'Loading...',
+    signIn: 'Sign in with Bluesky',
+    signInNote: 'Requires a Bluesky account. OAuth 2.0 Secure Login.',
+    signOut: 'Sign Out',
+    retry: 'Retry',
+    errorAuth: 'Authentication failed. Please try signing in again.',
+    errorFollowees: 'No followees found. Follow some people!',
+    errorLikes: 'No likes found. Like some posts!',
+    errorData: 'Failed to load game data',
+    turn: 'Turn',
+    phase: 'Phase',
+    users: 'Users',
+    goal: 'Goal: 100M Users',
+    gameStart: 'Game Start',
+    nextTurn: 'Next Turn',
+    endTurn: 'End Turn',
+    timelineEmpty: 'Timeline Empty. Play an Avatar!',
+    hand: 'Hand',
+    avatars: 'Avatars',
+    content: 'Content',
+    deck: 'Deck',
+    open: 'OPEN',
+    release: 'RELEASE',
+    victory: 'YOU ENLIVENED BLUESKY!',
+    victorySub: 'Victory! 100 Million Users!',
+    defeat: 'FADED INTO OBSCURITY',
+    defeatSub: 'Game Over! Deck Empty.',
+    playAgain: 'Play Again',
+    settings: 'Settings',
+    language: 'Language',
+    close: 'Close',
+    alertPlayAvatar: 'You must play an Avatar card this turn!',
+    slot: 'Slot'
+  },
+  jp: {
+    titleMain: 'Project Sky',
+    titleSub: '-1億ユーザーへの道-',
+    subtitle: '一人用カードゲーム。Blueskyを導くのは君だ！',
+    loading: '読み込み中...',
+    signIn: 'Blueskyでサインイン',
+    signInNote: 'Blueskyアカウントが必要です',
+    signOut: 'サインアウト',
+    retry: '再試行',
+    errorAuth: '認証に失敗しました。もう一度サインインしてください。',
+    errorFollowees: 'フォローしているユーザーが見つかりません。誰かをフォローしましょう！',
+    errorLikes: 'いいねした投稿が見つかりません。投稿にいいねしましょう！',
+    errorData: 'ゲームデータの読み込みに失敗しました',
+    turn: 'ターン',
+    phase: 'フェーズ',
+    users: 'Users',
+    goal: 'Goal: 1億(100M) Users',
+    gameStart: 'ゲームスタート',
+    nextTurn: 'ターン終了',
+    endTurn: 'ターン終了',
+    timelineEmpty: 'タイムラインが空です',
+    hand: '手札',
+    avatars: 'アバター',
+    content: 'コンテンツ',
+    deck: 'デッキ',
+    open: 'OPEN',
+    release: 'RELEASE',
+    victory: 'Blueskyを盛り上げました！',
+    victorySub: '勝利！ 1億ユーザー達成！',
+    defeat: 'Blueskyは忘れ去られた...',
+    defeatSub: 'ゲームオーバー。デッキ切れ。',
+    playAgain: 'もう一度遊ぶ',
+    settings: '設定',
+    language: '言語',
+    close: '閉じる',
+    alertPlayAvatar: '1ターンに1枚はアバターカードをプレイする必要があります！',
+    slot: 'スロット'
+  }
+};
+
+export const t = derived(locale, ($locale) => (key: keyof typeof translations['en']) => {
+  return translations[$locale][key] || key;
+});
