@@ -93,10 +93,12 @@
 </svelte:head>
 
 <div
-  class="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white"
+  class="h-dvh w-full bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white flex flex-col overflow-hidden"
 >
   {#if loading}
-    <div class="flex items-center justify-center h-screen flex-col gap-4">
+    <div
+      class="flex-grow w-full flex items-center justify-center flex-col gap-4"
+    >
       <div
         class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
       ></div>
@@ -109,7 +111,7 @@
   {:else}
     <!-- Landing / Login -->
     <div
-      class="flex flex-col items-center justify-center h-screen relative overflow-hidden"
+      class="flex-grow w-full flex flex-col items-center justify-center relative overflow-hidden"
     >
       <!-- Background Decoration -->
       <div

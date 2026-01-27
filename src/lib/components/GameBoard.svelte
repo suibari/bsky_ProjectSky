@@ -183,11 +183,11 @@
 </script>
 
 <div
-  class="h-screen w-full bg-slate-900 text-white flex flex-col overflow-hidden relative"
+  class="h-full w-full bg-slate-900 text-white flex flex-col overflow-hidden relative"
 >
   <!-- HUD -->
   <div
-    class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
+    class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative pt-[env(safe-area-inset-top)]"
   >
     <!-- Moved Settings Button to Grid -->
     <!-- Progress Bar Background -->
@@ -351,7 +351,7 @@
 
   <!-- Hand (Bottom) -->
   <div
-    class="h-64 md:h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden"
+    class="h-64 md:h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden pb-[env(safe-area-inset-bottom)]"
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
