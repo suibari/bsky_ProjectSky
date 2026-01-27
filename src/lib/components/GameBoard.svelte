@@ -551,14 +551,14 @@
   </div>
 
   <!-- Victory/Loss Overlay -->
-  {#if gameState.victory || gameState.gameOver}
+  {#if gameState.gameOver}
     <div
       class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center flex-col gap-4 backdrop-blur-sm"
     >
       <h1
         class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-red-600"
       >
-        {gameState.victory ? $t("victory") : $t("defeat")}
+        {$t("defeat")}
       </h1>
       <p class="text-2xl text-white font-bold">
         Final Score: {gameState.player.buzzPoints.toLocaleString()}
