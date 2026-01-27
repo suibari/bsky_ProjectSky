@@ -11,7 +11,9 @@
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t, locale } from "$lib/i18n";
   import SettingsModal from "./SettingsModal.svelte";
-
+  import ScoreAnimation from "$lib/components/visuals/ScoreAnimation.svelte";
+  import TurnTransition from "$lib/components/visuals/TurnTransition.svelte";
+  import GameClear from "$lib/components/visuals/GameClear.svelte";
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
     fallback(node, params) {
@@ -45,7 +47,15 @@
 
   // Actions
   function startTurn() {
-    engine.startTurn();
+    if (gameState.player.turnCount === 0) {
+      // Game Start Animation
+      animationNextTurn = 1;
+      showTurnTransition = true;
+      // engine.startTurn() will be called by handleTurnTransitionCovered
+    } else {
+      // Fallback for some reason if manual
+      engine.startTurn();
+    }
   }
 
   function playAvatar(index: number) {
@@ -80,6 +90,21 @@
   let contentSelection = $state<number | null>(null);
 
   let showSettings = $state(false);
+
+  // Animation States
+  let showScoreCalculation = $state(false);
+  let showTurnTransition = $state(false);
+  let showGameClear = $state(false);
+
+  let animationLanes = $state<
+    {
+      avatar: AvatarCard;
+      contents: ContentCard[];
+      avatarPower: number;
+    }[]
+  >([]);
+  let animationPreviousScore = $state(0);
+  let animationNextTurn = $state(0);
 
   function handleAvatarClick(index: number) {
     if (gameState.phase !== "main") return;
@@ -153,19 +178,58 @@
   }
 
   function endTurn() {
-    const success = engine.endTurn();
-    if (!success) {
-      if (gameState.phase === "main") {
-        alert($t("alertPlayAvatar"));
-      }
+    // 1. Prepare data for Score Animation
+    // We need to calculate what the engine WOULD calculate, but not commit it yet.
+    // Actually, we can just grab the current lanes and calculate totals using helper.
+
+    const lanesForAnimation = gameState.player.field
+      .filter((l) => l.turnCreated === gameState.player.turnCount)
+      .map((l) => ({
+        avatar: l.avatar,
+        contents: l.contents,
+        avatarPower: l.avatar.buzzPower,
+      }));
+
+    if (lanesForAnimation.length === 0) {
+      // Should be impossible due to engine checks, but fallback
+      engine.endTurn();
       return;
     }
 
+    animationLanes = lanesForAnimation;
+    animationPreviousScore = gameState.player.buzzPoints;
+    showScoreCalculation = true;
+    // Note: We do NOT call engine.endTurn() yet.
+  }
+
+  function handleScoreAnimationComplete() {
+    showScoreCalculation = false;
+
+    // Commit the turn in the engine
+    const success = engine.endTurn();
+    if (!success) return; // Should not happen given we pre-checked basically
+
     if (gameState.victory) {
-      alert($t("victorySub"));
+      showGameClear = true;
     } else if (gameState.gameOver) {
       alert($t("defeatSub"));
+      // Or show defeat screen
+    } else {
+      // Auto Turn Advance
+      animationNextTurn = gameState.player.turnCount + 1; // It's still N in state until startTurn, actually wait.
+      // engine.endTurn() does NOT increment turn count. startTurn() does.
+      // So currently turnCount is N. Next is N+1.
+
+      showTurnTransition = true;
     }
+  }
+
+  function handleTurnTransitionCovered() {
+    engine.startTurn();
+  }
+
+  function handleTurnTransitionComplete() {
+    showTurnTransition = false;
   }
 
   // Progress to 10G
@@ -537,4 +601,24 @@
     {did}
     {handle}
   />
+
+  {#if showScoreCalculation}
+    <ScoreAnimation
+      lanes={animationLanes}
+      previousTotal={animationPreviousScore}
+      onComplete={handleScoreAnimationComplete}
+    />
+  {/if}
+
+  {#if showTurnTransition}
+    <TurnTransition
+      turn={animationNextTurn}
+      onCovered={handleTurnTransitionCovered}
+      onComplete={handleTurnTransitionComplete}
+    />
+  {/if}
+
+  {#if showGameClear}
+    <GameClear score={gameState.player.buzzPoints} />
+  {/if}
 </div>
