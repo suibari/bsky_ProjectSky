@@ -39,7 +39,8 @@ export class GameEngine {
       gameOver: false,
       victory: false,
       buzzHistory: [0],
-      nextTurnContentDrawBonus: 0
+      nextTurnContentDrawBonus: 0,
+      nextTurnAvatarDrawBonus: 0
     };
   }
 
@@ -50,13 +51,20 @@ export class GameEngine {
     this.state.player.turnCount++;
 
     const baseContentDraw = 1;
-    const bonusDraw = this.state.nextTurnContentDrawBonus;
-    const totalContentDraw = baseContentDraw + bonusDraw;
+    const contentBonusDraw = this.state.nextTurnContentDrawBonus;
+    const totalContentDraw = baseContentDraw + contentBonusDraw;
 
-    // Reset bonus
+    // Reset content bonus
     this.state.nextTurnContentDrawBonus = 0;
 
-    const newAvatars = this.state.player.deck.avatars.splice(0, 1); // Draw 1 avatar
+    const baseAvatarDraw = 1;
+    const avatarBonusDraw = this.state.nextTurnAvatarDrawBonus;
+    const totalAvatarDraw = baseAvatarDraw + avatarBonusDraw;
+
+    // Reset avatar bonus
+    this.state.nextTurnAvatarDrawBonus = 0;
+
+    const newAvatars = this.state.player.deck.avatars.splice(0, totalAvatarDraw); // Draw 1 + bonus avatars
     const newContents = this.state.player.deck.contents.splice(0, totalContentDraw); // Draw 1 + bonus contents
 
     this.state.player.hand.avatars.push(...newAvatars);
@@ -101,7 +109,7 @@ export class GameEngine {
     const card = this.state.player.hand.avatars[cardIndex];
     if (!card) return;
 
-    // Rule: Cannot release if only 1 avatar remains (in hand/total checks?)
+    // Rule: Cannot release if only 1 avatar remains
     // Prompt: "アバターが残り1枚のときは、リリースはできない"
     // Assuming this means "If you don't have enough avatars to continue playing if you release this one".
     // Or simpliest: If Hand has 1 card.
@@ -113,7 +121,7 @@ export class GameEngine {
     // Remove from hand (discard/release)
     this.state.player.hand.avatars.splice(cardIndex, 1);
 
-    // Bonus for next turn
+    // Bonus for next turn (Content Draw +1)
     this.state.nextTurnContentDrawBonus += 1;
   }
 
@@ -153,6 +161,19 @@ export class GameEngine {
 
     // Add to lane
     lane.contents.push(card);
+  }
+
+  releaseContent(cardIndex: number) {
+    if (this.state.phase !== 'main') return;
+
+    const card = this.state.player.hand.contents[cardIndex];
+    if (!card) return;
+
+    // Remove from hand
+    this.state.player.hand.contents.splice(cardIndex, 1);
+
+    // Bonus for next turn (Avatar Draw +1)
+    this.state.nextTurnAvatarDrawBonus += 1;
   }
 
   returnAvatar(laneIndex: number) {

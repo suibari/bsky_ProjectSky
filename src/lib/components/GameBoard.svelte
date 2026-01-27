@@ -65,8 +65,15 @@
     avatarSelection = null; // Close menu
   }
 
+  function releaseContent(index: number) {
+    engine.releaseContent(index);
+    contentSelection = null;
+  }
+
   // UI State for Avatar Menu
   let avatarSelection = $state<number | null>(null);
+  // UI State for Content Menu
+  let contentSelection = $state<number | null>(null);
 
   function handleAvatarClick(index: number) {
     if (gameState.phase !== "main") return;
@@ -74,6 +81,17 @@
       avatarSelection = null; // Toggle off
     } else {
       avatarSelection = index;
+      contentSelection = null; // Close other
+    }
+  }
+
+  function handleContentClick(index: number) {
+    if (gameState.phase !== "main") return;
+    if (contentSelection === index) {
+      contentSelection = null;
+    } else {
+      contentSelection = index;
+      avatarSelection = null;
     }
   }
 
@@ -84,6 +102,15 @@
 
   function confirmReleaseAvatar(index: number) {
     releaseAvatar(index);
+  }
+
+  function confirmPlayContent(index: number) {
+    playContent(index);
+    contentSelection = null;
+  }
+
+  function confirmReleaseContent(index: number) {
+    releaseContent(index);
   }
 
   // Helper for Score Preview (Mirrors Engine Logic)
@@ -350,16 +377,16 @@
             </div>
 
             <!-- Action Menu (Visible if selected) -->
-            <!-- Action Menu (Bottom Horizontal) -->
+            <!-- Action Menu (Bottom Vertical) -->
             {#if avatarSelection === i}
               <div
-                class="absolute bottom-16 left-0 w-full z-50 flex flex-row items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 px-2 pointer-events-auto"
+                class="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 z-50 flex flex-col items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto"
                 role="group"
                 onclick={(e) => e.stopPropagation()}
                 onkeydown={(e) => e.stopPropagation()}
               >
                 <button
-                  class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow-lg hover:scale-105 transition-all border border-blue-400"
+                  class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-base font-bold rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-blue-400"
                   onclick={(e) => {
                     e.stopPropagation();
                     confirmPlayAvatar(i);
@@ -368,7 +395,7 @@
                   OPEN
                 </button>
                 <button
-                  class="flex-1 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg shadow-lg hover:scale-105 transition-all border border-red-400 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
+                  class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={gameState.player.hand.avatars.length <= 1}
                   onclick={(e) => {
                     e.stopPropagation();
@@ -386,17 +413,54 @@
       <!-- Contents -->
       <div class="flex gap-4">
         {#each gameState.player.hand.contents as card, i (card.uuid || card.id)}
+          <!-- Content Card Container -->
           <div
-            class="hover:-translate-y-4 transition-transform duration-200 relative z-0"
+            class="relative transition-transform duration-200 z-0 flex flex-col gap-2 items-center group"
             in:receive={{ key: card.uuid || card.id }}
             out:send={{ key: card.uuid || card.id }}
             animate:flip
           >
-            <Card
-              {card}
-              interactive={gameState.phase === "main"}
-              onClick={() => playContent(i)}
-            />
+            <!-- Card Itself -->
+            <div
+              class="{contentSelection === i
+                ? '-translate-y-8 scale-105 z-10'
+                : 'group-hover:-translate-y-4'} transition-all duration-300"
+            >
+              <Card
+                {card}
+                interactive={gameState.phase === "main"}
+                onClick={() => handleContentClick(i)}
+              />
+            </div>
+
+            <!-- Action Menu (Bottom Vertical) -->
+            {#if contentSelection === i}
+              <div
+                class="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 z-50 flex flex-col items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto"
+                role="group"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
+              >
+                <button
+                  class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-base font-bold rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-blue-400"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    confirmPlayContent(i);
+                  }}
+                >
+                  OPEN
+                </button>
+                <button
+                  class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    confirmReleaseContent(i);
+                  }}
+                >
+                  RELEASE
+                </button>
+              </div>
+            {/if}
           </div>
         {/each}
       </div>

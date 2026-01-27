@@ -57,4 +57,5 @@ export interface GameState {
   victory: boolean;
   buzzHistory: number[]; // For graph/tracking
   nextTurnContentDrawBonus: number; // For Release system
+  nextTurnAvatarDrawBonus: number; // For Release system (Content -> Avatar draw)
 }
