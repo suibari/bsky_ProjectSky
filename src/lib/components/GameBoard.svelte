@@ -164,8 +164,6 @@
     }
   }
 
-
-
   // Progress to 10G
   let progressPercent = $derived(
     Math.min(100, (gameState.player.buzzPoints / 100_000_000) * 100),
@@ -185,7 +183,7 @@
 >
   <!-- HUD -->
   <div
-    class="h-20 w-full flex flex-col bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
+    class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative"
   >
     <!-- Progress Bar Background -->
     <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
@@ -195,8 +193,11 @@
       ></div>
     </div>
 
-    <div class="flex-grow flex items-center justify-between px-8">
-      <div class="flex items-center gap-4">
+    <div
+      class="grid grid-cols-2 md:flex md:items-center md:justify-between px-4 py-4 md:px-8 gap-4 w-full"
+    >
+      <!-- Turn Info -->
+      <div class="flex items-center gap-4 md:order-1 col-span-1">
         <h1
           class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
         >
@@ -207,17 +208,36 @@
         >
           <span>{gameState.phase} Phase</span>
           <span class="text-blue-400">
-            Level {Math.ceil(gameState.player.turnCount / 3)} (Max {gameState
+            Lv {Math.ceil(gameState.player.turnCount / 3)} (SLOT {gameState
               .player.turnCount >= 7
               ? 3
               : gameState.player.turnCount >= 4
                 ? 2
-                : 1} Slots)
+                : 1})
           </span>
         </div>
       </div>
 
-      <div class="flex flex-col items-end">
+      <!-- Button -->
+      <div class="flex justify-end md:order-3 col-span-1">
+        <button
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm md:text-base"
+          onclick={gameState.phase === "draw" || gameState.phase === "end"
+            ? startTurn
+            : endTurn}
+          disabled={gameState.gameOver || gameState.victory}
+        >
+          {gameState.phase === "draw" || gameState.phase === "end"
+            ? "Next Turn"
+            : "End Turn"}
+        </button>
+      </div>
+
+      <!-- Score -->
+      <!-- Score -->
+      <div
+        class="col-span-2 flex flex-col items-center md:col-span-1 md:items-end md:order-2 md:w-auto"
+      >
         <div
           class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
@@ -225,18 +245,6 @@
         </div>
         <div class="text-xs text-slate-500 font-mono">Goal: 100M Users</div>
       </div>
-
-      <button
-        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-bold transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        onclick={gameState.phase === "draw" || gameState.phase === "end"
-          ? startTurn
-          : endTurn}
-        disabled={gameState.gameOver || gameState.victory}
-      >
-        {gameState.phase === "draw" || gameState.phase === "end"
-          ? "Start Next Turn"
-          : "End Turn"}
-      </button>
     </div>
   </div>
 
@@ -317,9 +325,11 @@
               {formatScore(calculateLaneScore(lane))}
             </div>
             {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0}
-               <div class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1">
-                 + <AnimatedNumber value={gameState.player.buzzPoints} /> (Total)
-               </div>
+              <div
+                class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1"
+              >
+                + <AnimatedNumber value={gameState.player.buzzPoints} /> (Total)
+              </div>
             {/if}
           </div>
         </div>
