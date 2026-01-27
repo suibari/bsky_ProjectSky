@@ -396,7 +396,9 @@
                 </button>
                 <button
                   class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={gameState.player.hand.avatars.length <= 1}
+                  disabled={!gameState.player.field.some(
+                    (l) => l.turnCreated === gameState.player.turnCount,
+                  ) && gameState.player.hand.avatars.length <= 1}
                   onclick={(e) => {
                     e.stopPropagation();
                     confirmReleaseAvatar(i);

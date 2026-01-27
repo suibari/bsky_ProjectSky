@@ -109,12 +109,12 @@ export class GameEngine {
     const card = this.state.player.hand.avatars[cardIndex];
     if (!card) return;
 
-    // Rule: Cannot release if only 1 avatar remains
-    // Prompt: "アバターが残り1枚のときは、リリースはできない"
-    // Assuming this means "If you don't have enough avatars to continue playing if you release this one".
-    // Or simpliest: If Hand has 1 card.
-    if (this.state.player.hand.avatars.length <= 1) {
-      console.warn("Cannot release, must have at least one avatar to play or keep.");
+    // Rule: Cannot release if only 1 avatar remains AND we haven't played an avatar yet.
+    // If we already played an avatar, we can release the last card in hand (since we can't play it anyway).
+    const alreadyPlayedAvatar = this.state.player.field.some(lane => lane.turnCreated === this.state.player.turnCount);
+
+    if (!alreadyPlayedAvatar && this.state.player.hand.avatars.length <= 1) {
+      console.warn("Cannot release, must play an avatar this turn.");
       return;
     }
 
