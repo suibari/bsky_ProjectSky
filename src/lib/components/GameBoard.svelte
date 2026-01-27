@@ -510,17 +510,19 @@
 
   <!-- Turn Progress Button (Fixed Bottom Right) -->
   <button
-    class="absolute bottom-8 right-8 z-40 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white text-lg font-black rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 flex items-center gap-2 group disabled:opacity-50 disabled:grayscale"
+    class="absolute bottom-8 right-4 md:right-8 z-40 p-4 md:px-8 md:py-4 bg-blue-600 hover:bg-blue-500 text-white text-lg font-black rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 flex items-center justify-center gap-0 md:gap-2 group disabled:opacity-50 disabled:grayscale"
     onclick={gameState.phase === "draw" || gameState.phase === "end"
       ? startTurn
       : endTurn}
     disabled={gameState.gameOver || gameState.victory}
   >
-    {gameState.player.turnCount === 0
-      ? $t("gameStart")
-      : gameState.phase === "draw" || gameState.phase === "end"
-        ? $t("nextTurn")
-        : $t("endTurn")}
+    <span class="hidden md:inline">
+      {gameState.player.turnCount === 0
+        ? $t("gameStart")
+        : gameState.phase === "draw" || gameState.phase === "end"
+          ? $t("nextTurn")
+          : $t("endTurn")}
+    </span>
     <svg
       viewBox="0 0 24 24"
       class="w-6 h-6 fill-white group-hover:translate-x-1 transition-transform"
