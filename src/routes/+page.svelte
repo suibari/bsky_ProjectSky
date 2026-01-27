@@ -57,7 +57,7 @@
     loading = true;
     try {
       const [avatars, contents] = await Promise.all([
-        fetchAvatarDeck(did),
+        fetchAvatarDeck(agent!, did),
         fetchContentDeck(agent!, did),
       ]);
 

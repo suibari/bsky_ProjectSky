@@ -2,40 +2,55 @@ import { Agent } from '@atproto/api'; // Use class import for instantiation
 import type { AvatarCard, ContentCard } from './types';
 import { publicAgent, getPdsEndpoint } from '$lib/atproto';
 
-export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
+export async function fetchAvatarDeck(ag: Agent, actor: string): Promise<AvatarCard[]> {
   try {
-    // Fetch up to 2000 follows
-    let allFollows: any[] = [];
+    // Strategy: Fetch user's likes, extract unique authors, use them as Avatars.
+    const collectedAuthors = new Map<string, any>(); // did -> profile/post.author
     let cursor: string | undefined;
 
-    while (allFollows.length < 2000) {
-      const res = await publicAgent.getFollows({
+    // Safety break
+    let loopCount = 0;
+
+    while (collectedAuthors.size < 25 && loopCount < 10) {
+      loopCount++;
+      const res = await ag.getActorLikes({
         actor,
         limit: 100,
         cursor
       });
-      allFollows = [...allFollows, ...res.data.follows];
-      cursor = res.data.cursor;
 
+      const likes = res.data.feed;
+      if (!likes || likes.length === 0) break;
+
+      for (const item of likes) {
+        const author = item.post.author;
+        if (author.did !== actor && !collectedAuthors.has(author.did)) {
+          collectedAuthors.set(author.did, author);
+        }
+        if (collectedAuthors.size >= 50) break; // Fetch a bit more to shuffle
+      }
+
+      cursor = res.data.cursor;
       if (!cursor) break;
     }
 
+    // Convert to array
+    const candidates = Array.from(collectedAuthors.values());
+
     // Shuffle and pick 25 randomly
-    const selectedFollows = allFollows.sort(() => Math.random() - 0.5).slice(0, 25);
+    const selectedAuthors = candidates.sort(() => Math.random() - 0.5).slice(0, 25);
 
     // Calculate Buzz Power in parallel
-    const cards = await Promise.all(selectedFollows.map(async f => {
+    const cards = await Promise.all(selectedAuthors.map(async f => {
       let buzzPower = 1;
 
       try {
         // Resolve PDS for the user
         const pdsEndpoint = await getPdsEndpoint(f.did);
         // Create a specific agent for this PDS (no auth needed for public records usually)
-        // Fallback to public API if resolution fails, though likely won't work if federated elsewhere.
         const pdsAgent = new Agent(pdsEndpoint || 'https://public.api.bsky.app');
 
         // Fetch recent 'like' records to estimate "likes per day" (Activity)
-        // Use listRecords from the PDS-specific agent
         const { data } = await pdsAgent.api.com.atproto.repo.listRecords({
           repo: f.did,
           collection: 'app.bsky.feed.like',
@@ -44,7 +59,6 @@ export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
 
         if (data.records.length > 1) {
           // Fetch in reverse to get LATEST if needed, or assume default order
-          // Re-fetch consistent with PDS agent
           const latestRes = await pdsAgent.api.com.atproto.repo.listRecords({
             repo: f.did,
             collection: 'app.bsky.feed.like',
@@ -75,7 +89,7 @@ export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
         id: f.did,
         type: 'avatar' as const,
         handle: f.handle,
-        displayName: f.displayName, // Map displayName
+        displayName: f.displayName,
         avatarUrl: f.avatar,
         buzzPower,
         originalBuzzFactor: 0,
@@ -86,7 +100,7 @@ export async function fetchAvatarDeck(actor: string): Promise<AvatarCard[]> {
     return cards;
 
   } catch (e) {
-    console.error("Failed to fetch follows", e);
+    console.error("Failed to fetch avatar deck from likes", e);
     return [];
   }
 }
