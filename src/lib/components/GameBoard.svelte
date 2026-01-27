@@ -227,9 +227,11 @@
             : endTurn}
           disabled={gameState.gameOver || gameState.victory}
         >
-          {gameState.phase === "draw" || gameState.phase === "end"
-            ? "Next Turn"
-            : "End Turn"}
+          {gameState.player.turnCount === 0
+            ? "Game Start"
+            : gameState.phase === "draw" || gameState.phase === "end"
+              ? "Next Turn"
+              : "End Turn"}
         </button>
       </div>
 
