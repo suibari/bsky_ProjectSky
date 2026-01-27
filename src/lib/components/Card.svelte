@@ -3,10 +3,11 @@
   import gsap from "gsap";
   import type { AvatarCard, ContentCard } from "../game/types";
   import favicon from "$lib/assets/favicon.svg";
+  import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
 
   export let card: AvatarCard | ContentCard;
   export let faceUp = true;
-  export let onClick: () => void = () => {};
+  export let onClick = () => {};
   export let interactive = false;
 
   let cardElement: HTMLElement;
@@ -70,7 +71,7 @@
       <div
         class="absolute bottom-2 right-3 text-2xl font-black text-blue-600 drop-shadow-sm"
       >
-        {card.buzzPower}
+        <AnimatedNumber value={card.buzzPower} />
       </div>
     {:else}
       <!-- Content Card -->

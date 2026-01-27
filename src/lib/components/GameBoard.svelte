@@ -7,6 +7,8 @@
   import { crossfade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
+  import { formatScore } from "$lib/utils/format";
+  import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
 
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
@@ -162,20 +164,7 @@
     }
   }
 
-  function formatScore(score: number): string {
-    if (score < 1000) return score.toString();
 
-    const suffixes = ["K", "M", "G", "T"];
-    const suffixNum = Math.floor(("" + Math.floor(score)).length / 3);
-
-    // Handle case for exactly 1000, 1000000 etc where length/3 might align such that we need index-1
-    // Actually easier logic:
-    if (score >= 1_000_000_000) return (score / 1_000_000_000).toFixed(3) + "G";
-    if (score >= 1_000_000) return (score / 1_000_000).toFixed(3) + "M";
-    if (score >= 1_000) return (score / 1_000).toFixed(3) + "K";
-
-    return score.toString();
-  }
 
   // Progress to 10G
   let progressPercent = $derived(
@@ -232,7 +221,7 @@
         <div
           class="text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
-          {formatScore(gameState.player.buzzPoints)} Users
+          <AnimatedNumber value={gameState.player.buzzPoints} /> Users
         </div>
         <div class="text-xs text-slate-500 font-mono">Goal: 100M Users</div>
       </div>
@@ -328,9 +317,9 @@
               {formatScore(calculateLaneScore(lane))}
             </div>
             {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0}
-              <div class="text-sm font-bold text-green-400 drop-shadow-md mt-1">
-                + {formatScore(gameState.player.buzzPoints)} (Total)
-              </div>
+               <div class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1">
+                 + <AnimatedNumber value={gameState.player.buzzPoints} /> (Total)
+               </div>
             {/if}
           </div>
         </div>
