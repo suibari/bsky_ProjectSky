@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getClient, publicAgent, signIn } from "$lib/atproto"; // Import getClient instead of getAgent
-  import { fetchAvatarDeck, fetchContentDeck } from "$lib/game/api";
+  import { fetchGameDecks, type ProgressKey } from "$lib/game/api";
   import type { AvatarCard, ContentCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
   import SettingsModal from "$lib/components/SettingsModal.svelte";
@@ -9,7 +9,7 @@
   import { Agent } from "@atproto/api"; // Class
 
   let agent = $state<Agent | null>(null);
-  let loading = $state(true);
+  let loadingMessageKey = $state<ProgressKey | "loading" | null>("loading");
   let error = $state<string | null>(null);
 
   // Game Data
@@ -52,17 +52,17 @@
       console.error("Auth Error:", e);
       error = $t("errorAuth");
     } finally {
-      loading = false;
+      loadingMessageKey = null;
     }
   });
 
   async function loadDecks(did: string) {
-    loading = true;
+    loadingMessageKey = "loadingLikes";
     try {
-      const [avatars, contents] = await Promise.all([
-        fetchAvatarDeck(agent!, did),
-        fetchContentDeck(agent!, did),
-      ]);
+      const { avatarDeck: avatars, contentDeck: contents } =
+        await fetchGameDecks(agent!, did, (key) => {
+          loadingMessageKey = key;
+        });
 
       if (avatars.length < 10 || contents.length < 10) {
         if (avatars.length === 0) error = $t("errorFollowees");
@@ -76,7 +76,7 @@
       console.error(e);
       error = $t("errorData");
     } finally {
-      loading = false;
+      loadingMessageKey = null;
     }
   }
 
@@ -95,7 +95,7 @@
 <div
   class="h-dvh w-full bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white flex flex-col overflow-hidden"
 >
-  {#if loading}
+  {#if loadingMessageKey}
     <div
       class="flex-grow w-full flex items-center justify-center flex-col gap-4"
     >
@@ -103,7 +103,7 @@
         class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
       ></div>
       <p class="text-blue-400 font-bold animate-pulse">
-        {$t("loading")}
+        {$t(loadingMessageKey)}
       </p>
     </div>
   {:else if readyToPlay && agent}
