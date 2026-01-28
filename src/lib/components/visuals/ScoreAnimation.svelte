@@ -4,13 +4,19 @@
   import type { AvatarCard, ContentCard } from "../../game/types";
   import { t } from "$lib/i18n";
 
-  let { lanes, previousTotal, onComplete } = $props<{
+  let {
+    lanes,
+    previousTotal,
+    isBreakBonusActive = false,
+    onComplete,
+  } = $props<{
     lanes: {
       avatar: AvatarCard;
       contents: ContentCard[];
       avatarPower: number;
     }[];
     previousTotal: number;
+    isBreakBonusActive?: boolean;
     onComplete: () => void;
   }>();
 
@@ -40,28 +46,14 @@
 
     lane.contents.forEach((content: ContentCard) => {
       let cardScore = content.buzzFactor;
-      let isDoubled = false;
-      let isSquared = false;
-
-      // Metadata Bonus (x2)
-      if (content.metadata?.some((tag: string) => tagCounts[tag] > 1)) {
-        cardScore *= 2;
-        isDoubled = true;
-      }
-
-      // Account Match Bonus (^2)
-      if (content.authorDid && content.authorDid === lane.avatar.id) {
-        cardScore = Math.pow(cardScore, 2);
-        isSquared = true;
-      }
-
+      // Simple multiplication
       currentMult *= cardScore;
 
       details.push({
         card: content,
         val: cardScore,
-        isDoubled,
-        isSquared,
+        isDoubled: false,
+        isSquared: false,
       });
     });
 
@@ -138,18 +130,18 @@
       );
     });
 
-    // 3. Snowball effect specific text if relevant
-    if (previousTotal > 0) {
+    // 3. Break Bonus effect specific text if relevant
+    if (isBreakBonusActive && previousTotal > 0) {
       currentRunningTotal += previousTotal;
 
-      // Show Snowball Row
+      // Show Break Bonus Row
       tl.fromTo(
         snowballElement,
         { x: -50, opacity: 0 },
         { x: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" },
       );
 
-      // Animate adding snowball to total
+      // Animate adding Break Bonus to total
       tl.to(
         {},
         {
@@ -261,20 +253,25 @@
       {/each}
     </div>
 
-    <!-- Snowball Bonus Row -->
-    {#if previousTotal > 0}
+    <!-- Break Bonus Row -->
+
+    <!-- Break Bonus Row (Enhanced) -->
+    {#if isBreakBonusActive && previousTotal > 0}
       <div
         bind:this={snowballElement}
-        class="flex items-center justify-between bg-slate-800/50 p-4 rounded-xl border border-blue-500/30 w-full"
+        class="flex flex-col items-center justify-center bg-gradient-to-r from-green-900/80 to-emerald-900/80 p-8 rounded-3xl border-4 border-green-400/50 w-full shadow-[0_0_50px_rgba(74,222,128,0.3)] gap-4"
       >
-        <div class="flex items-center gap-2">
-          <div
-            class="text-blue-300 font-bold uppercase tracking-wider text-sm md:text-base"
-          >
-            Snowball Bonus (Previous Users)
-          </div>
+        <div
+          class="text-green-300 font-black uppercase tracking-[0.2em] text-xl md:text-2xl animate-pulse text-center"
+        >
+          ✨ Break Bonus! ✨
         </div>
-        <div class="text-3xl font-black text-blue-400 min-w-[100px] text-right">
+        <div class="text-green-100 text-sm md:text-base font-bold opacity-80">
+          (Total Users Added to Turn Score)
+        </div>
+        <div
+          class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-green-400 drop-shadow-[0_4px_0_rgba(22,101,52,1)]"
+        >
           +{previousTotal.toLocaleString()}
         </div>
       </div>

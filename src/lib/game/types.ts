@@ -58,4 +58,5 @@ export interface GameState {
   buzzHistory: number[]; // For graph/tracking
   nextTurnContentDrawBonus: number; // For Release system
   nextTurnAvatarDrawBonus: number; // For Release system (Content -> Avatar draw)
+  shields: number; // X Shield system
 }

@@ -40,7 +40,8 @@ export class GameEngine {
       victory: false,
       buzzHistory: [0],
       nextTurnContentDrawBonus: 0,
-      nextTurnAvatarDrawBonus: 0
+      nextTurnAvatarDrawBonus: 0,
+      shields: 5 // Start with 5 shields
     };
   }
 
@@ -63,6 +64,14 @@ export class GameEngine {
 
     // Reset avatar bonus
     this.state.nextTurnAvatarDrawBonus = 0;
+
+    // X Shield Recovery
+    // Recover 1 shield every 3 turns (Turn 3, 6, 9...)
+    if (this.state.player.turnCount > 1 && this.state.player.turnCount % 3 === 0) {
+      if (this.state.shields < 5) {
+        this.state.shields += 1;
+      }
+    }
 
     const newAvatars = this.state.player.deck.avatars.splice(0, totalAvatarDraw); // Draw 1 + bonus avatars
     const newContents = this.state.player.deck.contents.splice(0, totalContentDraw); // Draw 1 + bonus contents
@@ -230,8 +239,9 @@ export class GameEngine {
 
     this.state.phase = 'end';
 
-    // 1. Calculate Score
+    // 1. Calculate Score & Shield Damage
     let turnScore = 0;
+    let totalShieldDamage = 0;
 
     for (const lane of this.state.player.field) {
       // ONLY score cards played THIS turn
@@ -240,41 +250,17 @@ export class GameEngine {
       const avatar = lane.avatar;
       const avatarPower = avatar.buzzPower;
 
-      // Collect all metadata in this lane for "Metadata Match" check
-      // Logic: If "metadata of issued content cards matches"
-      // Interpretation: Check intersection of metadata across ALL content cards in lane.
-      // Or check if a tag appears > 1 times? "Match" usually implies "Same as another".
-      // "matched card each USER becomes double".
-      // Let's count occurrence of each tag.
-      const tagCounts: Record<string, number> = {};
-      lane.contents.forEach(c => {
-        c.metadata?.forEach(tag => {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-        });
-      });
-
       let contentSum = 1;
 
       lane.contents.forEach((content) => {
         let cardScore = content.buzzFactor;
-
-        // 1. Metadata Bonus (Double)
-        // If this card has a tag that appears more than once in the lane (matches another card)
-        const hasMatch = content.metadata?.some(tag => tagCounts[tag] > 1);
-        if (hasMatch) {
-          cardScore *= 2;
-        }
-
-        // 2. Account Match Bonus (Square)
-        // If Avatar DID == Content Author DID
-        // "USER becomes squared" -> implying the RESULTING score of this card is squared.
-        // Prompt: "倍にした後2乗する" (After doubling, square it).
-        if (content.authorDid && content.authorDid === avatar.id) {
-          // Apply square
-          cardScore = Math.pow(cardScore, 2);
-        }
-
+        // Simple multiplication, no more metadata/account match bonuses
         contentSum *= cardScore;
+
+        // Shield Damage: Count of metadata tags
+        if (content.metadata && content.metadata.length > 0) {
+          totalShieldDamage += content.metadata.length;
+        }
       });
 
       // Simple multiplication
@@ -282,28 +268,19 @@ export class GameEngine {
       turnScore += laneTotal;
     }
 
-    // Snowball Rule: Add current Total Score to this turn's gain
-    // "2ターン目にトータルスコア100が加算され" -> New Gain = TurnScore + CurrentTotal
-    if (this.state.player.buzzPoints > 0) {
+    // Apply Shield Damage
+    this.state.shields = Math.max(0, this.state.shields - totalShieldDamage);
+
+    // Break Bonus: If shields are broken (0), add current Total Score to this turn's gain
+    if (this.state.shields === 0 && this.state.player.buzzPoints > 0) {
       turnScore += this.state.player.buzzPoints;
     }
 
     this.state.player.buzzPoints += turnScore;
     this.state.buzzHistory.push(this.state.player.buzzPoints);
 
-    // 2. Apply Decay (Content) and Aging (Avatar)
-    // Rule: "コンテンツカードのバズ係数は、引いた次のターンからターンごとに80%になる"
-    // Apply to HAND contents.
-    for (const content of this.state.player.hand.contents) {
-      content.buzzFactor = Math.floor(content.buzzFactor * 0.8);
-      if (content.buzzFactor < 1) content.buzzFactor = 1; // Minimum 1?
-    }
-
-    // Rule: "アバターカードのバズパワーは、引いた次のターンからターンごとに増加"
-    // Apply to HAND avatars.
-    for (const avatar of this.state.player.hand.avatars) {
-      avatar.buzzPower = Math.ceil(avatar.buzzPower * 1.2);
-    }
+    // 2. Removed Decay (Content) and Aging (Avatar)
+    // No changes to hand cards anymore.
 
     // 3. Check Victory (100M Users)
     if (this.state.player.buzzPoints >= 100_000_000) {

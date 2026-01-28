@@ -149,29 +149,10 @@
     lane: (typeof gameState.player.field)[0],
   ): number {
     const avatarPower = lane.avatar.buzzPower;
-    const tagCounts: Record<string, number> = {};
-    lane.contents.forEach((c) => {
-      c.metadata?.forEach((tag) => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-      });
-    });
-
     let contentSum = 1;
 
     lane.contents.forEach((content) => {
-      let cardScore = content.buzzFactor;
-
-      // Metadata Bonus (x2)
-      if (content.metadata?.some((tag) => tagCounts[tag] > 1)) {
-        cardScore *= 2;
-      }
-
-      // Account Match Bonus (^2)
-      if (content.authorDid && content.authorDid === lane.avatar.id) {
-        cardScore = Math.pow(cardScore, 2);
-      }
-
-      contentSum *= cardScore;
+      contentSum *= content.buzzFactor;
     });
 
     return avatarPower * contentSum;
@@ -272,14 +253,30 @@
           {$t("turn")}
           {gameState.player.turnCount}
         </h1>
-        <div
-          class="flex flex-col text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold leading-tight"
-        >
-          <span>{gameState.phase} {$t("phase")}</span>
-          <span class="text-blue-400 whitespace-nowrap">
-            Lv {Math.ceil(gameState.player.turnCount / 3)} ({$t("slot")}
-            {currentSlotLimit})
-          </span>
+        <div class="flex flex-col gap-1">
+          <div
+            class="flex flex-col text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold leading-tight"
+          >
+            <span>{gameState.phase} {$t("phase")}</span>
+            <span class="text-blue-400 whitespace-nowrap">
+              Lv {Math.ceil(gameState.player.turnCount / 3)} ({$t("slot")}
+              {currentSlotLimit})
+            </span>
+          </div>
+
+          <!-- X Shields Display -->
+          <div class="flex gap-1" title="X Shields">
+            {#each Array(5) as _, i}
+              <div
+                class="w-3 h-4 rounded border border-slate-600 flex items-center justify-center text-[8px] font-bold transition-all duration-300
+                  {i < gameState.shields
+                  ? 'bg-black text-white shadow-[0_0_5px_rgba(0,0,0,0.5)] scale-100 opacity-100'
+                  : 'bg-transparent text-slate-700 scale-90 opacity-20'}"
+              >
+                X
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
 
@@ -400,11 +397,11 @@
             <div class="text-2xl font-black text-blue-400 drop-shadow-md">
               {formatScore(calculateLaneScore(lane))}
             </div>
-            {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0}
+            {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0 && gameState.shields === 0}
               <div
-                class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1"
+                class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1 animate-pulse"
               >
-                + <AnimatedNumber value={gameState.player.buzzPoints} /> (Total)
+                + <AnimatedNumber value={gameState.player.buzzPoints} /> (Break Bonus)
               </div>
             {/if}
           </div>
@@ -606,6 +603,7 @@
     <ScoreAnimation
       lanes={animationLanes}
       previousTotal={animationPreviousScore}
+      isBreakBonusActive={gameState.shields === 0}
       onComplete={handleScoreAnimationComplete}
     />
   {/if}
