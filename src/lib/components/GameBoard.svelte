@@ -1,19 +1,22 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { GameEngine } from "../game/engine";
-  import type { GameState, AvatarCard, ContentCard } from "../game/types";
-  import Card from "./Card.svelte";
+  import type { GameState, Card } from "../game/types";
+  import CardComponent from "./Card.svelte";
   import gsap from "gsap";
   import { crossfade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
-  import { t, locale } from "$lib/i18n";
+  import { t } from "$lib/i18n";
   import SettingsModal from "./SettingsModal.svelte";
   import ScoreAnimation from "$lib/components/visuals/ScoreAnimation.svelte";
   import TurnTransition from "$lib/components/visuals/TurnTransition.svelte";
-  import GameClear from "$lib/components/visuals/GameClear.svelte";
+  //   import GameClear from "$lib/components/visuals/GameClear.svelte";
+
+  /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
+
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
     fallback(node, params) {
@@ -34,8 +37,8 @@
   let { did, handle, avatarDeck, contentDeck } = $props<{
     did: string;
     handle: string;
-    avatarDeck: AvatarCard[];
-    contentDeck: ContentCard[];
+    avatarDeck: any[];
+    contentDeck: any[];
   }>();
 
   // Svelte 5 Reactivity
@@ -45,167 +48,20 @@
 
   const engine = new GameEngine(gameState);
 
-  // Actions
-  function startTurn() {
-    if (gameState.player.turnCount === 0) {
-      // Game Start Animation
-      animationNextTurn = 1;
-      showTurnTransition = true;
-      // engine.startTurn() will be called by handleTurnTransitionCovered
-    } else {
-      // Fallback for some reason if manual
-      engine.startTurn();
-    }
-  }
-
-  function playAvatar(index: number) {
-    engine.playAvatar(index);
-  }
-
-  function playContent(cardIndex: number) {
-    engine.playContent(cardIndex);
-  }
-
-  function returnAvatar(laneIndex: number) {
-    engine.returnAvatar(laneIndex);
-  }
-
-  function returnContent(laneIndex: number, contentIndex: number) {
-    engine.returnContent(laneIndex, contentIndex);
-  }
-
-  function releaseAvatar(index: number) {
-    engine.releaseAvatar(index);
-    avatarSelection = null; // Close menu
-  }
-
-  function releaseContent(index: number) {
-    engine.releaseContent(index);
-    contentSelection = null;
-  }
-
-  // UI State for Avatar Menu
-  let avatarSelection = $state<number | null>(null);
-  // UI State for Content Menu
-  let contentSelection = $state<number | null>(null);
-
+  // UI State
+  let selectedCardIndex = $state<number | null>(null);
   let showSettings = $state(false);
-
-  // Animation States
   let showScoreCalculation = $state(false);
   let showTurnTransition = $state(false);
-  let showGameClear = $state(false);
+  let animationLanes = $state<{ card: any }[]>([]);
 
-  let animationLanes = $state<
-    {
-      avatar: AvatarCard;
-      contents: ContentCard[];
-      avatarPower: number;
-    }[]
-  >([]);
-  let animationPreviousScore = $state(0);
-  let animationNextTurn = $state(0);
-
-  function handleAvatarClick(index: number) {
-    if (gameState.phase !== "main") return;
-    if (avatarSelection === index) {
-      avatarSelection = null; // Toggle off
-    } else {
-      avatarSelection = index;
-      contentSelection = null; // Close other
-    }
+  // Actions
+  function startGame() {
+    startTurn();
   }
 
-  function handleContentClick(index: number) {
-    if (gameState.phase !== "main") return;
-    if (contentSelection === index) {
-      contentSelection = null;
-    } else {
-      contentSelection = index;
-      avatarSelection = null;
-    }
-  }
-
-  function confirmPlayAvatar(index: number) {
-    playAvatar(index);
-    avatarSelection = null;
-  }
-
-  function confirmReleaseAvatar(index: number) {
-    releaseAvatar(index);
-  }
-
-  function confirmPlayContent(index: number) {
-    playContent(index);
-    contentSelection = null;
-  }
-
-  function confirmReleaseContent(index: number) {
-    releaseContent(index);
-  }
-
-  // Helper for Score Preview (Mirrors Engine Logic)
-  function calculateLaneScore(
-    lane: (typeof gameState.player.field)[0],
-  ): number {
-    const avatarPower = lane.avatar.buzzPower;
-    let contentSum = 1;
-
-    lane.contents.forEach((content) => {
-      contentSum *= content.buzzFactor;
-    });
-
-    return avatarPower * contentSum;
-  }
-
-  function endTurn() {
-    // 1. Prepare data for Score Animation
-    // We need to calculate what the engine WOULD calculate, but not commit it yet.
-    // Actually, we can just grab the current lanes and calculate totals using helper.
-
-    const lanesForAnimation = gameState.player.field
-      .filter((l) => l.turnCreated === gameState.player.turnCount)
-      .map((l) => ({
-        avatar: l.avatar,
-        contents: l.contents,
-        avatarPower: l.avatar.buzzPower,
-      }));
-
-    if (lanesForAnimation.length === 0) {
-      // Should be impossible due to engine checks, but fallback
-      engine.endTurn();
-      return;
-    }
-
-    animationLanes = lanesForAnimation;
-    animationPreviousScore = gameState.player.buzzPoints;
-    showScoreCalculation = true;
-    // Note: We do NOT call engine.endTurn() yet.
-  }
-
-  function handleScoreAnimationComplete() {
-    showScoreCalculation = false;
-
-    // Commit the turn in the engine
-    const success = engine.endTurn();
-    if (!success) return; // Should not happen given we pre-checked basically
-
-    if (gameState.victory) {
-      showGameClear = true;
-    } else if (gameState.gameOver) {
-      alert($t("defeatSub"));
-      // Or show defeat screen
-    } else {
-      // Auto Turn Advance
-      animationNextTurn = gameState.player.turnCount + 1; // It's still N in state until startTurn, actually wait.
-      // engine.endTurn() does NOT increment turn count. startTurn() does.
-      // So currently turnCount is N. Next is N+1.
-
-      showTurnTransition = true;
-    }
-  }
-
-  function handleTurnTransitionCovered() {
+  function startTurn() {
+    showTurnTransition = true;
     engine.startTurn();
   }
 
@@ -213,29 +69,89 @@
     showTurnTransition = false;
   }
 
-  // Progress to 10G
+  function playCard(index: number) {
+    // Only if affordable
+    const card = gameState.player.hand[index];
+    if (gameState.player.pdsCurrent >= card.cost) {
+      engine.playCard(index);
+      selectedCardIndex = null;
+    } else {
+      // Visualize error
+      const el = document.getElementById(`hand-card-${index}`);
+      if (el) {
+        gsap.to(el, { x: 5, duration: 0.1, yoyo: true, repeat: 3 });
+      }
+    }
+  }
+
+  function endTurn() {
+    // Show animation first
+
+    // Prepare animation data
+    const lanesForAnimation = gameState.player.field.map((l) => ({
+      card: l.card,
+    }));
+
+    // If no field cards, skip animation or just show "0"
+    if (gameState.turnCount >= 15) {
+      // Game end transition?
+    }
+
+    animationLanes = lanesForAnimation;
+    // We want to show what we *will* get.
+    // Actually ScoreAnimation adds to a total?
+    // The previous one took "previousTotal".
+    // In new logic, we just generate +X score. We don't necessarily animate the "Total Score" climbing from A to B inside the modal,
+    // unless we want to.
+
+    // Let's pass the *current* score as "previousTotal" just for visual context if needed,
+    // but the new ScoreAnimation mostly focuses on the +Gain.
+
+    showScoreCalculation = true;
+  }
+
+  function handleScoreAnimationComplete() {
+    showScoreCalculation = false;
+    engine.endTurn();
+    if (!gameState.gameOver) {
+      startTurn();
+    }
+  }
+
+  // Computed
   let progressPercent = $derived(
     Math.min(100, (gameState.player.buzzPoints / 100_000_000) * 100),
-  );
-
-  let currentSlotLimit = $derived(
-    gameState.player.turnCount >= 7
-      ? 3
-      : gameState.player.turnCount >= 4
-        ? 2
-        : 1,
   );
 </script>
 
 <div
   class="h-full w-full bg-slate-900 text-white flex flex-col overflow-hidden relative"
 >
+  {#if showTurnTransition}
+    <TurnTransition
+      turn={gameState.turnCount}
+      onComplete={handleTurnTransitionComplete}
+    />
+  {/if}
+
+  {#if gameState.turnCount === 0}
+    <div
+      class="absolute inset-0 z-50 bg-black/80 flex items-center justify-center"
+    >
+      <button
+        class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-2xl rounded-full shadow-[0_0_50px_rgba(37,99,235,0.5)] transition-all hover:scale-110 active:scale-95 animate-pulse"
+        onclick={startGame}
+      >
+        START GAME
+      </button>
+    </div>
+  {/if}
+
   <!-- HUD -->
   <div
     class="w-full flex flex-col md:flex-row bg-slate-800 border-b border-slate-700 z-20 shrink-0 relative pt-[env(safe-area-inset-top)]"
   >
-    <!-- Moved Settings Button to Grid -->
-    <!-- Progress Bar Background -->
+    <!-- Progress Bar -->
     <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
       <div
         class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
@@ -251,73 +167,57 @@
           class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
         >
           {$t("turn")}
-          {gameState.player.turnCount}
+          {gameState.turnCount}/15
         </h1>
         <div class="flex flex-col gap-1">
           <div
             class="flex flex-col text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold leading-tight"
           >
-            <span>{gameState.phase} {$t("phase")}</span>
-            <span class="text-blue-400 whitespace-nowrap">
-              Lv {Math.ceil(gameState.player.turnCount / 3)} ({$t("slot")}
-              {currentSlotLimit})
+            <span>{gameState.phase} Phase</span>
+            <span class="text-yellow-400 whitespace-nowrap">
+              Multiplier: x{gameState.phaseMultiplier}
             </span>
-          </div>
-
-          <!-- X Shields Display -->
-          <div class="flex gap-1" title="X Shields">
-            {#each Array(5) as _, i}
-              <div
-                class="w-3 h-4 rounded border border-slate-600 flex items-center justify-center text-[8px] font-bold transition-all duration-300
-                  {i < gameState.shields
-                  ? 'bg-black text-white shadow-[0_0_5px_rgba(0,0,0,0.5)] scale-100 opacity-100'
-                  : 'bg-transparent text-slate-700 scale-90 opacity-20'}"
-              >
-                X
-              </div>
-            {/each}
           </div>
         </div>
       </div>
 
-      <!-- Score Centralized (Absolute on Desktop, Flex Item on Mobile) -->
+      <!-- Center: Score & PDS -->
       <div
         class="flex flex-col items-center justify-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto"
       >
+        <!-- PDS Meter -->
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-bold text-slate-400">PDS LOAD</span>
+          <div class="flex gap-0.5">
+            {#each Array(gameState.player.pdsCapacity) as _, i}
+              <div
+                class="w-2 h-4 rounded-sm {i < gameState.player.pdsCurrent
+                  ? 'bg-pink-500 shadow-[0_0_5px_rgba(236,72,153,0.8)]'
+                  : 'bg-slate-700'} transition-all"
+              ></div>
+            {/each}
+          </div>
+          <span class="text-xs font-mono text-pink-400"
+            >{gameState.player.pdsCurrent}/{gameState.player.pdsCapacity}</span
+          >
+        </div>
+
         <div
           class="text-xl md:text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
         >
           <AnimatedNumber value={gameState.player.buzzPoints} />
           <span class="text-sm md:text-xl">{$t("users")}</span>
         </div>
-        <div
-          class="text-[10px] md:text-xs text-slate-500 font-mono text-center"
-        >
-          {$t("goal")}
-        </div>
       </div>
 
-      <!-- Settings Button (Right) -->
+      <!-- Settings -->
       <div class="flex justify-end col-span-1 md:w-auto">
         <button
           class="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-full backdrop-blur-md"
           onclick={() => (showSettings = true)}
           aria-label={$t("settings")}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            ><circle cx="12" cy="12" r="3"></circle><path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-            ></path></svg
-          >
+          ⚙️
         </button>
       </div>
     </div>
@@ -325,85 +225,41 @@
 
   <!-- Main Game Area -->
   <div class="flex-grow flex relative overflow-hidden">
-    <!-- Field (Timeline) -->
+    <!-- Field -->
     <div
-      class="flex-grow relative overflow-y-auto p-2 md:p-8 flex flex-col gap-6 items-center bg-slate-900/50 pb-32"
+      class="flex-grow relative overflow-y-auto p-2 md:p-8 flex flex-col gap-4 items-center bg-slate-900/50 pb-32"
     >
       {#if gameState.player.field.length === 0}
         <div class="text-slate-600 font-bold text-2xl mt-20">
-          {$t("timelineEmpty")}
+          No Active Users on Field
         </div>
       {/if}
 
-      {#each gameState.player.field as lane, index (lane.id)}
-        <!-- Lane -->
+      {#each gameState.player.field as lane (lane.id)}
         <div
-          class="w-full max-w-4xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 transition-colors hover:border-blue-500/50 relative"
+          class="w-full max-w-2xl bg-slate-800/80 rounded-2xl border border-slate-700 p-4 flex gap-4 relative items-center"
+          in:receive={{ key: lane.card.uuid }}
+          out:send={{ key: lane.card.uuid }}
+          animate:flip
         >
-          <!-- Avatar Slot -->
-          <!-- Interactive if created this turn (can return to hand) -->
-          <div
-            class="shrink-0 scale-75 origin-top-left -mr-8"
-            in:receive={{ key: lane.avatar.uuid || lane.avatar.id }}
-            out:send={{ key: lane.avatar.uuid || lane.avatar.id }}
-          >
-            <Card
-              card={lane.avatar}
-              interactive={gameState.phase === "main" &&
-                lane.turnCreated === gameState.player.turnCount}
-              onClick={() => returnAvatar(index)}
-            />
+          <!-- Card Mini View -->
+          <div class="scale-50 origin-left -ml-6 -my-10">
+            <CardComponent card={lane.card} interactive={false} />
           </div>
 
-          <!-- Content Slots -->
-          <div
-            class="flex-grow flex gap-2 items-center overflow-x-auto overflow-y-hidden p-2"
-          >
-            {#each lane.contents as content, cIndex (content.uuid || content.id)}
-              <div
-                class="shrink-0 scale-75 origin-left"
-                in:receive={{ key: content.uuid || content.id }}
-                out:send={{ key: content.uuid || content.id }}
-                animate:flip
-              >
-                <Card
-                  card={content}
-                  interactive={gameState.phase === "main" &&
-                    lane.turnCreated === gameState.player.turnCount}
-                  onClick={() => returnContent(index, cIndex)}
-                />
-              </div>
-            {/each}
-
-            <!-- Empty slots indicators -->
-            {#if lane.contents.length < currentSlotLimit}
-              <div
-                class="w-32 h-48 rounded-xl border-2 border-dashed border-slate-600 flex items-center justify-center opacity-30 text-xs"
-              >
-                {$t("slot")}
-              </div>
-            {/if}
-          </div>
-
-          <!-- Lane Score Display -->
-          <div
-            class="absolute bottom-4 right-4 text-right z-10 pointer-events-none"
-          >
-            <div
-              class="text-xs text-slate-400 font-bold uppercase tracking-wider"
-            >
-              Users
+          <!-- Info -->
+          <div class="flex flex-col">
+            <div class="text-lg font-bold text-white">
+              {lane.card.displayName || lane.card.handle}
             </div>
-            <div class="text-2xl font-black text-blue-400 drop-shadow-md">
-              {formatScore(calculateLaneScore(lane))}
+            <div class="text-sm text-slate-400">
+              {lane.card.description || "Active User"}
             </div>
-            {#if lane.turnCreated === gameState.player.turnCount && gameState.player.buzzPoints > 0 && gameState.shields === 0}
-              <div
-                class="text-sm font-bold text-green-400 drop-shadow-md mt-1 flex gap-1 animate-pulse"
+            <div class="mt-2 text-blue-400 font-bold flex gap-2">
+              <span
+                >Generating +{lane.card.power * gameState.phaseMultiplier} Users/Turn</span
               >
-                + <AnimatedNumber value={gameState.player.buzzPoints} /> (Break Bonus)
-              </div>
-            {/if}
+            </div>
           </div>
         </div>
       {/each}
@@ -412,184 +268,78 @@
 
   <!-- Hand (Bottom) -->
   <div
-    class="h-64 md:h-96 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden pb-[env(safe-area-inset-bottom)]"
+    class="h-64 md:h-80 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden pb-[env(safe-area-inset-bottom)]"
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
     >
-      <span>{$t("hand")}</span>
-      <span
-        >{$t("avatars")}: {gameState.player.hand.avatars.length} / {$t("deck")}: {gameState
-          .player.deck.avatars.length}</span
-      >
-      <span
-        >{$t("content")}: {gameState.player.hand.contents.length} / {$t(
-          "deck",
-        )}: {gameState.player.deck.contents.length}</span
-      >
+      <span>Hand: {gameState.player.hand.length}</span>
+      <span>Deck: {gameState.player.deck.length}</span>
+      <span>Discard: {gameState.player.discard.length}</span>
     </div>
+
     <div
-      class="flex-grow flex items-end px-8 gap-8 overflow-x-auto overflow-y-hidden pb-4 pt-20"
+      class="flex-grow flex items-center justify-center gap-4 px-8 overflow-x-auto overflow-y-hidden pb-4"
     >
-      <!-- Avatars -->
-      <div class="flex gap-4 pr-8 border-r border-slate-600/50 relative">
-        {#each gameState.player.hand.avatars as card, i (card.uuid || card.id)}
-          <!-- Avatar Card Container -->
+      {#each gameState.player.hand as card, i (card.uuid)}
+        <div
+          id="hand-card-{i}"
+          class="relative transition-all duration-300 z-0 hover:z-10 group"
+          style="transform: translateY({selectedCardIndex === i
+            ? '-20px'
+            : '0px'})"
+        >
           <div
-            class="relative transition-transform duration-200 z-0 flex flex-col gap-2 items-center group"
-            in:receive={{ key: card.uuid || card.id }}
-            out:send={{ key: card.uuid || card.id }}
-            animate:flip
+            class="scale-90 hover:scale-100 transition-transform origin-bottom"
           >
-            <!-- Card Itself -->
-            <div
-              class="scale-75 md:scale-100 origin-center {avatarSelection === i
-                ? '-translate-y-1 md:-translate-y-8 z-10'
-                : 'translate-y-10 md:translate-y-0 group-hover:md:-translate-y-4'} transition-all duration-300"
-            >
-              <Card
-                {card}
-                interactive={gameState.phase === "main"}
-                onClick={() => handleAvatarClick(i)}
-              />
-            </div>
-
-            <!-- Action Menu (Visible if selected) -->
-            <!-- Action Menu (Bottom Vertical) -->
-            {#if avatarSelection === i}
-              <div
-                class="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 z-50 flex flex-col items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto"
-                role="group"
-                onclick={(e) => e.stopPropagation()}
-                onkeydown={(e) => e.stopPropagation()}
-              >
-                <button
-                  class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-base font-bold rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-blue-400"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    confirmPlayAvatar(i);
-                  }}
-                >
-                  {$t("open")}
-                </button>
-                <button
-                  class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!gameState.player.field.some(
-                    (l) => l.turnCreated === gameState.player.turnCount,
-                  ) && gameState.player.hand.avatars.length <= 1}
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    confirmReleaseAvatar(i);
-                  }}
-                >
-                  {$t("release")}
-                </button>
-              </div>
-            {/if}
+            <CardComponent
+              {card}
+              interactive={gameState.phase === "main"}
+              onClick={() => playCard(i)}
+            />
           </div>
-        {/each}
-      </div>
-
-      <!-- Contents -->
-      <div class="flex gap-4">
-        {#each gameState.player.hand.contents as card, i (card.uuid || card.id)}
-          <!-- Content Card Container -->
-          <div
-            class="relative transition-transform duration-200 z-0 flex flex-col gap-2 items-center group"
-            in:receive={{ key: card.uuid || card.id }}
-            out:send={{ key: card.uuid || card.id }}
-            animate:flip
-          >
-            <!-- Card Itself -->
-            <div
-              class="scale-75 md:scale-100 origin-center {contentSelection === i
-                ? '-translate-y-1 md:-translate-y-8 z-10'
-                : 'translate-y-10 md:translate-y-0 group-hover:md:-translate-y-4'} transition-all duration-300"
-            >
-              <Card
-                {card}
-                interactive={gameState.phase === "main"}
-                onClick={() => handleContentClick(i)}
-              />
-            </div>
-
-            <!-- Action Menu (Bottom Vertical) -->
-            {#if contentSelection === i}
-              <div
-                class="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 z-50 flex flex-col items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 pointer-events-auto"
-                role="group"
-                onclick={(e) => e.stopPropagation()}
-                onkeydown={(e) => e.stopPropagation()}
-              >
-                <button
-                  class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-base font-bold rounded-xl shadow-xl hover:scale-105 transition-all border-2 border-blue-400"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    confirmPlayContent(i);
-                  }}
-                >
-                  {$t("open")}
-                </button>
-                <button
-                  class="w-3/4 py-1.5 bg-red-900/80 hover:bg-red-800 text-red-100 text-[10px] font-bold rounded-lg shadow-md hover:scale-105 transition-all border border-red-500/50 uppercase tracking-wider"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    confirmReleaseContent(i);
-                  }}
-                >
-                  {$t("release")}
-                </button>
-              </div>
-            {/if}
-          </div>
-        {/each}
-      </div>
+        </div>
+      {/each}
     </div>
   </div>
 
-  <!-- Victory/Loss Overlay -->
+  <!-- Game Over Overlay -->
   {#if gameState.gameOver}
     <div
-      class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center flex-col gap-4 backdrop-blur-sm"
+      class="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col gap-4"
     >
       <h1
-        class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-red-600"
+        class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500"
       >
-        {$t("defeat")}
+        FINISH
       </h1>
-      <p class="text-2xl text-white font-bold">
-        Final Score: {gameState.player.buzzPoints.toLocaleString()}
-      </p>
+      <div class="text-4xl text-white font-bold">
+        Rank: <span class="text-yellow-400 text-6xl">{gameState.finalRank}</span
+        >
+      </div>
+      <div class="text-2xl text-slate-400">
+        Score: {formatScore(gameState.player.buzzPoints)}
+      </div>
       <button
-        class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition"
+        class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105"
         onclick={() => location.reload()}
       >
-        {$t("playAgain")}
+        Play Again
       </button>
     </div>
   {/if}
 
-  <!-- Turn Progress Button (Fixed Bottom Right) -->
+  <!-- Turn Button -->
   <button
-    class="absolute bottom-8 right-4 md:right-8 z-40 p-4 md:px-8 md:py-4 bg-blue-600 hover:bg-blue-500 text-white text-lg font-black rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 flex items-center justify-center gap-0 md:gap-2 group disabled:opacity-50 disabled:grayscale"
-    onclick={gameState.phase === "draw" || gameState.phase === "end"
-      ? startTurn
-      : endTurn}
-    disabled={gameState.gameOver || gameState.victory}
+    class="absolute bottom-8 right-8 z-40 p-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 disabled:opacity-50 disabled:grayscale"
+    onclick={gameState.phase === "draw" ? startTurn : endTurn}
+    disabled={gameState.gameOver}
   >
-    <span class="hidden md:inline">
-      {gameState.player.turnCount === 0
-        ? $t("gameStart")
-        : gameState.phase === "draw" || gameState.phase === "end"
-          ? $t("nextTurn")
-          : $t("endTurn")}
-    </span>
-    <svg
-      viewBox="0 0 24 24"
-      class="w-6 h-6 fill-white group-hover:translate-x-1 transition-transform"
-    >
-      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
-    </svg>
+    {gameState.turnCount === 0
+      ? "START GAME"
+      : gameState.phase === "draw"
+        ? "DRAW"
+        : "END TURN"}
   </button>
 
   <SettingsModal
@@ -602,21 +352,8 @@
   {#if showScoreCalculation}
     <ScoreAnimation
       lanes={animationLanes}
-      previousTotal={animationPreviousScore}
-      isBreakBonusActive={gameState.shields === 0}
+      phaseMultiplier={gameState.phaseMultiplier}
       onComplete={handleScoreAnimationComplete}
     />
-  {/if}
-
-  {#if showTurnTransition}
-    <TurnTransition
-      turn={animationNextTurn}
-      onCovered={handleTurnTransitionCovered}
-      onComplete={handleTurnTransitionComplete}
-    />
-  {/if}
-
-  {#if showGameClear}
-    <GameClear score={gameState.player.buzzPoints} />
   {/if}
 </div>

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { getClient, publicAgent, signIn } from "$lib/atproto"; // Import getClient instead of getAgent
   import { fetchGameDecks, type ProgressKey } from "$lib/game/api";
-  import type { AvatarCard, ContentCard } from "$lib/game/types";
+  import type { UserCard, PostCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
   import SettingsModal from "$lib/components/SettingsModal.svelte";
   import { t, locale } from "$lib/i18n";
@@ -13,8 +13,8 @@
   let error = $state<string | null>(null);
 
   // Game Data
-  let avatarDeck = $state<AvatarCard[]>([]);
-  let contentDeck = $state<ContentCard[]>([]);
+  let avatarDeck = $state<UserCard[]>([]);
+  let contentDeck = $state<PostCard[]>([]);
   let readyToPlay = $state(false);
   let userDid = $state("");
   let userHandle = $state("");

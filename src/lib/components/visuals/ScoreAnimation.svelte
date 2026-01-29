@@ -1,291 +1,168 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import gsap from "gsap";
-  import type { AvatarCard, ContentCard } from "../../game/types";
+  import type { UserCard } from "../../game/types";
   import { t } from "$lib/i18n";
 
   let {
     lanes,
-    previousTotal,
-    isBreakBonusActive = false,
+    phaseMultiplier = 1,
     onComplete,
   } = $props<{
     lanes: {
-      avatar: AvatarCard;
-      contents: ContentCard[];
-      avatarPower: number;
+      card: UserCard;
     }[];
-    previousTotal: number;
-    isBreakBonusActive?: boolean;
+    phaseMultiplier: number;
     onComplete: () => void;
   }>();
 
   let container: HTMLDivElement;
-  let laneElements: HTMLDivElement[] = $state([]);
-  let snowballElement: HTMLDivElement;
+  let itemsContainer: HTMLDivElement;
   let totalScoreElement: HTMLDivElement;
-  let finalScore = $state(previousTotal);
-  let displayScore = $state(previousTotal);
+  let displayScore = $state(0);
 
-  // Helper to calculate lane score specifics
-  function getLaneDetails(lane: (typeof lanes)[0]) {
-    const tagCounts: Record<string, number> = {};
-    lane.contents.forEach((c: ContentCard) => {
-      c.metadata?.forEach((tag: string) => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-      });
-    });
-
-    let details: {
-      card: ContentCard;
-      val: number;
-      isDoubled: boolean;
-      isSquared: boolean;
-    }[] = [];
-    let currentMult = 1;
-
-    lane.contents.forEach((content: ContentCard) => {
-      let cardScore = content.buzzFactor;
-      // Simple multiplication
-      currentMult *= cardScore;
-
-      details.push({
-        card: content,
-        val: cardScore,
-        isDoubled: false,
-        isSquared: false,
-      });
-    });
-
-    return {
-      details,
-      totalMult: currentMult,
-      laneTotal: lane.avatarPower * currentMult,
-    };
-  }
+  // Pre-calculate totals
+  let totalPower = $derived(
+    lanes.reduce((acc: number, l: { card: UserCard }) => acc + l.card.power, 0),
+  );
+  let finalScore = $derived(totalPower * phaseMultiplier);
 
   onMount(() => {
     const tl = gsap.timeline({
       onComplete: () => {
-        setTimeout(onComplete, 1000);
+        setTimeout(onComplete, 1200);
       },
     });
 
     // 1. Fade in container
-    tl.fromTo(container, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+    tl.fromTo(container, { opacity: 0 }, { opacity: 1, duration: 0.3 });
 
-    // 2. Animate each lane
-    let currentRunningTotal = previousTotal;
-
-    lanes.forEach((lane: (typeof lanes)[0], index: number) => {
-      const { details, totalMult, laneTotal } = getLaneDetails(lane);
-      const row = laneElements[index];
-      if (!row) return; // Should not happen
-
-      // Show Row
-      tl.fromTo(
-        row,
-        { x: -50, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" },
-      );
-
-      // Show Avatar Power
-      const powerEl = row.querySelector(".avatar-power");
-      tl.from(powerEl, {
+    // 2. Animate items (Grid Stagger)
+    if (lanes.length > 0) {
+      tl.from(".score-item", {
         scale: 0,
         opacity: 0,
-        duration: 0.3,
-        ease: "elastic.out(1, 0.3)",
-      });
-
-      // Show multipliers sequentially
-      const multEls = row.querySelectorAll(".mult-item");
-      multEls.forEach((el, i) => {
-        tl.from(el, { scale: 2, opacity: 0, duration: 0.2 }, "-=0.1");
-      });
-
-      // Show Lane Total
-      const laneTotalEl = row.querySelector(".lane-total");
-      tl.from(laneTotalEl, { opacity: 0, scale: 0.5, duration: 0.3 });
-
-      // Update Big Score
-      currentRunningTotal += laneTotal;
-      tl.to(
-        {},
-        {
-          duration: 0.8,
-          ease: "power2.out",
-          onStart: () => {
-            gsap.to(proxy, {
-              val: currentRunningTotal,
-              duration: 0.8,
-              ease: "power2.out",
-              onUpdate: () => {
-                displayScore = Math.round(proxy.val);
-              },
-            });
-          },
+        y: 20,
+        stagger: {
+          amount: 0.5, // Total time for all items to appear is 0.5s max
+          grid: "auto",
+          from: "center",
         },
-        "+=0.2",
-      );
-    });
-
-    // 3. Break Bonus effect specific text if relevant
-    if (isBreakBonusActive && previousTotal > 0) {
-      currentRunningTotal += previousTotal;
-
-      // Show Break Bonus Row
-      tl.fromTo(
-        snowballElement,
-        { x: -50, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" },
-      );
-
-      // Animate adding Break Bonus to total
-      tl.to(
-        {},
-        {
-          duration: 1.0,
-          ease: "power2.out",
-          onStart: () => {
-            gsap.to(proxy, {
-              val: currentRunningTotal,
-              duration: 1.0,
-              ease: "power2.out",
-              onUpdate: () => {
-                displayScore = Math.round(proxy.val);
-              },
-            });
-          },
-        },
-      );
+        duration: 0.4,
+        ease: "back.out(1.5)",
+      });
     }
 
-    // 4. Final fanfare
-    tl.to(totalScoreElement, {
-      scale: 1.2,
-      duration: 0.2,
-      yoyo: true,
-      repeat: 1,
+    // 3. Animate Score Calculation
+    tl.to({}, { duration: 0.2 }); // small pause
+
+    tl.to(proxy, {
+      val: finalScore,
+      duration: 0.8,
+      ease: "power2.out",
+      onUpdate: () => {
+        displayScore = Math.round(proxy.val);
+      },
     });
+
+    // 4. Final Pulse
+    tl.to(
+      totalScoreElement,
+      { scale: 1.1, duration: 0.15, yoyo: true, repeat: 1 },
+      "<+=0.4",
+    );
   });
 
-  const proxy = { val: previousTotal };
+  const proxy = { val: 0 };
 </script>
 
 <div
   bind:this={container}
-  class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-8 pointer-events-auto"
+  class="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 pointer-events-auto"
 >
-  <div class="w-full max-w-4xl flex flex-col gap-8">
-    <h2
-      class="text-4xl font-bold text-center text-white mb-8 tracking-widest uppercase border-b border-slate-700 pb-4"
-    >
-      {$t("endTurn")} Calculation
-    </h2>
-
-    <div class="flex flex-col gap-4">
-      {#each lanes as lane, i}
-        {@const { details, totalMult, laneTotal } = getLaneDetails(lane)}
-        <div
-          bind:this={laneElements[i]}
-          class="flex items-center gap-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700"
-        >
-          <!-- Avatar -->
-          <div class="flex flex-col items-center gap-1 shrink-0">
-            <div
-              class="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-400"
-            >
-              {#if lane.avatar.avatarUrl}
-                <img
-                  src={lane.avatar.avatarUrl}
-                  alt={lane.avatar.handle}
-                  class="w-full h-full object-cover"
-                />
-              {:else}
-                <div class="w-full h-full bg-slate-600"></div>
-              {/if}
-            </div>
-            <div class="avatar-power text-2xl font-black text-blue-400">
-              {lane.avatarPower}
-            </div>
-          </div>
-
-          <div class="text-slate-400 font-bold text-xl">×</div>
-
-          <!-- Multipliers -->
-          <div class="flex flex-wrap gap-2 items-center flex-grow">
-            {#each details as item}
-              <div
-                class="mult-item flex flex-col items-center bg-slate-700 px-3 py-1 rounded-lg border border-slate-600 relative"
-              >
-                <span class="text-xl font-bold text-white">
-                  {item.val}
-                </span>
-                {#if item.isSquared}
-                  <span
-                    class="absolute -top-3 -right-3 text-xs bg-yellow-500 text-black font-bold px-1 rounded-sm shadow-md"
-                    >^2</span
-                  >
-                {:else if item.isDoubled}
-                  <span
-                    class="absolute -top-3 -right-3 text-xs bg-green-500 text-black font-bold px-1 rounded-sm shadow-md"
-                    >x2</span
-                  >
-                {/if}
-              </div>
-              <div class="text-slate-500 text-sm last:hidden">×</div>
-            {/each}
-            {#if details.length === 0}
-              <span class="text-slate-500 italic text-sm">No Content</span>
-            {/if}
-          </div>
-
-          <div class="text-slate-400 font-bold text-xl">=</div>
-
-          <!-- Lane Total -->
-          <div
-            class="lane-total text-3xl font-black text-green-400 min-w-[100px] text-right"
-          >
-            +{laneTotal.toLocaleString()}
-          </div>
-        </div>
-      {/each}
+  <div class="w-full max-w-4xl flex flex-col gap-6 max-h-full">
+    <!-- Title Area (Compact) -->
+    <div class="text-center border-b border-slate-700 pb-2">
+      <h2 class="text-2xl font-bold text-white tracking-widest uppercase">
+        {$t("endTurn")} Report
+      </h2>
     </div>
 
-    <!-- Break Bonus Row -->
-
-    <!-- Break Bonus Row (Enhanced) -->
-    {#if isBreakBonusActive && previousTotal > 0}
-      <div
-        bind:this={snowballElement}
-        class="flex flex-col items-center justify-center bg-gradient-to-r from-green-900/80 to-emerald-900/80 p-8 rounded-3xl border-4 border-green-400/50 w-full shadow-[0_0_50px_rgba(74,222,128,0.3)] gap-4"
-      >
+    <!-- Active Users Grid -->
+    {#if lanes.length > 0}
+      <div class="flex-grow overflow-y-auto min-h-0 p-2">
         <div
-          class="text-green-300 font-black uppercase tracking-[0.2em] text-xl md:text-2xl animate-pulse text-center"
+          bind:this={itemsContainer}
+          class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3 justify-center"
         >
-          ✨ Break Bonus! ✨
+          {#each lanes as lane}
+            <div class="score-item flex flex-col items-center gap-1 group">
+              <!-- Avatar -->
+              <div
+                class="w-12 h-12 rounded-full border-2 border-blue-500 overflow-hidden relative shadow-lg group-hover:scale-110 transition-transform"
+              >
+                {#if lane.card.avatarUrl}
+                  <img
+                    src={lane.card.avatarUrl}
+                    alt=""
+                    class="w-full h-full object-cover"
+                  />
+                {:else}
+                  <div class="w-full h-full bg-slate-700"></div>
+                {/if}
+                <!-- Power Badge -->
+                <div
+                  class="absolute bottom-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-1 rounded-tl-md"
+                >
+                  {lane.card.power}
+                </div>
+              </div>
+              <!-- Name (Truncated) -->
+              <div
+                class="text-[9px] text-slate-400 max-w-full truncate w-14 text-center"
+              >
+                {lane.card.displayName || lane.card.handle}
+              </div>
+            </div>
+          {/each}
         </div>
-        <div class="text-green-100 text-sm md:text-base font-bold opacity-80">
-          (Total Users Added to Turn Score)
-        </div>
-        <div
-          class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-green-400 drop-shadow-[0_4px_0_rgba(22,101,52,1)]"
-        >
-          +{previousTotal.toLocaleString()}
-        </div>
+      </div>
+    {:else}
+      <div class="h-32 flex items-center justify-center text-slate-500 italic">
+        No Active Users
       </div>
     {/if}
 
-    <div class="mt-8 flex flex-col items-center">
-      <div class="text-slate-400 text-sm uppercase tracking-wider">
-        Total Users
+    <!-- Calculation Footer -->
+    <div
+      class="mt-auto bg-slate-800/80 rounded-2xl p-6 border border-slate-700 flex flex-col items-center shadow-2xl"
+    >
+      <div
+        class="flex items-center gap-4 md:gap-8 text-lg md:text-2xl font-mono text-slate-300 mb-2"
+      >
+        <div class="flex flex-col items-center">
+          <span class="text-xs uppercase text-slate-500 font-sans font-bold"
+            >Total Power</span
+          >
+          <span class="text-blue-400 font-bold"
+            >{totalPower.toLocaleString()}</span
+          >
+        </div>
+        <span class="text-slate-600">×</span>
+        <div class="flex flex-col items-center">
+          <span class="text-xs uppercase text-slate-500 font-sans font-bold"
+            >Multiplier</span
+          >
+          <span class="text-yellow-400 font-bold">x{phaseMultiplier}</span>
+        </div>
+        <span class="text-slate-600">=</span>
       </div>
+
       <div
         bind:this={totalScoreElement}
-        class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 drop-shadow-[0_0_20px_rgba(59,130,246,0.5)] tabular-nums"
+        class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 drop-shadow-[0_0_15px_rgba(74,222,128,0.4)] tabular-nums"
       >
-        {Math.round(displayScore).toLocaleString()}
+        +{Math.round(displayScore).toLocaleString()}
       </div>
     </div>
   </div>

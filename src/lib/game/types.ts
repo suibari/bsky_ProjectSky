@@ -2,61 +2,65 @@ export interface Player {
   did: string;
   handle: string;
   avatarUrl?: string;
-  deck: {
-    avatars: AvatarCard[];
-    contents: ContentCard[];
-  };
-  hand: {
-    avatars: AvatarCard[];
-    contents: ContentCard[];
-  };
-  field: Lane[];
-  buzzPoints: number;
-  turnCount: number;
+  deck: Card[];
+  hand: Card[];
+  discard: Card[];
+  field: Lane[]; // User Cards on field
+
+  // Resource
+  pdsCapacity: number;
+  pdsCurrent: number;
+
+  // Score
+  buzzPoints: number; // Users
 }
 
 export interface Lane {
-  id: string; // unique id for keying
-  avatar: AvatarCard;
-  contents: ContentCard[];
+  id: string;
+  card: UserCard; // Only User Cards stay on field
   turnCreated: number;
 }
 
-export interface AvatarCard {
-  id: string; // did
-  type: 'avatar';
+export type CardType = 'user' | 'post';
+
+export interface BaseCard {
+  id: string;
+  type: CardType;
+  uuid: string; // Runtime unique ID
+
+  // Stats
+  power: number; // Users gain (User: per turn, Post: instant)
+  cost: number;  // PDS cost
+
+  // Display
   handle: string;
-  displayName?: string; // Add displayName
+  displayName?: string;
   avatarUrl?: string;
-  buzzPower: number; // likes per day + 1
-  description?: string;
-  // Runtime props
-  uuid?: string; // unique id for hand/field distinction if multiple same cards
+  text?: string;
+  imageUrl?: string;
 }
 
-export interface ContentCard {
-  id: string; // uri
-  type: 'content';
-  authorHandle: string;
-  authorDisplayName?: string; // Add authorDisplayName
-  text: string;
-  imageUrl?: string;
-  buzzFactor: number; // likes + 1
-  originalBuzzFactor: number; // to track decay base if needed, or just mutate buzzFactor
-  // Runtime props
-  uuid?: string;
-  // New props
-  authorDid?: string;
-  metadata?: string[]; // 'quote' | 'mention' | 'image' | 'link'
+export interface UserCard extends BaseCard {
+  type: 'user';
+  description?: string;
 }
+
+export interface PostCard extends BaseCard {
+  type: 'post';
+  originalLikes: number; // For reference if needed
+}
+
+export type Card = UserCard | PostCard;
 
 export interface GameState {
   player: Player;
+  turnCount: number; // 1-15
   phase: 'draw' | 'main' | 'end';
+  phaseMultiplier: number; // 1, 10, 100
+
   gameOver: boolean;
-  victory: boolean;
-  buzzHistory: number[]; // For graph/tracking
-  nextTurnContentDrawBonus: number; // For Release system
-  nextTurnAvatarDrawBonus: number; // For Release system (Content -> Avatar draw)
-  shields: number; // X Shield system
+  victory: boolean; // Not used strictly as boolean anymore, rank determines result
+  finalRank?: 'SS' | 'S' | 'A' | 'B' | 'C';
+
+  buzzHistory: number[];
 }

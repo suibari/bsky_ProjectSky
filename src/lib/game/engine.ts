@@ -1,4 +1,5 @@
-import type { GameState, Player, AvatarCard, ContentCard, Lane } from './types';
+import { GAME_CONFIG } from './config';
+import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
 
 export class GameEngine {
   state: GameState;
@@ -7,291 +8,212 @@ export class GameEngine {
     this.state = initialState;
   }
 
-  static createInitialState(did: string, handle: string, avatarDeck: AvatarCard[], contentDeck: ContentCard[]): GameState {
-    // Shuffle decks and assign UUIDs to ensure uniqueness
-    const assignUUID = (c: any) => ({ ...c, uuid: crypto.randomUUID() });
+  // Adapter to convert raw deck inputs to new Card format
+  static convertCards(
+    did: string,
+    rawAvatars: any[],
+    rawContents: any[]
+  ): Card[] {
+    const cards: Card[] = [];
 
-    const shuffledAvatars = [...avatarDeck].map(assignUUID).sort(() => Math.random() - 0.5);
-    const shuffledContents = [...contentDeck].map(assignUUID).sort(() => Math.random() - 0.5);
+    // Process Avatar -> User Cards
+    rawAvatars.forEach(a => {
+      // Use existing power/cost if available (from api.ts), otherwise fallback
+      const power = a.power ?? 1;
+      const cost = a.cost ?? Math.min(8, Math.floor(2 + power / 10));
 
-    // Draw initial hand (2 avatars, 2 contents)
-    // Rule: Start with 2 and 2.
-    const handAvatars = shuffledAvatars.splice(0, 2);
-    const handContents = shuffledContents.splice(0, 2);
+      const card: UserCard = {
+        id: a.id,
+        uuid: crypto.randomUUID(),
+        type: 'user',
+        handle: a.handle,
+        displayName: a.displayName,
+        avatarUrl: a.avatarUrl,
+        description: a.description,
+        power,
+        cost
+      };
+      cards.push(card);
+    });
+
+    // Process Content -> Post Cards
+    rawContents.forEach(c => {
+      const likes = c.originalLikes ?? c.buzzFactor ?? 0;
+
+      const power = c.power ?? Math.floor((likes * 1000) / ((c.text?.length || 0) + 10));
+      const cost = c.cost ?? Math.floor(1 + ((c.text?.length || 0) / 40));
+
+      const card: PostCard = {
+        id: c.id,
+        uuid: crypto.randomUUID(),
+        type: 'post',
+        handle: c.handle || c.authorHandle,
+        displayName: c.displayName || c.authorDisplayName,
+        avatarUrl: undefined, // Content cards might not have avatar url readily available in old type unless passed
+        text: c.text,
+        imageUrl: c.imageUrl,
+        power,
+        cost,
+        originalLikes: likes
+      };
+      cards.push(card);
+    });
+
+    return cards;
+  }
+
+  static createInitialState(did: string, handle: string, avatarDeck: any[], contentDeck: any[]): GameState {
+    const allCards = GameEngine.convertCards(did, avatarDeck, contentDeck);
+
+    // Ensure we have enough cards or truncate? 
+    // Prompt says "Deck is composed of 30 User and 30 Post cards".
+    // We will shuffle and take what we have, or take first 30 of each if provided more.
+
+    const userCards = allCards.filter(c => c.type === 'user');
+    const postCards = allCards.filter(c => c.type === 'post');
+
+    // Shuffle independent pools first
+    userCards.sort(() => Math.random() - 0.5);
+    postCards.sort(() => Math.random() - 0.5);
+
+    // Take 30 each (or all if less)
+    const deckUsers = userCards.slice(0, GAME_CONFIG.deck.avatarCount);
+    const deckPosts = postCards.slice(0, GAME_CONFIG.deck.contentCount);
+
+    // Merge and shuffle final deck
+    const deck = [...deckUsers, ...deckPosts].sort(() => Math.random() - 0.5);
+
+    // Draw initial hand: 0 cards (User starts manually)
+    const hand: any[] = [];
 
     return {
       player: {
         did,
         handle,
-        deck: {
-          avatars: shuffledAvatars,
-          contents: shuffledContents
-        },
-        hand: {
-          avatars: handAvatars,
-          contents: handContents
-        },
+        deck,
+        hand,
+        discard: [],
         field: [],
-        buzzPoints: 0,
-        turnCount: 0
+        pdsCapacity: GAME_CONFIG.pds.initialCapacity,
+        pdsCurrent: GAME_CONFIG.pds.initialCapacity,
+        buzzPoints: 0
       },
+      turnCount: 0, // Will be 1 after startTurn
       phase: 'draw',
+      phaseMultiplier: 1,
       gameOver: false,
       victory: false,
-      buzzHistory: [0],
-      nextTurnContentDrawBonus: 0,
-      nextTurnAvatarDrawBonus: 0,
-      shields: 5 // Start with 5 shields
+      buzzHistory: [0]
     };
   }
 
+  getPhaseMultiplier(turn: number): number {
+    if (turn >= 11) return 100;
+    if (turn >= 6) return 10;
+    return 1;
+  }
+
   startTurn() {
-    if (this.state.gameOver || this.state.victory) return;
+    if (this.state.gameOver) return;
 
+    this.state.turnCount++;
     this.state.phase = 'draw';
-    this.state.player.turnCount++;
+    this.state.phaseMultiplier = this.getPhaseMultiplier(this.state.turnCount);
 
-    const baseContentDraw = 1;
-    const contentBonusDraw = this.state.nextTurnContentDrawBonus;
-    const totalContentDraw = baseContentDraw + contentBonusDraw;
+    // PDS Recovery & Growth
+    this.state.player.pdsCapacity = GAME_CONFIG.pds.initialCapacity + (this.state.turnCount - 1) * GAME_CONFIG.pds.maxCapacityIncrement;
+    this.state.player.pdsCurrent = this.state.player.pdsCapacity;
 
-    // Reset content bonus
-    this.state.nextTurnContentDrawBonus = 0;
+    // Draw Phase: Draw until hand has 5 cards
+    // "手札が5枚になるようデッキからドローする"
+    const cardsNeeded = GAME_CONFIG.initialHandSize - this.state.player.hand.length;
+    if (cardsNeeded > 0) {
+      const drawn = this.state.player.deck.splice(0, cardsNeeded);
+      this.state.player.hand.push(...drawn);
 
-    const baseAvatarDraw = 1;
-    const avatarBonusDraw = this.state.nextTurnAvatarDrawBonus;
-    const totalAvatarDraw = baseAvatarDraw + avatarBonusDraw;
-
-    // Reset avatar bonus
-    this.state.nextTurnAvatarDrawBonus = 0;
-
-    // X Shield Recovery
-    // Recover 1 shield every 3 turns (Turn 3, 6, 9...)
-    if (this.state.player.turnCount > 1 && this.state.player.turnCount % 3 === 0) {
-      if (this.state.shields < 5) {
-        this.state.shields += 1;
+      // Deck out check?
+      if (this.state.player.deck.length === 0 && drawn.length < cardsNeeded) {
+        // Handle deck out - maybe nothing happens, just play with what you have
       }
-    }
-
-    const newAvatars = this.state.player.deck.avatars.splice(0, totalAvatarDraw); // Draw 1 + bonus avatars
-    const newContents = this.state.player.deck.contents.splice(0, totalContentDraw); // Draw 1 + bonus contents
-
-    this.state.player.hand.avatars.push(...newAvatars);
-    this.state.player.hand.contents.push(...newContents);
-
-    // Rule: Game Over if Avatar Deck becomes 0.
-    if (this.state.player.deck.avatars.length === 0 && newAvatars.length === 0) {
-      this.state.gameOver = true;
     }
 
     this.state.phase = 'main';
   }
 
-  playAvatar(cardIndex: number) {
+  playCard(cardIndex: number) {
     if (this.state.phase !== 'main') return;
 
-    // Rule: One Avatar per turn
-    const alreadyPlayedAvatar = this.state.player.field.some(lane => lane.turnCreated === this.state.player.turnCount);
-    if (alreadyPlayedAvatar) {
-      console.warn("Already played an Avatar this turn");
+    const card = this.state.player.hand[cardIndex];
+    if (!card) return;
+
+    // Check Cost
+    if (this.state.player.pdsCurrent < card.cost) {
+      console.warn("Not enough PDS");
       return;
     }
 
-    const card = this.state.player.hand.avatars[cardIndex];
-    if (!card) return;
+    // Pay Cost
+    this.state.player.pdsCurrent -= card.cost;
 
     // Remove from hand
-    this.state.player.hand.avatars.splice(cardIndex, 1);
+    this.state.player.hand.splice(cardIndex, 1);
 
-    // Add to field as new Lane
-    this.state.player.field.unshift({
-      id: crypto.randomUUID(),
-      avatar: card,
-      contents: [],
-      turnCreated: this.state.player.turnCount
-    });
+    if (card.type === 'user') {
+      // User Card: Place on Field
+      this.state.player.field.unshift({
+        id: crypto.randomUUID(),
+        card: card as UserCard,
+        turnCreated: this.state.turnCount
+      });
+    } else if (card.type === 'post') {
+      // Post Card: Instant Score
+      // Power * Phase Multiplier
+      const scoreGain = card.power * this.state.phaseMultiplier;
+      this.state.player.buzzPoints += scoreGain;
+
+      // Move to Discard
+      this.state.player.discard.push(card);
+    }
   }
 
-  releaseAvatar(cardIndex: number) {
+  endTurn() {
     if (this.state.phase !== 'main') return;
-
-    const card = this.state.player.hand.avatars[cardIndex];
-    if (!card) return;
-
-    // Rule: Cannot release if only 1 avatar remains AND we haven't played an avatar yet.
-    // If we already played an avatar, we can release the last card in hand (since we can't play it anyway).
-    const alreadyPlayedAvatar = this.state.player.field.some(lane => lane.turnCreated === this.state.player.turnCount);
-
-    if (!alreadyPlayedAvatar && this.state.player.hand.avatars.length <= 1) {
-      console.warn("Cannot release, must play an avatar this turn.");
-      return;
-    }
-
-    // Remove from hand (discard/release)
-    this.state.player.hand.avatars.splice(cardIndex, 1);
-
-    // Bonus for next turn (Content Draw +1)
-    this.state.nextTurnContentDrawBonus += 1;
-  }
-
-  playContent(cardIndex: number) {
-    if (this.state.phase !== 'main') return;
-
-    // Target the LATEST lane (unshifted to 0)
-    const lane = this.state.player.field[0];
-    if (!lane) {
-      console.warn("No avatar on field");
-      return;
-    }
-
-    // Rule: Cannot set content to past field cards.
-    // Meaning, safe to assume only the avatar played THIS TURN is valid.
-    if (lane.turnCreated !== this.state.player.turnCount) {
-      console.warn("Cannot play content on past avatars");
-      return;
-    }
-
-    // Rule: Level System (Content Limit)
-    // 1-3: 1, 4-6: 2, 7+: 3
-    let limit = 1;
-    if (this.state.player.turnCount >= 7) limit = 3;
-    else if (this.state.player.turnCount >= 4) limit = 2;
-
-    if (lane.contents.length >= limit) {
-      console.warn("Lane full (Level limit)");
-      return;
-    }
-
-    const card = this.state.player.hand.contents[cardIndex];
-    if (!card) return;
-
-    // Remove from hand
-    this.state.player.hand.contents.splice(cardIndex, 1);
-
-    // Add to lane
-    lane.contents.push(card);
-  }
-
-  releaseContent(cardIndex: number) {
-    if (this.state.phase !== 'main') return;
-
-    const card = this.state.player.hand.contents[cardIndex];
-    if (!card) return;
-
-    // Remove from hand
-    this.state.player.hand.contents.splice(cardIndex, 1);
-
-    // Bonus for next turn (Avatar Draw +1)
-    this.state.nextTurnAvatarDrawBonus += 1;
-  }
-
-  returnAvatar(laneIndex: number) {
-    if (this.state.phase !== 'main') return;
-    const lane = this.state.player.field[laneIndex];
-    if (!lane) return;
-
-    // Rule: Can only return cards played THIS turn
-    if (lane.turnCreated !== this.state.player.turnCount) {
-      console.warn("Cannot return past cards");
-      return;
-    }
-
-    // Return contents to hand
-    this.state.player.hand.contents.push(...lane.contents);
-
-    // Return avatar to hand
-    this.state.player.hand.avatars.push(lane.avatar);
-
-    // Remove lane
-    this.state.player.field.splice(laneIndex, 1);
-  }
-
-  returnContent(laneIndex: number, contentIndex: number) {
-    if (this.state.phase !== 'main') return;
-    const lane = this.state.player.field[laneIndex];
-    if (!lane) return;
-
-    // Rule: Check recursion/turn
-    if (lane.turnCreated !== this.state.player.turnCount) {
-      console.warn("Cannot return past cards");
-      return;
-    }
-
-    const content = lane.contents[contentIndex];
-    if (!content) return;
-
-    // Return to hand
-    this.state.player.hand.contents.push(content);
-
-    // Remove from lane
-    lane.contents.splice(contentIndex, 1);
-  }
-
-  endTurn(): boolean {
-    if (this.state.phase !== 'main') return false;
-
-    // Rule: Must play Avatar every turn
-    const latestLane = this.state.player.field[0];
-    if (!latestLane || latestLane.turnCreated !== this.state.player.turnCount) {
-      console.warn("Must play an Avatar this turn");
-      return false;
-    }
 
     this.state.phase = 'end';
 
-    // 1. Calculate Score & Shield Damage
-    let turnScore = 0;
-    let totalShieldDamage = 0;
-
+    // End Phase: Field User Cards generate score
+    // Sum of Power * Phase Multiplier
+    let turnFieldScore = 0;
     for (const lane of this.state.player.field) {
-      // ONLY score cards played THIS turn
-      if (lane.turnCreated !== this.state.player.turnCount) continue;
-
-      const avatar = lane.avatar;
-      const avatarPower = avatar.buzzPower;
-
-      let contentSum = 1;
-
-      lane.contents.forEach((content) => {
-        let cardScore = content.buzzFactor;
-        // Simple multiplication, no more metadata/account match bonuses
-        contentSum *= cardScore;
-
-        // Shield Damage: Count of metadata tags
-        if (content.metadata && content.metadata.length > 0) {
-          totalShieldDamage += content.metadata.length;
-        }
-      });
-
-      // Simple multiplication
-      const laneTotal = avatarPower * contentSum;
-      turnScore += laneTotal;
+      turnFieldScore += lane.card.power;
     }
+    const totalGain = turnFieldScore * this.state.phaseMultiplier;
+    this.state.player.buzzPoints += totalGain;
 
-    // Apply Shield Damage
-    this.state.shields = Math.max(0, this.state.shields - totalShieldDamage);
-
-    // Break Bonus: If shields are broken (0), add current Total Score to this turn's gain
-    if (this.state.shields === 0 && this.state.player.buzzPoints > 0) {
-      turnScore += this.state.player.buzzPoints;
-    }
-
-    this.state.player.buzzPoints += turnScore;
     this.state.buzzHistory.push(this.state.player.buzzPoints);
 
-    // 2. Removed Decay (Content) and Aging (Avatar)
-    // No changes to hand cards anymore.
-
-    // 3. Check Victory (100M Users)
-    if (this.state.player.buzzPoints >= 100_000_000) {
-      this.state.victory = true;
+    // Check Game End Condition (Turn 15)
+    if (this.state.turnCount >= GAME_CONFIG.maxTurns) {
+      this.finishGame();
     }
+  }
 
-    if (this.state.player.deck.avatars.length === 0) {
-      // Rule says Game Over if Deck becomes 0.
-      // Usually checked at draw, but keeping eye on it.
+  finishGame() {
+    this.state.gameOver = true;
+
+    // Calculate Rank
+    const users = this.state.player.buzzPoints;
+    if (users >= GAME_CONFIG.ranks.SS) {
+      this.state.finalRank = 'SS';
+      this.state.victory = true; // "Clear"
+    } else if (users >= GAME_CONFIG.ranks.S) {
+      this.state.finalRank = 'S';
+    } else if (users >= GAME_CONFIG.ranks.A) {
+      this.state.finalRank = 'A';
+    } else if (users >= GAME_CONFIG.ranks.B) {
+      this.state.finalRank = 'B';
+    } else {
+      this.state.finalRank = 'C';
     }
-
-    return true;
   }
 }
