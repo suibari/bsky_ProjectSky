@@ -123,14 +123,16 @@ async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]
   return selectedAuthors.map(f => {
     const profile = profilesMap.get(f.did);
     const followers = profile?.followersCount || 0;
+    const follows = profile?.followsCount || 0;
 
-    // New Formula: Power = sqrt(Followers)
-    // Cost = 2 + Power/10
+    // Power = sqrt(Followers)
     let power = Math.floor(Math.sqrt(followers));
     if (power < 1) power = 1;
 
-    let cost = Math.floor(2 + (power / 10));
-    if (cost > 8) cost = 8; // Cap cost reasonable?
+    // Cost Formula: Clamp( floor( (Follows * 5) / (Followers + 1) ) + 1, 1, 10 )
+    // High Follows / Low Followers = High Cost
+    let rawCost = Math.floor((follows * 5) / (followers + 1)) + 1;
+    let cost = Math.max(1, Math.min(10, rawCost));
 
     return {
       id: f.did,
