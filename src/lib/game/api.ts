@@ -1,6 +1,7 @@
 import { Agent } from '@atproto/api';
 import type { UserCard, PostCard } from './types';
 import { publicAgent, getPdsEndpoint } from '$lib/atproto';
+import { GAME_CONFIG } from './config';
 
 export type ProgressKey = 'loadingLikes' | 'loadingBuildDeck' | 'loadingAnalysis';
 
@@ -18,7 +19,7 @@ export async function fetchGameDecks(
   let cursor: string | undefined;
   let loopCount = 0;
 
-  while (collectedAuthors.size < 25 && loopCount < 10) {
+  while (collectedAuthors.size < GAME_CONFIG.deck.avatarCount && loopCount < 10) {
     loopCount++;
     try {
       const res = await ag.getActorLikes({
@@ -59,7 +60,7 @@ export async function fetchGameDecks(
 }
 
 function buildContentDeck(likes: any[]): PostCard[] {
-  const validLikes = likes.slice(0, 100);
+  const validLikes = likes.slice(0, GAME_CONFIG.deck.contentCount);
 
   return validLikes.map(item => {
     const post = item.post;
@@ -99,7 +100,7 @@ function buildContentDeck(likes: any[]): PostCard[] {
 }
 
 async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]> {
-  const selectedAuthors = candidates.sort(() => Math.random() - 0.5).slice(0, 30); // Aim for 30
+  const selectedAuthors = candidates.sort(() => Math.random() - 0.5).slice(0, GAME_CONFIG.deck.avatarCount);
 
   if (selectedAuthors.length === 0) return [];
 
