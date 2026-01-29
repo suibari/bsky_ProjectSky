@@ -84,6 +84,14 @@
     }
   }
 
+  function pdsBoost() {
+    if (gameState.player.pdsCurrent >= 3) {
+      engine.pdsBoost();
+    } else {
+      // Visualize error (shake PDS meter maybe? for now just skip)
+    }
+  }
+
   function endTurn() {
     // Show animation first
 
@@ -329,14 +337,27 @@
     </div>
   {/if}
 
+  <!-- PDS Boost Button -->
+  <button
+    class="absolute bottom-8 right-48 z-40 p-3 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-lg shadow-xl hover:scale-105 transition-all border-2 border-pink-400/50 disabled:opacity-50 disabled:grayscale flex flex-col items-center leading-tight"
+    style="right: 180px;"
+    onclick={pdsBoost}
+    disabled={gameState.gameOver ||
+      gameState.phase !== "main" ||
+      gameState.player.pdsCurrent < 3}
+  >
+    <span class="text-sm">DRAW 1</span>
+    <span class="text-xs opacity-80">(Cost: 3)</span>
+  </button>
+
   <!-- Turn Button -->
   <button
-    class="absolute bottom-8 right-8 z-40 p-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 disabled:opacity-50 disabled:grayscale"
+    class="absolute bottom-6 right-6 z-40 w-32 h-16 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 disabled:opacity-50 disabled:grayscale"
     onclick={gameState.phase === "draw" ? startTurn : endTurn}
     disabled={gameState.gameOver}
   >
     {gameState.turnCount === 0
-      ? "START GAME"
+      ? "START"
       : gameState.phase === "draw"
         ? "DRAW"
         : "END TURN"}

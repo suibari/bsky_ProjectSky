@@ -176,6 +176,32 @@ export class GameEngine {
     }
   }
 
+  pdsBoost() {
+    if (this.state.phase !== 'main') return;
+
+    // Cost: 3 PDS
+    const cost = 3;
+    if (this.state.player.pdsCurrent < cost) {
+      console.warn("Not enough PDS for Boost");
+      return;
+    }
+
+    // Check deck
+    if (this.state.player.deck.length === 0) {
+      console.warn("Deck empty");
+      return;
+    }
+
+    // Pay Cost
+    this.state.player.pdsCurrent -= cost;
+
+    // Draw 1 card
+    const card = this.state.player.deck.shift();
+    if (card) {
+      this.state.player.hand.push(card);
+    }
+  }
+
   endTurn() {
     if (this.state.phase !== 'main') return;
 
