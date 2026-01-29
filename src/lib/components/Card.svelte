@@ -8,7 +8,9 @@
   export let card: Card;
   export let faceUp = true;
   export let onClick = () => {};
+  export let onContextmenu = () => {};
   export let interactive = false;
+  export let displayPower: number | undefined = undefined; // For previewing buffs
 
   let cardElement: HTMLElement;
 
@@ -26,6 +28,12 @@
       onClick();
     }
   }
+
+  function handleContextmenu() {
+    if (interactive) {
+      onContextmenu();
+    }
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -33,6 +41,7 @@
   bind:this={cardElement}
   class="relative w-48 h-72 rounded-xl shadow-2xl cursor-pointer preserve-3d transition-transform hover:scale-105"
   on:click={handleClick}
+  on:contextmenu|preventDefault={handleContextmenu}
   role="button"
   tabindex="0"
   on:keydown={(e) => e.key === "Enter" && handleClick()}
@@ -87,7 +96,7 @@
           Power/Turn
         </div>
         <div class="text-2xl font-black text-blue-600 drop-shadow-sm">
-          <AnimatedNumber value={card.power} />
+          <AnimatedNumber value={displayPower ?? card.power} />
         </div>
       </div>
     {:else}
@@ -135,7 +144,7 @@
           Power (Instant)
         </div>
         <div class="text-2xl font-black drop-shadow-md">
-          <AnimatedNumber value={card.power} />
+          <AnimatedNumber value={displayPower ?? card.power} />
         </div>
       </div>
     {/if}

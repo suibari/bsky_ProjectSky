@@ -103,7 +103,8 @@ export class GameEngine {
       phaseMultiplier: 1,
       gameOver: false,
       victory: false,
-      buzzHistory: [0]
+      buzzHistory: [0],
+      archiveMultiplier: 1
     };
   }
 
@@ -140,6 +141,23 @@ export class GameEngine {
     this.state.phase = 'main';
   }
 
+  archiveCard(cardIndex: number) {
+    if (this.state.phase !== 'main') return;
+
+    const card = this.state.player.hand[cardIndex];
+    if (!card) return;
+
+    // Remove from hand
+    this.state.player.hand.splice(cardIndex, 1);
+
+    // Move to Discard
+    this.state.player.discard.push(card);
+
+    // Apply Multiplier
+    // "Power is *2. Stacking possible."
+    this.state.archiveMultiplier *= 2;
+  }
+
   playCard(cardIndex: number) {
     if (this.state.phase !== 'main') return;
 
@@ -160,6 +178,9 @@ export class GameEngine {
 
     if (card.type === 'user') {
       // User Card: Place on Field
+      // Apply Archive Multiplier permanently to this card instance
+      card.power *= this.state.archiveMultiplier;
+
       this.state.player.field.unshift({
         id: crypto.randomUUID(),
         card: card as UserCard,
@@ -167,13 +188,15 @@ export class GameEngine {
       });
     } else if (card.type === 'post') {
       // Post Card: Instant Score
-      // Power * Phase Multiplier
-      const scoreGain = card.power * this.state.phaseMultiplier;
+      // Power * Phase Multiplier * Archive Multiplier
+      const scoreGain = card.power * this.state.phaseMultiplier * this.state.archiveMultiplier;
       this.state.player.buzzPoints += scoreGain;
 
       // Move to Discard
       this.state.player.discard.push(card);
     }
+
+    this.state.archiveMultiplier = 1;
   }
 
   pdsBoost() {
@@ -222,6 +245,9 @@ export class GameEngine {
     if (this.state.turnCount >= GAME_CONFIG.maxTurns) {
       this.finishGame();
     }
+
+    // Reset Archive Multiplier at end of turn (do not carry over)
+    this.state.archiveMultiplier = 1;
   }
 
   finishGame() {

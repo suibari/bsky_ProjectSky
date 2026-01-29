@@ -57,6 +57,7 @@ export interface GameState {
   turnCount: number; // 1-15
   phase: 'draw' | 'main' | 'end';
   phaseMultiplier: number; // 1, 10, 100
+  archiveMultiplier: number; // Multiplier from archived cards
 
   gameOver: boolean;
   victory: boolean; // Not used strictly as boolean anymore, rank determines result

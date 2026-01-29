@@ -54,6 +54,7 @@
   let showScoreCalculation = $state(false);
   let showTurnTransition = $state(false);
   let animationLanes = $state<{ card: any }[]>([]);
+  let menuPosition = $state<{ x: number; y: number } | null>(null);
 
   // Actions
   function startGame() {
@@ -61,6 +62,7 @@
   }
 
   function startTurn() {
+    selectedCardIndex = null;
     showTurnTransition = true;
     engine.startTurn();
   }
@@ -69,18 +71,61 @@
     showTurnTransition = false;
   }
 
-  function playCard(index: number) {
+  async function handleCardClick(index: number) {
+    if (selectedCardIndex === index) {
+      selectedCardIndex = null; // Toggle off
+      menuPosition = null;
+    } else {
+      selectedCardIndex = index; // Select
+
+      // Calculate Position
+      await tick();
+      const el = document.getElementById(`hand-card-${index}`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        // Position above the card
+        // Card is transformed up by 40px when selected.
+        // rect.top includes the transform? Yes.
+        // We want it centered horizontally, and ~20px above the top
+        // Position "Temae" -> In front of the card (superimposed)
+        // Center of the card
+        menuPosition = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        };
+      }
+    }
+  }
+
+  function handleHandScroll() {
+    if (selectedCardIndex !== null) {
+      selectedCardIndex = null;
+      menuPosition = null;
+    }
+  }
+
+  function confirmPlay() {
+    if (selectedCardIndex === null) return;
+
     // Only if affordable
-    const card = gameState.player.hand[index];
+    const card = gameState.player.hand[selectedCardIndex];
     if (gameState.player.pdsCurrent >= card.cost) {
-      engine.playCard(index);
+      engine.playCard(selectedCardIndex);
       selectedCardIndex = null;
     } else {
       // Visualize error
-      const el = document.getElementById(`hand-card-${index}`);
+      const el = document.getElementById(`hand-card-${selectedCardIndex}`);
       if (el) {
         gsap.to(el, { x: 5, duration: 0.1, yoyo: true, repeat: 3 });
       }
+    }
+  }
+
+  function confirmArchive() {
+    if (selectedCardIndex === null) return;
+    if (gameState.phase === "main") {
+      engine.archiveCard(selectedCardIndex);
+      selectedCardIndex = null;
     }
   }
 
@@ -185,6 +230,13 @@
             <span class="text-yellow-400 whitespace-nowrap">
               Multiplier: x{gameState.phaseMultiplier}
             </span>
+            {#if gameState.archiveMultiplier > 1}
+              <span
+                class="text-red-400 whitespace-nowrap animate-pulse font-black"
+              >
+                Next Power: x{gameState.archiveMultiplier}
+              </span>
+            {/if}
           </div>
         </div>
       </div>
@@ -274,28 +326,76 @@
     </div>
   </div>
 
+  <!-- Global Action Menu (Dynamically Positioned) -->
+  {#if selectedCardIndex !== null && gameState.phase === "main" && menuPosition}
+    <!-- Backdrop to close -->
+    <button
+      class="fixed inset-0 z-[60] cursor-default bg-transparent"
+      onclick={() => {
+        selectedCardIndex = null;
+        menuPosition = null;
+      }}
+      onkeydown={(e) => e.key === "Escape" && (selectedCardIndex = null)}
+      aria-label="Close Menu"
+    ></button>
+
+    <div
+      class="fixed z-[70] flex flex-col items-center gap-2 w-48 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+      style="left: {menuPosition.x}px; top: {menuPosition.y}px;"
+    >
+      <button
+        class="pointer-events-auto w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xl rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.5)] border-2 border-blue-400 disabled:opacity-50 disabled:grayscale transition-all hover:scale-105 active:scale-95 flex flex-col items-center"
+        onclick={confirmPlay}
+        disabled={gameState.player.pdsCurrent <
+          gameState.player.hand[selectedCardIndex].cost}
+      >
+        PLAY
+        <span class="text-xs font-normal opacity-90"
+          >Cost: {gameState.player.hand[selectedCardIndex].cost}</span
+        >
+      </button>
+
+      <button
+        class="pointer-events-auto px-6 py-2 bg-slate-900/90 hover:bg-red-900/90 text-slate-300 hover:text-white font-bold text-xs rounded-full shadow-lg backdrop-blur-md border border-slate-600 hover:border-red-500 transition-all hover:scale-105"
+        onclick={confirmArchive}
+      >
+        ARCHIVE (Discard)
+      </button>
+    </div>
+  {/if}
+
   <!-- Hand (Bottom) -->
   <div
     class="h-64 md:h-80 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden pb-[env(safe-area-inset-bottom)]"
+    onclick={() => (selectedCardIndex = null)}
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
+      onclick={(e) => e.stopPropagation()}
     >
       <span>Hand: {gameState.player.hand.length}</span>
       <span>Deck: {gameState.player.deck.length}</span>
       <span>Discard: {gameState.player.discard.length}</span>
+      <span class="text-slate-500 font-normal ml-auto hidden md:block"
+        >Click card to Select</span
+      >
     </div>
 
     <div
       class="flex-grow flex items-center justify-center gap-4 px-8 overflow-x-auto overflow-y-hidden pb-4"
+      onscroll={handleHandScroll}
     >
       {#each gameState.player.hand as card, i (card.uuid)}
         <div
           id="hand-card-{i}"
-          class="relative transition-all duration-300 z-0 hover:z-10 group"
+          class="relative transition-all duration-300 z-0 {selectedCardIndex ===
+          i
+            ? 'z-20 scale-110'
+            : 'hover:z-10 group'}"
           style="transform: translateY({selectedCardIndex === i
-            ? '-20px'
+            ? '-40px'
             : '0px'})"
+          onclick={(e) => e.stopPropagation()}
         >
           <div
             class="scale-90 hover:scale-100 transition-transform origin-bottom"
@@ -303,7 +403,10 @@
             <CardComponent
               {card}
               interactive={gameState.phase === "main"}
-              onClick={() => playCard(i)}
+              displayPower={card.power *
+                gameState.phaseMultiplier *
+                gameState.archiveMultiplier}
+              onClick={() => handleCardClick(i)}
             />
           </div>
         </div>
