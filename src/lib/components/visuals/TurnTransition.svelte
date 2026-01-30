@@ -65,14 +65,14 @@
   <!-- Top Slice (Black background, diagonal cut) -->
   <div
     bind:this={topSlice}
-    class="absolute top-0 left-0 w-full h-[60%] bg-black z-10 -translate-x-full"
+    class="absolute top-0 left-0 w-full h-[60%] bg-slate-900/90 z-10 -translate-x-full"
     style="clip-path: polygon(0 0, 100% 0, 100% 80%, 0% 100%);"
   ></div>
 
   <!-- Bottom Slice -->
   <div
     bind:this={bottomSlice}
-    class="absolute bottom-0 right-0 w-full h-[60%] bg-black z-10 translate-x-full"
+    class="absolute bottom-0 right-0 w-full h-[60%] bg-slate-900/90 z-10 translate-x-full"
     style="clip-path: polygon(0 20%, 100% 0%, 100% 100%, 0% 100%);"
   ></div>
 

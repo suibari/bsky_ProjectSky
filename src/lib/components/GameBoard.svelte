@@ -8,6 +8,7 @@
   import { crossfade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { flip } from "svelte/animate";
+  import { fly } from "svelte/transition";
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t } from "$lib/i18n";
@@ -203,7 +204,7 @@
     <!-- Progress Bar -->
     <div class="absolute bottom-0 left-0 w-full h-1 bg-slate-700">
       <div
-        class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
+        class="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-1000 ease-out"
         style="width: {progressPercent}%"
       ></div>
     </div>
@@ -400,6 +401,7 @@
           role="button"
           tabindex="0"
           onkeydown={(e) => e.stopPropagation()}
+          in:fly={{ y: 50, duration: 400, delay: i * 50 }}
         >
           <div
             class="scale-75 hover:scale-90 transition-transform origin-bottom"

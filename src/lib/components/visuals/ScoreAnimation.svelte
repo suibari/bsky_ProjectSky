@@ -78,7 +78,7 @@
 
 <div
   bind:this={container}
-  class="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 pointer-events-auto"
+  class="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-md flex flex-col items-center justify-center p-4 pointer-events-auto"
 >
   <div class="w-full max-w-4xl flex flex-col gap-6 max-h-full">
     <!-- Title Area (Compact) -->
