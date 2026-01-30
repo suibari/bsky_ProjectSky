@@ -13,7 +13,10 @@ export const GAME_CONFIG = {
   pds: {
     initialCapacity: 10,
     maxCapacityIncrement: 1, // How much capacity increases per turn
+    drawCost: 5, // Cost to draw an extra card
   },
+
+  archiveMultiplier: 1.5, // Multiplier when archiving a card
 
   // Ranking Thresholds (Buzz Points)
   ranks: {

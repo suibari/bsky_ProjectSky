@@ -155,7 +155,7 @@ export class GameEngine {
 
     // Apply Multiplier
     // "Power is *2. Stacking possible."
-    this.state.archiveMultiplier *= 2;
+    this.state.archiveMultiplier *= GAME_CONFIG.archiveMultiplier;
   }
 
   playCard(cardIndex: number) {
@@ -203,7 +203,7 @@ export class GameEngine {
     if (this.state.phase !== 'main') return;
 
     // Cost: 3 PDS
-    const cost = 3;
+    const cost = GAME_CONFIG.pds.drawCost;
     if (this.state.player.pdsCurrent < cost) {
       console.warn("Not enough PDS for Boost");
       return;

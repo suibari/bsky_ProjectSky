@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { GameEngine } from "../game/engine";
+  import { GAME_CONFIG } from "../game/config";
   import type { GameState, Card } from "../game/types";
   import CardComponent from "./Card.svelte";
   import gsap from "gsap";
@@ -138,7 +139,7 @@
   }
 
   function pdsBoost() {
-    if (gameState.player.pdsCurrent >= 3) {
+    if (gameState.player.pdsCurrent >= GAME_CONFIG.pds.drawCost) {
       engine.pdsBoost();
     } else {
       // Visualize error (shake PDS meter maybe? for now just skip)
@@ -451,10 +452,10 @@
     onclick={pdsBoost}
     disabled={gameState.gameOver ||
       gameState.phase !== "main" ||
-      gameState.player.pdsCurrent < 3}
+      gameState.player.pdsCurrent < GAME_CONFIG.pds.drawCost}
   >
     <span class="text-sm">DRAW 1</span>
-    <span class="text-xs opacity-80">(Cost: 3)</span>
+    <span class="text-xs opacity-80">(Cost: {GAME_CONFIG.pds.drawCost})</span>
   </button>
 
   <!-- Turn Button -->
