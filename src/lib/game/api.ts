@@ -13,8 +13,7 @@ export async function fetchGameDecks(
 
   onProgress?.('loadingLikes');
 
-  const collectedAuthors = new Map<string, any>();
-  const allLikes: any[] = [];
+  const uniqueAuthorDids = new Set<string>();
   const likedPostUris: string[] = [];
 
   let cursor: string | undefined;
@@ -32,7 +31,9 @@ export async function fetchGameDecks(
   }
 
   // 2. Fetch Likes using listRecords (Targeting PDS)
-  while (likedPostUris.length < GAME_CONFIG.deck.avatarCount && loopCount < 10) {
+  // Ensure we get enough unique authors and enough posts
+  // We want ideally 100 User Cards (unique authors)
+  while ((uniqueAuthorDids.size < GAME_CONFIG.deck.avatarCount || likedPostUris.length < GAME_CONFIG.deck.contentCount) && loopCount < 10) {
     loopCount++;
     try {
       const res = await repoAgent.com.atproto.repo.listRecords({
@@ -48,8 +49,15 @@ export async function fetchGameDecks(
       for (const record of records) {
         // @ts-ignore
         const subjectUri = record.value.subject?.uri;
-        if (subjectUri) {
+        if (subjectUri && typeof subjectUri === 'string') {
           likedPostUris.push(subjectUri);
+
+          // Extract DID from URI: at://did:plc:xyz/...
+          // The format is at://<did>/<collection>/<rkey>
+          const match = subjectUri.match(/^at:\/\/([^\/]+)/);
+          if (match && match[1]) {
+            uniqueAuthorDids.add(match[1]);
+          }
         }
       }
 
@@ -62,27 +70,25 @@ export async function fetchGameDecks(
     }
   }
 
-  // 2. Hydrate Posts using getPosts (Batch fetch)
+  // 3. Hydrate Posts using getPosts (Batch fetch) for Content Deck
   onProgress?.('loadingBuildDeck');
 
-  // Chunky fetch posts
+  const allLikes: any[] = [];
+  // Use Set to dedup URIs just in case
   const uniqueUris = [...new Set(likedPostUris)];
   const chunkSize = 25;
 
-  for (let i = 0; i < uniqueUris.length; i += chunkSize) {
-    const chunk = uniqueUris.slice(i, i + chunkSize);
+  // Only hydrate enough posts for the deck. 
+  // If we fetched 1000 likes to find 100 authors, we don't need to hydrate all 1000.
+  // We just need GAME_CONFIG.deck.contentCount (100).
+  const postsToFetch = uniqueUris.slice(0, GAME_CONFIG.deck.contentCount + 10); // +10 buffer
+
+  for (let i = 0; i < postsToFetch.length; i += chunkSize) {
+    const chunk = postsToFetch.slice(i, i + chunkSize);
     try {
       const postsRes = await ag.getPosts({ uris: chunk });
       const posts = postsRes.data.posts;
-
-      allLikes.push(...posts.map(p => ({ post: p }))); // Wrap to match expected format for buildContentDeck logic if needed, or just adapt logic.
-
-      for (const post of posts) {
-        const author = post.author;
-        if (author.did !== actor && !collectedAuthors.has(author.did)) {
-          collectedAuthors.set(author.did, author);
-        }
-      }
+      allLikes.push(...posts.map(p => ({ post: p })));
     } catch (e) {
       console.warn(`Failed to fetch posts chunk ${i}`, e);
     }
@@ -90,15 +96,41 @@ export async function fetchGameDecks(
 
   const contentDeck = buildContentDeck(allLikes);
 
+  // 4. Build Avatar Deck from Unique Authors found
   onProgress?.('loadingAnalysis');
-  const avatarCandidates = Array.from(collectedAuthors.values());
+
+  // Convert collected DIDs to candidate objects
+  // We need to fetch their profiles to get handle, avatar, etc.
+  let avatarCandidates = Array.from(uniqueAuthorDids).map(did => ({ did }));
+
+  // If we still don't have enough unique authors from likes, fall back to "follows"
+  // This addresses the issue where a user only likes posts from a few people.
+  if (avatarCandidates.length < GAME_CONFIG.deck.avatarCount) {
+    try {
+      // Fetch user's follows to fill the gap
+      // We can fetch up to 100 to fill checks
+      const followsRes = await ag.getFollows({ actor: actor, limit: 100 });
+      const newFollows = followsRes.data.follows
+        .filter(f => !uniqueAuthorDids.has(f.did))
+        .map(f => ({ did: f.did }));
+
+      avatarCandidates.push(...newFollows);
+    } catch (e) {
+      console.warn("Failed to fetch follows for fallback", e);
+    }
+  }
+
+  // Slice to limit before fetching profiles to save requests?
+  // Actually buildAvatarDeck handles slicing.
   const avatarDeck = await buildAvatarDeck(ag, avatarCandidates);
 
   return { avatarDeck, contentDeck };
 }
 
 function buildContentDeck(likes: any[]): PostCard[] {
-  const validLikes = likes.slice(0, GAME_CONFIG.deck.contentCount);
+  // Shuffle loves availability
+  const shuffled = likes.sort(() => Math.random() - 0.5);
+  const validLikes = shuffled.slice(0, GAME_CONFIG.deck.contentCount);
 
   return validLikes.map(item => {
     const post = item.post;
@@ -138,6 +170,7 @@ function buildContentDeck(likes: any[]): PostCard[] {
 }
 
 async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]> {
+  // We need to fetch profiles for these candidates since we only have DIDs (mostly)
   const selectedAuthors = candidates.sort(() => Math.random() - 0.5).slice(0, GAME_CONFIG.deck.avatarCount);
 
   if (selectedAuthors.length === 0) return [];
@@ -155,34 +188,40 @@ async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]
       profileRes.data.profiles.forEach(p => profilesMap.set(p.did, p));
     } catch (e) {
       console.warn(`Failed to batch fetch profiles (chunk ${i})`, e);
-      // Try fallback to individual fetch ? Too slow.
     }
   }
 
-  return selectedAuthors.map(f => {
+  // Filter out any that failed to fetch profile (optional, but safer)
+  // modify map to return Card
+  const deck: UserCard[] = [];
+
+  for (const f of selectedAuthors) {
     const profile = profilesMap.get(f.did);
-    const followers = profile?.followersCount || 0;
-    const follows = profile?.followsCount || 0;
+    if (!profile) continue; // Skip if profile fetch failed
+
+    const followers = profile.followersCount || 0;
+    const follows = profile.followsCount || 0;
 
     // Power = sqrt(Followers)
     let power = Math.floor(Math.sqrt(followers));
     if (power < 1) power = 1;
 
-    // Cost Formula: Clamp( floor( (Follows * 5) / (Followers + 1) ) + 1, 1, 10 )
-    // High Follows / Low Followers = High Cost
+    // Cost
     let rawCost = Math.floor((follows * 5) / (followers + 1)) + 1;
     let cost = Math.max(1, Math.min(10, rawCost));
 
-    return {
+    deck.push({
       id: f.did,
       uuid: crypto.randomUUID(),
       type: 'user',
-      handle: f.handle,
-      displayName: f.displayName,
-      avatarUrl: f.avatar,
-      description: f.description,
+      handle: profile.handle,
+      displayName: profile.displayName || profile.handle,
+      avatarUrl: profile.avatar,
+      description: profile.description,
       power,
       cost
-    };
-  });
+    });
+  }
+
+  return deck;
 }
