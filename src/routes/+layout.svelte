@@ -1,7 +1,6 @@
 <script lang="ts">
 	import "../app.css";
 	import { onMount } from "svelte";
-	import { getClient } from "$lib/atproto";
 	import favicon from "$lib/assets/favicon.svg";
 
 	let { children } = $props();

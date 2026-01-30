@@ -15,28 +15,41 @@ export async function fetchGameDecks(
 
   const collectedAuthors = new Map<string, any>();
   const allLikes: any[] = [];
+  const likedPostUris: string[] = [];
 
   let cursor: string | undefined;
   let loopCount = 0;
 
-  while (collectedAuthors.size < GAME_CONFIG.deck.avatarCount && loopCount < 10) {
+  // 1. Resolve PDS Endpoint & Create Agent for Repo operations
+  let repoAgent = ag;
+  try {
+    const endpoint = await getPdsEndpoint(actor);
+    if (endpoint) {
+      repoAgent = new Agent(endpoint);
+    }
+  } catch (e) {
+    console.warn("Failed to resolve PDS endpoint, falling back to public agent", e);
+  }
+
+  // 2. Fetch Likes using listRecords (Targeting PDS)
+  while (likedPostUris.length < GAME_CONFIG.deck.avatarCount && loopCount < 10) {
     loopCount++;
     try {
-      const res = await ag.getActorLikes({
-        actor,
+      const res = await repoAgent.com.atproto.repo.listRecords({
+        repo: actor,
+        collection: 'app.bsky.feed.like',
         limit: 100,
         cursor
       });
 
-      const feed = res.data.feed;
-      if (!feed || feed.length === 0) break;
+      const records = res.data.records;
+      if (!records || records.length === 0) break;
 
-      allLikes.push(...feed);
-
-      for (const item of feed) {
-        const author = item.post.author;
-        if (author.did !== actor && !collectedAuthors.has(author.did)) {
-          collectedAuthors.set(author.did, author);
+      for (const record of records) {
+        // @ts-ignore
+        const subjectUri = record.value.subject?.uri;
+        if (subjectUri) {
+          likedPostUris.push(subjectUri);
         }
       }
 
@@ -44,12 +57,37 @@ export async function fetchGameDecks(
       if (!cursor) break;
 
     } catch (e) {
-      console.warn("Error fetching likes page", e);
+      console.warn("Error fetching likes records", e);
       break;
     }
   }
 
+  // 2. Hydrate Posts using getPosts (Batch fetch)
   onProgress?.('loadingBuildDeck');
+
+  // Chunky fetch posts
+  const uniqueUris = [...new Set(likedPostUris)];
+  const chunkSize = 25;
+
+  for (let i = 0; i < uniqueUris.length; i += chunkSize) {
+    const chunk = uniqueUris.slice(i, i + chunkSize);
+    try {
+      const postsRes = await ag.getPosts({ uris: chunk });
+      const posts = postsRes.data.posts;
+
+      allLikes.push(...posts.map(p => ({ post: p }))); // Wrap to match expected format for buildContentDeck logic if needed, or just adapt logic.
+
+      for (const post of posts) {
+        const author = post.author;
+        if (author.did !== actor && !collectedAuthors.has(author.did)) {
+          collectedAuthors.set(author.did, author);
+        }
+      }
+    } catch (e) {
+      console.warn(`Failed to fetch posts chunk ${i}`, e);
+    }
+  }
+
   const contentDeck = buildContentDeck(allLikes);
 
   onProgress?.('loadingAnalysis');

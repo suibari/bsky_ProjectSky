@@ -1,6 +1,5 @@
 <script lang="ts">
   import { locale, t } from "$lib/i18n";
-  import { signOut } from "$lib/atproto";
 
   let { isOpen, onClose, did, handle } = $props<{
     isOpen: boolean;
@@ -11,6 +10,11 @@
 
   function toggleLocale() {
     locale.update((l) => (l === "en" ? "jp" : "en"));
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("bsky_handle");
+    location.reload();
   }
 </script>
 
@@ -51,8 +55,8 @@
 
       <!-- Language Switcher -->
       <div class="flex flex-col gap-2">
-        <label class="text-sm text-slate-400 uppercase font-bold tracking-wider"
-          >{$t("language")}</label
+        <span class="text-sm text-slate-400 uppercase font-bold tracking-wider"
+          >{$t("language")}</span
         >
         <div class="flex gap-2">
           <button
@@ -82,7 +86,7 @@
       {#if did}
         <button
           class="w-full py-3 bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-          onclick={() => signOut(did).then(() => location.reload())}
+          onclick={handleLogout}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

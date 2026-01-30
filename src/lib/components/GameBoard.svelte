@@ -42,9 +42,13 @@
   }>();
 
   // Svelte 5 Reactivity
-  let gameState = $state<GameState>(
-    GameEngine.createInitialState(did, handle, avatarDeck, contentDeck),
+  const initialState = GameEngine.createInitialState(
+    did,
+    handle,
+    avatarDeck,
+    contentDeck,
   );
+  let gameState = $state<GameState>(initialState);
 
   const engine = new GameEngine(gameState);
 
@@ -60,6 +64,10 @@
   function startGame() {
     startTurn();
   }
+
+  onMount(() => {
+    startGame();
+  });
 
   function startTurn() {
     selectedCardIndex = null;
@@ -185,19 +193,6 @@
       turn={gameState.turnCount}
       onComplete={handleTurnTransitionComplete}
     />
-  {/if}
-
-  {#if gameState.turnCount === 0}
-    <div
-      class="absolute inset-0 z-50 bg-black/80 flex items-center justify-center"
-    >
-      <button
-        class="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-2xl rounded-full shadow-[0_0_50px_rgba(37,99,235,0.5)] transition-all hover:scale-110 active:scale-95 animate-pulse"
-        onclick={startGame}
-      >
-        START GAME
-      </button>
-    </div>
   {/if}
 
   <!-- HUD -->
@@ -368,10 +363,16 @@
   <div
     class="h-64 md:h-80 w-full bg-slate-800/95 border-t border-slate-700 flex flex-col z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] shrink-0 overflow-y-hidden pb-[env(safe-area-inset-bottom)]"
     onclick={() => (selectedCardIndex = null)}
+    role="button"
+    tabindex="0"
+    onkeydown={(e) => e.key === "Escape" && (selectedCardIndex = null)}
   >
     <div
       class="h-8 bg-black/20 flex items-center px-4 text-xs font-bold text-slate-400 gap-8"
       onclick={(e) => e.stopPropagation()}
+      role="button"
+      tabindex="0"
+      onkeydown={(e) => e.stopPropagation()}
     >
       <span>Hand: {gameState.player.hand.length}</span>
       <span>Deck: {gameState.player.deck.length}</span>
@@ -396,6 +397,9 @@
             ? '-40px'
             : '0px'})"
           onclick={(e) => e.stopPropagation()}
+          role="button"
+          tabindex="0"
+          onkeydown={(e) => e.stopPropagation()}
         >
           <div
             class="scale-90 hover:scale-100 transition-transform origin-bottom"

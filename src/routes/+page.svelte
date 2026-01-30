@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getClient, publicAgent, signIn } from "$lib/atproto"; // Import getClient instead of getAgent
+  import { publicAgent, getPdsEndpoint } from "$lib/atproto";
   import { fetchGameDecks, type ProgressKey } from "$lib/game/api";
   import type { UserCard, PostCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
   import SettingsModal from "$lib/components/SettingsModal.svelte";
   import { t, locale } from "$lib/i18n";
-  import { Agent } from "@atproto/api"; // Class
+  import { Agent } from "@atproto/api";
 
   let agent = $state<Agent | null>(null);
-  let loadingMessageKey = $state<ProgressKey | "loading" | null>("loading");
+  let loadingMessageKey = $state<ProgressKey | "loading" | null>(null); // Start null
   let error = $state<string | null>(null);
 
   // Game Data
@@ -20,47 +20,93 @@
   let userHandle = $state("");
   let showSettings = $state(false);
 
+  // Input & Typeahead
+  let inputText = $state("");
+  let suggestions = $state<any[]>([]);
+  let showSuggestions = $state(false);
+  let debounceTimer: ReturnType<typeof setTimeout>;
+
   onMount(async () => {
-    try {
-      const client = getClient();
-      if (!client) throw new Error("OAuth client not initialized");
-
-      const result = await client.init();
-      if (result) {
-        agent = new Agent(result.session);
-
-        userDid = result.session.did;
-
-        // @ts-ignore
-        userHandle = (result.handle || result.sub || "") as string; // Handle might be in result?
-
-        // Ensure we have the handle properly if not in result
-        // if userHandle is effectively just the DID or empty, fetch profile
-        if (!userHandle || !userHandle.includes(".")) {
-          // Fetch profile to get handle?
-          try {
-            const profile = await publicAgent.getProfile({ actor: userDid });
-            userHandle = profile.data.handle;
-          } catch (e) {
-            console.warn("Could not fetch profile handle", e);
-          }
-        }
-
-        await loadDecks(userDid);
-      }
-    } catch (e) {
-      console.error("Auth Error:", e);
-      error = $t("errorAuth");
-    } finally {
-      loadingMessageKey = null;
+    // Check localStorage
+    const savedHandle = localStorage.getItem("bsky_handle");
+    if (savedHandle) {
+      inputText = savedHandle;
+      // Optionally auto-start or just pre-fill
     }
   });
 
+  function handleInput(e: Event) {
+    const value = (e.target as HTMLInputElement).value;
+    inputText = value;
+    clearTimeout(debounceTimer);
+
+    if (!value || value.length < 3) {
+      suggestions = [];
+      showSuggestions = false;
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      try {
+        const res = await publicAgent.searchActorsTypeahead({
+          q: value,
+          limit: 5,
+        });
+        suggestions = res.data.actors;
+        showSuggestions = true;
+      } catch (e) {
+        console.warn("Typeahead error", e);
+      }
+    }, 300);
+  }
+
+  async function selectHandle(handle: string, did?: string) {
+    inputText = handle;
+    showSuggestions = false;
+
+    // Resolve DID if not provided
+    if (!did) {
+      try {
+        const res = await publicAgent.resolveHandle({ handle });
+        did = res.data.did;
+      } catch (e) {
+        error = $t("errorAuth"); // Reuse auth error or generic
+        return;
+      }
+    }
+
+    // Save to localStorage
+    localStorage.setItem("bsky_handle", handle);
+
+    // Start Game
+    await startGame(handle, did!);
+  }
+
+  async function startGame(handle: string, did: string) {
+    userHandle = handle;
+    userDid = did;
+    agent = publicAgent; // Use public agent for game queries
+
+    loadingMessageKey = "loadingLikes";
+    error = null;
+
+    try {
+      await loadDecks(did);
+    } catch (e) {
+      console.error(e);
+      error = $t("errorData");
+    }
+  }
+
   async function loadDecks(did: string) {
     loadingMessageKey = "loadingLikes";
+    // Reset decks
+    avatarDeck = [];
+    contentDeck = [];
+
     try {
       const { avatarDeck: avatars, contentDeck: contents } =
-        await fetchGameDecks(agent!, did, (key) => {
+        await fetchGameDecks(publicAgent, did, (key) => {
           loadingMessageKey = key;
         });
 
@@ -69,21 +115,19 @@
         if (contents.length === 0) error = $t("errorLikes");
       }
 
-      avatarDeck = avatars;
-      contentDeck = contents;
-      readyToPlay = true;
+      // If we got some data but maybe not enough, still try to play if configured to allow partials?
+      // For now strict check as before, but maybe looser logging.
+
+      if (!error) {
+        avatarDeck = avatars;
+        contentDeck = contents;
+        readyToPlay = true;
+      }
     } catch (e) {
       console.error(e);
       error = $t("errorData");
     } finally {
       loadingMessageKey = null;
-    }
-  }
-
-  function handleLogin() {
-    const handle = prompt("Enter your Bluesky handle (e.g. user.bsky.social):");
-    if (handle) {
-      signIn(handle);
     }
   }
 </script>
@@ -106,10 +150,10 @@
         {$t(loadingMessageKey)}
       </p>
     </div>
-  {:else if readyToPlay && agent}
+  {:else if readyToPlay}
     <GameBoard did={userDid} handle={userHandle} {avatarDeck} {contentDeck} />
   {:else}
-    <!-- Landing / Login -->
+    <!-- Landing / Handle Input -->
     <div
       class="flex-grow w-full flex flex-col items-center justify-center relative overflow-hidden"
     >
@@ -124,7 +168,6 @@
         class="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"
       ></div>
 
-      <!-- Settings Button (Top Right) -->
       <!-- Language Switcher (Top Right) -->
       <div class="absolute top-4 right-4 z-50 flex gap-2">
         <button
@@ -148,7 +191,7 @@
       </div>
 
       <div
-        class="z-10 text-center flex flex-col items-center gap-8 max-w-2xl px-4"
+        class="z-10 text-center flex flex-col items-center gap-8 max-w-2xl px-4 w-full"
       >
         <div class="mb-4">
           <div class="flex flex-col items-center">
@@ -181,23 +224,81 @@
           </div>
         {/if}
 
-        {#if !agent}
-          <button
-            class="px-10 py-4 bg-white text-black text-lg font-bold rounded-full hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all active:scale-95 flex items-center gap-2"
-            onclick={handleLogin}
+        <!-- Handle Input Section -->
+        <div class="w-full max-w-md relative">
+          <input
+            type="text"
+            class="w-full px-6 py-4 bg-slate-900/80 border border-slate-700 rounded-full text-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-xl backdrop-blur-sm"
+            placeholder="Enter Bluesky Handle (e.g. user.bsky.social)"
+            value={inputText}
+            oninput={handleInput}
+            onfocus={() => {
+              if (inputText.length >= 3) showSuggestions = true;
+            }}
+          />
+          <!-- Search Icon -->
+          <div
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
           >
-            <svg viewBox="0 0 24 24" class="w-6 h-6 fill-blue-600"
-              ><path
-                d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99z"
-              /></svg
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-            {$t("signIn")}
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
+          <!-- Typeahead Dropdown -->
+          {#if showSuggestions && suggestions.length > 0}
+            <div
+              class="absolute top-full left-0 w-full mt-2 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-2xl z-50"
+            >
+              {#each suggestions as actor}
+                <button
+                  class="w-full px-4 py-3 text-left hover:bg-slate-800 flex items-center gap-3 transition-colors border-b border-slate-800 last:border-0"
+                  onclick={() => selectHandle(actor.handle, actor.did)}
+                >
+                  {#if actor.avatar}
+                    <img
+                      src={actor.avatar}
+                      alt={actor.handle}
+                      class="w-10 h-10 rounded-full bg-slate-800 object-cover"
+                    />
+                  {:else}
+                    <div
+                      class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-500"
+                    >
+                      ?
+                    </div>
+                  {/if}
+                  <div class="flex flex-col">
+                    <span class="font-bold text-white leading-none"
+                      >{actor.displayName || actor.handle}</span
+                    >
+                    <span class="text-sm text-slate-400">@{actor.handle}</span>
+                  </div>
+                </button>
+              {/each}
+            </div>
+          {/if}
+        </div>
+
+        {#if inputText && !showSuggestions && !loadingMessageKey}
+          <button
+            class="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold rounded-full transition-all shadow-lg hover:shadow-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            onclick={() => selectHandle(inputText)}
+            disabled={!inputText}
+          >
+            Start Game
           </button>
-          <p class="text-slate-600 text-sm">
-            {$t("signInNote")}
-          </p>
-        {:else}
-          <!-- Handled in Settings -->
         {/if}
       </div>
     </div>

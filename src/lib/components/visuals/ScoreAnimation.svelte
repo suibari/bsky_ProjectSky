@@ -16,9 +16,9 @@
     onComplete: () => void;
   }>();
 
-  let container: HTMLDivElement;
-  let itemsContainer: HTMLDivElement;
-  let totalScoreElement: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
+  let itemsContainer = $state<HTMLDivElement>();
+  let totalScoreElement = $state<HTMLDivElement>();
   let displayScore = $state(0);
 
   // Pre-calculate totals
@@ -35,7 +35,7 @@
     });
 
     // 1. Fade in container
-    tl.fromTo(container, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+    tl.fromTo(container!, { opacity: 0 }, { opacity: 1, duration: 0.3 });
 
     // 2. Animate items (Grid Stagger)
     if (lanes.length > 0) {
@@ -67,7 +67,7 @@
 
     // 4. Final Pulse
     tl.to(
-      totalScoreElement,
+      totalScoreElement!,
       { scale: 1.1, duration: 0.15, yoyo: true, repeat: 1 },
       "<+=0.4",
     );

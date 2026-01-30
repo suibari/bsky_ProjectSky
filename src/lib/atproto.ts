@@ -1,69 +1,6 @@
-import { BrowserOAuthClient } from '@atproto/oauth-client-browser';
 import { Agent } from '@atproto/api';
 
 export const publicAgent = new Agent('https://public.api.bsky.app');
-
-export let client: BrowserOAuthClient | null = null;
-
-const SCOPE = 'atproto transition:generic';
-
-export function getClient() {
-  if (typeof window === 'undefined') return null;
-  if (client) return client;
-
-  const enc = encodeURIComponent;
-  const origin = window.location.origin;
-
-  // Simple detection for dev/local
-  const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
-
-  let client_id = `${origin}/client-metadata.json`;
-  const redirect_uri = `${origin}/`;
-
-  if (isLocal) {
-    // Special loopback client ID for local development on port 5173
-    client_id = `http://localhost?redirect_uri=${enc(redirect_uri)}&scope=${enc(SCOPE)}`;
-  }
-
-  client = new BrowserOAuthClient({
-    handleResolver: 'https://bsky.social',
-    clientMetadata: {
-      client_id,
-      client_name: 'Project Sky',
-      client_uri: origin,
-      redirect_uris: [redirect_uri],
-      scope: SCOPE,
-      grant_types: ['authorization_code', 'refresh_token'],
-      response_types: ['code'],
-      token_endpoint_auth_method: 'none',
-      application_type: 'web',
-      dpop_bound_access_tokens: true
-    }
-  });
-
-  return client;
-}
-
-export async function signIn(handle: string) {
-  const c = getClient();
-  if (!c) return;
-  // Initialize client if needed
-  await c.init();
-
-  await c.signIn(handle, {
-    prompt: 'login'
-  });
-}
-
-export async function signOut(did: string) {
-  const c = getClient();
-  if (!c) return;
-  try {
-    await c.revoke(did);
-  } catch (e) {
-    console.warn("Revoke failed", e);
-  }
-}
 
 // Helper to resolve PDS endpoint (Cross-PDS support)
 export async function getPdsEndpoint(did: string): Promise<string | null> {
