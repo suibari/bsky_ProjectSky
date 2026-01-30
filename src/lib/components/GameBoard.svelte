@@ -11,7 +11,7 @@
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t } from "$lib/i18n";
-  import SettingsModal from "./SettingsModal.svelte";
+
   import ScoreAnimation from "$lib/components/visuals/ScoreAnimation.svelte";
   import TurnTransition from "$lib/components/visuals/TurnTransition.svelte";
   //   import GameClear from "$lib/components/visuals/GameClear.svelte";
@@ -55,7 +55,7 @@
 
   // UI State
   let selectedCardIndex = $state<number | null>(null);
-  let showSettings = $state(false);
+
   let showScoreCalculation = $state(false);
   let showTurnTransition = $state(false);
   let animationLanes = $state<{ card: any }[]>([]);
@@ -209,37 +209,41 @@
     </div>
 
     <div
-      class="grid grid-cols-[1fr_auto_auto] md:flex md:items-center md:justify-between px-2 py-2 md:px-8 gap-2 w-full"
+      class="grid grid-cols-[1fr_auto_auto] md:grid md:grid-cols-3 md:items-center px-2 py-2 md:px-8 gap-2 w-full"
     >
-      <div class="flex items-center gap-4 col-span-1">
+      <div
+        class="flex items-center gap-1 col-span-2 md:col-span-1 md:justify-self-start"
+      >
         <h1
-          class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
+          class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 whitespace-nowrap"
         >
           {$t("turn")}
           {gameState.turnCount}/15
         </h1>
-        <div class="flex flex-col gap-1">
+        <div class="w-px h-8 bg-slate-700 mx-1"></div>
+        <div class="flex flex-col justify-center">
           <div
-            class="flex flex-col text-[10px] md:text-xs uppercase tracking-widest text-slate-400 font-bold leading-tight"
+            class="md:text-sm uppercase tracking-widest text-slate-300 font-bold leading-tight"
           >
-            <span>{gameState.phase} Phase</span>
             <span class="text-yellow-400 whitespace-nowrap">
-              Multiplier: x{gameState.phaseMultiplier}
+              <span class="hidden md:inline"
+                >MULTIPLIER:
+              </span>x{gameState.phaseMultiplier}
             </span>
-            {#if gameState.archiveMultiplier > 1}
-              <span
-                class="text-red-400 whitespace-nowrap animate-pulse font-black"
-              >
-                Next Power: x{gameState.archiveMultiplier}
-              </span>
-            {/if}
           </div>
+          {#if gameState.archiveMultiplier > 1}
+            <span
+              class="text-[10px] text-red-400 whitespace-nowrap animate-pulse font-black leading-tight"
+            >
+              Next: x{gameState.archiveMultiplier}
+            </span>
+          {/if}
         </div>
       </div>
 
       <!-- Center: Score & PDS -->
       <div
-        class="flex flex-col items-center justify-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-auto"
+        class="flex flex-col items-center justify-center md:col-span-1 md:justify-self-center"
       >
         <!-- PDS Meter -->
         <div class="flex items-center gap-2 mb-1">
@@ -258,24 +262,17 @@
           >
         </div>
 
-        <div
-          class="text-xl md:text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-        >
-          <AnimatedNumber value={gameState.player.buzzPoints} />
-          <span class="text-sm md:text-xl">{$t("users")}</span>
+        <div class="flex items-center gap-3">
+          <div
+            class="text-xl md:text-3xl font-black tabular-nums text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+          >
+            <AnimatedNumber value={gameState.player.buzzPoints} />
+            <span class="text-sm md:text-xl">{$t("users")}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Settings -->
-      <div class="flex justify-end col-span-1 md:w-auto">
-        <button
-          class="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-full backdrop-blur-md"
-          onclick={() => (showSettings = true)}
-          aria-label={$t("settings")}
-        >
-          ⚙️
-        </button>
-      </div>
+      <!-- PC Settings Button -->
     </div>
   </div>
 
@@ -384,7 +381,7 @@
     </div>
 
     <div
-      class="flex-grow flex items-center justify-center gap-4 px-8 overflow-x-auto overflow-y-hidden pb-4"
+      class="flex-grow flex items-end justify-start md:justify-center gap-2 md:gap-4 px-4 md:px-8 overflow-x-auto overflow-y-hidden pb-1 md:pb-4"
       onscroll={handleHandScroll}
     >
       {#each gameState.player.hand as card, i (card.uuid)}
@@ -403,7 +400,7 @@
           onkeydown={(e) => e.stopPropagation()}
         >
           <div
-            class="scale-90 hover:scale-100 transition-transform origin-bottom"
+            class="scale-75 hover:scale-90 transition-transform origin-bottom"
           >
             <CardComponent
               {card}
@@ -445,38 +442,35 @@
     </div>
   {/if}
 
-  <!-- PDS Boost Button -->
-  <button
-    class="absolute bottom-8 right-48 z-40 p-3 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-lg shadow-xl hover:scale-105 transition-all border-2 border-pink-400/50 disabled:opacity-50 disabled:grayscale flex flex-col items-center leading-tight"
-    style="right: 180px;"
-    onclick={pdsBoost}
-    disabled={gameState.gameOver ||
-      gameState.phase !== "main" ||
-      gameState.player.pdsCurrent < GAME_CONFIG.pds.drawCost}
-  >
-    <span class="text-sm">DRAW 1</span>
-    <span class="text-xs opacity-80">(Cost: {GAME_CONFIG.pds.drawCost})</span>
-  </button>
+  <!-- Action Buttons Stack -->
+  <div class="absolute bottom-6 right-6 z-40 flex flex-col items-end gap-4">
+    <!-- PDS Boost (Draw) -->
+    <button
+      class="p-3 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-lg shadow-xl hover:scale-105 transition-all border-2 border-pink-400/50 disabled:opacity-50 disabled:grayscale flex flex-col items-center leading-tight w-24"
+      onclick={pdsBoost}
+      disabled={gameState.gameOver ||
+        gameState.phase !== "main" ||
+        gameState.player.pdsCurrent < GAME_CONFIG.pds.drawCost}
+    >
+      <span class="text-sm">DRAW 1</span>
+      <span class="text-[10px] opacity-80"
+        >(Cost: {GAME_CONFIG.pds.drawCost})</span
+      >
+    </button>
 
-  <!-- Turn Button -->
-  <button
-    class="absolute bottom-6 right-6 z-40 w-32 h-16 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 disabled:opacity-50 disabled:grayscale"
-    onclick={gameState.phase === "draw" ? startTurn : endTurn}
-    disabled={gameState.gameOver}
-  >
-    {gameState.turnCount === 0
-      ? "START"
-      : gameState.phase === "draw"
-        ? "DRAW"
-        : "END TURN"}
-  </button>
-
-  <SettingsModal
-    isOpen={showSettings}
-    onClose={() => (showSettings = false)}
-    {did}
-    {handle}
-  />
+    <!-- Turn Button -->
+    <button
+      class="w-24 h-16 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-2xl hover:scale-110 transition-all border-4 border-blue-400/50 disabled:opacity-50 disabled:grayscale"
+      onclick={gameState.phase === "draw" ? startTurn : endTurn}
+      disabled={gameState.gameOver}
+    >
+      {gameState.turnCount === 0
+        ? "START"
+        : gameState.phase === "draw"
+          ? "DRAW"
+          : "END"}
+    </button>
+  </div>
 
   {#if showScoreCalculation}
     <ScoreAnimation

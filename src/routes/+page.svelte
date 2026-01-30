@@ -4,7 +4,7 @@
   import { fetchGameDecks, type ProgressKey } from "$lib/game/api";
   import type { UserCard, PostCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
-  import SettingsModal from "$lib/components/SettingsModal.svelte";
+
   import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api";
 
@@ -18,7 +18,6 @@
   let readyToPlay = $state(false);
   let userDid = $state("");
   let userHandle = $state("");
-  let showSettings = $state(false);
 
   // Input & Typeahead
   let inputText = $state("");
@@ -168,8 +167,8 @@
         class="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"
       ></div>
 
-      <!-- Language Switcher (Top Right) -->
-      <div class="absolute top-4 right-4 z-50 flex gap-2">
+      <!-- Language Switcher (Bottom Center) -->
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-2">
         <button
           class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
           'jp'
@@ -303,11 +302,4 @@
       </div>
     </div>
   {/if}
-
-  <SettingsModal
-    isOpen={showSettings}
-    onClose={() => (showSettings = false)}
-    did={userDid}
-    handle={userHandle}
-  />
 </div>
