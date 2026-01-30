@@ -2,17 +2,20 @@
   import { onMount } from "svelte";
   import gsap from "gsap";
   import type { UserCard } from "../../game/types";
+  import { GAME_CONFIG } from "$lib/game/config";
   import { t } from "$lib/i18n";
 
   let {
     lanes,
     phaseMultiplier = 1,
+    currentTotalScore = 0,
     onComplete,
   } = $props<{
     lanes: {
       card: UserCard;
     }[];
     phaseMultiplier: number;
+    currentTotalScore?: number;
     onComplete: () => void;
   }>();
 
@@ -20,6 +23,8 @@
   let itemsContainer = $state<HTMLDivElement>();
   let totalScoreElement = $state<HTMLDivElement>();
   let displayScore = $state(0);
+  let progressBar = $state<HTMLDivElement>();
+  let progressLabel = $state<HTMLSpanElement>();
 
   // Pre-calculate totals
   let totalPower = $derived(
@@ -56,12 +61,27 @@
     // 3. Animate Score Calculation
     tl.to({}, { duration: 0.2 }); // small pause
 
+    // Animate Score & Progress
+    const goal = GAME_CONFIG.ranks.SS;
+    const startProgress = Math.min(100, (currentTotalScore / goal) * 100);
+    const endProgress = Math.min(
+      100,
+      ((currentTotalScore + finalScore) / goal) * 100,
+    );
+
+    // Set initial
+    gsap.set(progressBar!, { width: `${startProgress}%` });
+
     tl.to(proxy, {
       val: finalScore,
+      progress: endProgress,
       duration: 0.8,
       ease: "power2.out",
       onUpdate: () => {
         displayScore = Math.round(proxy.val);
+        if (progressBar) {
+          progressBar.style.width = `${proxy.progress}%`;
+        }
       },
     });
 
@@ -73,7 +93,11 @@
     );
   });
 
-  const proxy = { val: 0 };
+  const proxy = { val: 0, progress: 0 };
+
+  // Calculate initial progress for SSR/hydration
+  const goal = GAME_CONFIG.ranks.SS;
+  const initialProgress = Math.min(100, (currentTotalScore / goal) * 100);
 </script>
 
 <div
@@ -163,6 +187,47 @@
         class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 drop-shadow-[0_0_15px_rgba(74,222,128,0.4)] tabular-nums"
       >
         +{Math.round(displayScore).toLocaleString()}
+      </div>
+
+      <!-- Turn Progress Bar -->
+      <div class="w-full max-w-md mt-4 flex flex-col gap-1">
+        <div
+          class="flex justify-between text-xs font-bold uppercase text-slate-400 tracking-wider"
+        >
+          <span>Progress to Goal</span>
+          <span
+            >{Math.min(
+              100,
+              ((currentTotalScore + displayScore) / GAME_CONFIG.ranks.SS) * 100,
+            ).toFixed(1)}%</span
+          >
+        </div>
+        <div
+          class="h-3 w-full bg-slate-700/50 rounded-full overflow-hidden border border-slate-600/50 relative"
+        >
+          <!-- Previous Progress (Ghost) -->
+          <div
+            class="absolute top-0 left-0 h-full bg-slate-600"
+            style="width: {initialProgress}%"
+          ></div>
+          <!-- Active Progress -->
+          <div
+            bind:this={progressBar}
+            class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500"
+            style="width: {initialProgress}%"
+          ></div>
+          <!-- Glow Effect on Tip -->
+          <div
+            class="absolute top-0 h-full w-1 bg-white/50 blur-[2px]"
+            style="left: {Math.min(
+              100,
+              ((currentTotalScore + displayScore) / GAME_CONFIG.ranks.SS) * 100,
+            )}%; transform: translateX(-100%);"
+          ></div>
+        </div>
+        <div class="text-xs text-right text-slate-500 font-mono">
+          {GAME_CONFIG.ranks.SS.toLocaleString()} Users Goal
+        </div>
       </div>
     </div>
   </div>

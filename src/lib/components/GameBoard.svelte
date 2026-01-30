@@ -480,6 +480,7 @@
     <ScoreAnimation
       lanes={animationLanes}
       phaseMultiplier={gameState.phaseMultiplier}
+      currentTotalScore={gameState.player.buzzPoints}
       onComplete={handleScoreAnimationComplete}
     />
   {/if}
