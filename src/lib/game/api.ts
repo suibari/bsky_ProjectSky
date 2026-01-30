@@ -139,7 +139,7 @@ function buildContentDeck(likes: any[]): PostCard[] {
 
     // New Formula: Power = (Likes * 1000) / (Length + 10)
     // Cost = 1 + Length/40
-    let power = Math.floor((likeCount * 1000) / (textLen + 10));
+    let power = Math.floor((likeCount * 100) / (textLen + 10));
     let cost = Math.floor(1 + (textLen / 40));
 
     // Clamp
@@ -203,7 +203,7 @@ async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]
     const follows = profile.followsCount || 0;
 
     // Power = sqrt(Followers)
-    let power = Math.floor(Math.sqrt(followers));
+    let power = Math.floor(followers / 100 + Math.sqrt(followers));
     if (power < 1) power = 1;
 
     // Cost
