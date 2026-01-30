@@ -296,8 +296,10 @@
           animate:flip
         >
           <!-- Card Mini View -->
-          <div class="scale-50 origin-left -ml-6 -my-10">
-            <CardComponent card={lane.card} interactive={false} />
+          <div class="w-24 h-36 shrink-0 relative">
+            <div class="origin-top-left scale-50 absolute top-0 left-0">
+              <CardComponent card={lane.card} interactive={false} />
+            </div>
           </div>
 
           <!-- Info -->

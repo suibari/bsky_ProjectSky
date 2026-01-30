@@ -16,7 +16,7 @@ export const GAME_CONFIG = {
     drawCost: 5, // Cost to draw an extra card
   },
 
-  archiveMultiplier: 1.5, // Multiplier when archiving a card
+  archiveMultiplier: 2, // Multiplier when archiving a card
 
   // Ranking Thresholds (Buzz Points)
   ranks: {
