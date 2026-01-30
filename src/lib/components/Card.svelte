@@ -71,7 +71,7 @@
       </div>
 
       <div
-        class="flex-grow flex items-center justify-center relative mt-6 w-full px-2"
+        class="flex-grow flex items-center justify-center relative w-full px-2"
       >
         {#if card.avatarUrl}
           <img
