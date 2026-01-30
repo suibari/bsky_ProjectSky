@@ -190,6 +190,7 @@ export class GameEngine {
       // Post Card: Instant Score
       // Power * Phase Multiplier * Archive Multiplier
       const scoreGain = card.power * this.state.phaseMultiplier * this.state.archiveMultiplier;
+      card.playedScore = scoreGain;
       this.state.player.buzzPoints += scoreGain;
 
       // Move to Discard
@@ -267,5 +268,31 @@ export class GameEngine {
     } else {
       this.state.finalRank = 'C';
     }
+
+    // Determine MVP Cards
+    // User MVP: Highest Power on Field (includes buffs if we had any, currently power is static but archive bonus is applied on play/permanent? Logic check:
+    // Archive multiplier applies to power permanently?
+    // line 182: card.power *= this.state.archiveMultiplier; -> YES.
+    // So looking at field cards is correct for "Strongest User".
+    let mvpUser: UserCard | null = null;
+    if (this.state.player.field.length > 0) {
+      mvpUser = this.state.player.field.reduce((prev, current) =>
+        (current.card.power > prev.card.power) ? current : prev
+        , this.state.player.field[0]).card;
+    }
+
+    // Post MVP: Highest Played Score in Discard
+    let mvpPost: PostCard | null = null;
+    const playedPostCards = this.state.player.discard.filter(c => c.type === 'post') as PostCard[];
+    if (playedPostCards.length > 0) {
+      mvpPost = playedPostCards.reduce((prev, current) =>
+        ((current.playedScore || 0) > (prev.playedScore || 0)) ? current : prev
+        , playedPostCards[0]);
+    }
+
+    this.state.mvpCards = {
+      user: mvpUser,
+      post: mvpPost
+    };
   }
 }

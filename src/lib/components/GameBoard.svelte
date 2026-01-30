@@ -15,7 +15,7 @@
 
   import ScoreAnimation from "$lib/components/visuals/ScoreAnimation.svelte";
   import TurnTransition from "$lib/components/visuals/TurnTransition.svelte";
-  //   import GameClear from "$lib/components/visuals/GameClear.svelte";
+  import GameClear from "$lib/components/visuals/GameClear.svelte";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
 
@@ -421,29 +421,12 @@
   </div>
 
   <!-- Game Over Overlay -->
-  {#if gameState.gameOver}
-    <div
-      class="absolute inset-0 bg-black/90 z-50 flex items-center justify-center flex-col gap-4"
-    >
-      <h1
-        class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500"
-      >
-        FINISH
-      </h1>
-      <div class="text-4xl text-white font-bold">
-        Rank: <span class="text-yellow-400 text-6xl">{gameState.finalRank}</span
-        >
-      </div>
-      <div class="text-2xl text-slate-400">
-        Score: {formatScore(gameState.player.buzzPoints)}
-      </div>
-      <button
-        class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105"
-        onclick={() => location.reload()}
-      >
-        Play Again
-      </button>
-    </div>
+  {#if gameState.gameOver && gameState.finalRank}
+    <GameClear
+      score={gameState.player.buzzPoints}
+      rank={gameState.finalRank}
+      mvpCards={gameState.mvpCards}
+    />
   {/if}
 
   <!-- Action Buttons Stack -->

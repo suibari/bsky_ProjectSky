@@ -48,6 +48,7 @@ export interface UserCard extends BaseCard {
 export interface PostCard extends BaseCard {
   type: 'post';
   originalLikes: number; // For reference if needed
+  playedScore?: number; // Score generated when played (for MVP calculation)
 }
 
 export type Card = UserCard | PostCard;
@@ -58,6 +59,11 @@ export interface GameState {
   phase: 'draw' | 'main' | 'end';
   phaseMultiplier: number; // 1, 10, 100
   archiveMultiplier: number; // Multiplier from archived cards
+
+  mvpCards?: {
+    user: UserCard | null;
+    post: PostCard | null;
+  };
 
   gameOver: boolean;
   victory: boolean; // Not used strictly as boolean anymore, rank determines result

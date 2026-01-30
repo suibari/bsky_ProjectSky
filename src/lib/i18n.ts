@@ -43,7 +43,15 @@ const translations = {
     language: 'Language',
     close: 'Close',
     alertPlayAvatar: 'You must play an Avatar card this turn!',
-    slot: 'Slot'
+    slot: 'Slot',
+    rankSS: 'Hegemonic SNS',
+    rankS: 'Leading SNS',
+    rankA: 'Niche SNS',
+    rankB: 'Eternal Beta',
+    rankC: 'Ghost Town',
+    mvpCard: 'MVP Card',
+    mvpUser: 'Top User',
+    mvpPost: 'Top Post'
   },
   jp: {
     titleMain: 'Project Sky',
@@ -84,7 +92,15 @@ const translations = {
     language: '言語',
     close: '閉じる',
     alertPlayAvatar: '1ターンに1枚はアバターカードをプレイする必要があります！',
-    slot: 'スロット'
+    slot: 'スロット',
+    rankSS: '覇権SNS',
+    rankS: '有力SNS',
+    rankA: '知る人ぞ知るSNS',
+    rankB: '永遠のベータテスト',
+    rankC: '限界集落',
+    mvpCard: 'MVPカード',
+    mvpUser: 'Top User',
+    mvpPost: 'Top Post'
   }
 };
 

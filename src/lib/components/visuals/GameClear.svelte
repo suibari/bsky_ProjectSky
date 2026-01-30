@@ -4,7 +4,14 @@
   import gsap from "gsap";
   import { t } from "$lib/i18n";
 
-  let { score } = $props<{ score: number }>();
+  import CardComponent from "../Card.svelte";
+  import type { UserCard, PostCard } from "../../game/types";
+
+  let { score, rank, mvpCards } = $props<{
+    score: number;
+    rank: string;
+    mvpCards?: { user: UserCard | null; post: PostCard | null };
+  }>();
 
   let textElement: HTMLDivElement;
 
@@ -12,14 +19,13 @@
     // Animate Text
     gsap.fromTo(
       textElement,
-      { scale: 0, rotation: -45, opacity: 0 },
+      { scale: 0.8, opacity: 0 },
       {
         scale: 1,
-        rotation: -5,
         opacity: 1,
-        duration: 1,
-        ease: "elastic.out(1, 0.3)",
-        delay: 0.5,
+        duration: 0.8,
+        ease: "power3.out",
+        delay: 0.2,
       },
     );
   });
@@ -29,17 +35,24 @@
   class="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center overflow-hidden"
 >
   <!-- Confetti Cannon -->
-  <div class="absolute -top-50 inset-0 flex h-full w-full pointer-events-none">
-    <Confetti
-      x={[-5, 5]}
-      y={[0, 0.1]}
-      delay={[0, 5000]}
-      infinite
-      duration={5000}
-      amount={200}
-      fallDistance="100vh"
-    />
-  </div>
+  {#if rank === "SS"}
+    <div
+      class="absolute -top-50 inset-0 flex h-full w-full pointer-events-none"
+    >
+      <Confetti
+        x={[-5, 5]}
+        y={[0, 0.1]}
+        delay={[0, 5000]}
+        infinite
+        duration={5000}
+        amount={200}
+        fallDistance="100vh"
+      />
+    </div>
+  {/if}
+
+  <!-- Background Overlay -->
+  <div class="fixed inset-0 bg-black/80 backdrop-blur-sm -z-10"></div>
 
   <!-- Text -->
   <div
@@ -47,22 +60,68 @@
     class="relative z-10 flex flex-col items-center justify-center p-8 text-center h-full pb-32 pointer-events-auto"
   >
     <h1
-      class="text-6xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-200 drop-shadow-[0_10px_20px_rgba(234,179,8,0.5)] italic tracking-tighter -rotate-6 mb-8"
+      class="text-6xl md:text-9xl font-black text-white italic tracking-tighter mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
     >
-      GAME CLEAR!
+      {#if rank === "SS"}
+        GAME CLEAR!!
+      {:else}
+        FINISH
+      {/if}
     </h1>
 
     <div
-      class="text-2xl md:text-4xl text-white font-bold drop-shadow-md mb-4 bg-black/30 p-4 rounded-xl backdrop-blur-sm"
-    >
-      {$t("victory")}
-    </div>
-
-    <div
-      class="text-xl md:text-2xl text-blue-200 font-bold drop-shadow-md mb-8"
+      class="text-xl md:text-3xl text-gray-300 font-bold tracking-widest mb-12 uppercase"
     >
       Score: {score.toLocaleString()}
     </div>
+
+    <!-- Rank Title -->
+    <div
+      class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-[0_0_30px_rgba(168,85,247,0.5)] mb-16 tracking-tight"
+    >
+      {$t(("rank" + rank) as any)}
+    </div>
+
+    <!-- MVP Cards -->
+    {#if mvpCards}
+      <div
+        class="flex flex-col md:flex-row gap-8 items-center justify-center mb-32"
+      >
+        {#if mvpCards.user}
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-yellow-400 font-bold text-xl drop-shadow-md">
+              {$t("mvpUser")}
+            </div>
+            <div
+              class="pointer-events-auto hover:scale-110 transition-transform duration-300"
+            >
+              <CardComponent
+                card={mvpCards.user}
+                interactive={false}
+                displayPower={mvpCards.user.power}
+              />
+            </div>
+          </div>
+        {/if}
+
+        {#if mvpCards.post}
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-cyan-400 font-bold text-xl drop-shadow-md">
+              {$t("mvpPost")}
+            </div>
+            <div
+              class="pointer-events-auto hover:scale-110 transition-transform duration-300"
+            >
+              <CardComponent
+                card={mvpCards.post}
+                interactive={false}
+                displayPower={mvpCards.post.playedScore ?? mvpCards.post.power}
+              />
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Button Fixed Bottom -->
