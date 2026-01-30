@@ -137,9 +137,9 @@ function buildContentDeck(likes: any[]): PostCard[] {
     const likeCount = post.likeCount || 0;
     const textLen = (post.record as any).text?.length || 0;
 
-    // New Formula: Power = (Likes * 1000) / (Length + 10)
+    // New Formula: Power = (Likes * 200) / (Length + 10)
     // Cost = 1 + Length/40
-    let power = Math.floor((likeCount * 100) / (textLen + 10));
+    let power = Math.floor((likeCount * 200) / (textLen + 10));
     let cost = Math.floor(1 + (textLen / 40));
 
     // Clamp
