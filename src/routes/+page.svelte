@@ -290,15 +290,13 @@
           {/if}
         </div>
 
-        {#if inputText && !showSuggestions && !loadingMessageKey}
-          <button
-            class="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold rounded-full transition-all shadow-lg hover:shadow-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            onclick={() => selectHandle(inputText)}
-            disabled={!inputText}
-          >
-            Start Game
-          </button>
-        {/if}
+        <button
+          class="px-10 py-3 bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold rounded-full transition-all shadow-lg hover:shadow-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          onclick={() => selectHandle(inputText)}
+          disabled={!inputText}
+        >
+          Start Game
+        </button>
       </div>
     </div>
   {/if}
