@@ -54,9 +54,9 @@ const translations = {
     mvpPost: 'Top Post'
   },
   jp: {
-    titleMain: 'Project Sky',
+    titleMain: 'プロジェクト スカイ',
     titleSub: '-1億ユーザーへの道-',
-    subtitle: '一人用カードゲーム。Blueskyを導くのは君だ！',
+    subtitle: '一人用カードゲーム。アンバサダーとなり、Blueskyを覇権SNSに導こう。',
     loading: '読み込み中...',
     loadingLikes: 'あなたのいいねを取得中...',
     loadingBuildDeck: 'あなたのいいねからデッキを構築中...',

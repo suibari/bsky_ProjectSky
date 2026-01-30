@@ -195,12 +195,12 @@
         <div class="mb-4">
           <div class="flex flex-col items-center">
             <h1
-              class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl leading-tight"
+              class="text-5xl md:text-6xl font-title text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl leading-tight"
             >
               {$t("titleMain")}
             </h1>
             <h2
-              class="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-200 to-slate-200 drop-shadow-lg mt-2"
+              class="text-2xl md:text-4xl font-title text-transparent bg-clip-text bg-gradient-to-r from-sky-200 to-slate-200 drop-shadow-lg mt-2"
             >
               {$t("titleSub")}
             </h2>
