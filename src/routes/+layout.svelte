@@ -1,7 +1,6 @@
 <script lang="ts">
 	import "../app.css";
 	import { onMount } from "svelte";
-	import favicon from "$lib/assets/favicon.svg";
 
 	let { children } = $props();
 
@@ -10,5 +9,12 @@
 	});
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href="/favicon.png" />
+	<meta property="og:title" content="Project Sky -Road to 100M-" />
+	<meta property="og:description" content="A Bluesky Card Game" />
+	<meta property="og:image" content="/ogp.png" />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary_large_image" />
+</svelte:head>
 {@render children()}
