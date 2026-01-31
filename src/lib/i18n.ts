@@ -51,7 +51,8 @@ const translations = {
     rankC: 'Ghost Town',
     mvpCard: 'MVP Card',
     mvpUser: 'Top User',
-    mvpPost: 'Top Post'
+    mvpPost: 'Top Post',
+    copyImageInstruction: 'Copy or save the image and paste it on Bluesky!'
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
@@ -69,7 +70,7 @@ const translations = {
     errorFollowees: 'フォローしているユーザーが見つかりません。誰かをフォローしましょう！',
     errorLikes: 'いいねした投稿が見つかりません。投稿にいいねしましょう！',
     errorData: 'ゲームデータの読み込みに失敗しました',
-    turn: 'ターン',
+    turn: 'TURN',
     phase: 'フェーズ',
     users: 'Users',
     goal: 'Goal: 1億(100M) Users',
@@ -100,7 +101,8 @@ const translations = {
     rankC: '限界集落',
     mvpCard: 'MVPカード',
     mvpUser: 'Top User',
-    mvpPost: 'Top Post'
+    mvpPost: 'Top Post',
+    copyImageInstruction: '画像のコピーまたは保存をして、Blueskyに貼り付けてください！'
   }
 };
 

@@ -53,6 +53,11 @@ export interface PostCard extends BaseCard {
 
 export type Card = UserCard | PostCard;
 
+export type MvpCards = {
+  user: UserCard | null;
+  post: PostCard | null;
+};
+
 export interface GameState {
   player: Player;
   turnCount: number; // 1-15
@@ -60,10 +65,7 @@ export interface GameState {
   phaseMultiplier: number; // 1, 10, 100
   archiveMultiplier: number; // Multiplier from archived cards
 
-  mvpCards?: {
-    user: UserCard | null;
-    post: PostCard | null;
-  };
+  mvpCards?: MvpCards;
 
   gameOver: boolean;
   victory: boolean; // Not used strictly as boolean anymore, rank determines result
