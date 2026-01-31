@@ -19,7 +19,9 @@
   let shareImageUrl = $state("");
 
   let shareText = $derived(
-    `Project Skyでランク${rank}、スコア${score.toLocaleString()}を達成しました！\n#ProjectSky`,
+    $t("shareText" as any)
+      .replace("{rank}", rank)
+      .replace("{score}", score.toLocaleString()),
   );
   let shareIntentUrl = $derived(
     `https://bsky.app/intent/compose?text=${encodeURIComponent(shareText)}`,

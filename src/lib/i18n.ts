@@ -95,7 +95,8 @@ const translations = {
       archiveDesc: 'Discard a card to double the power of the next card you use. Can be stacked.',
       multiplierTitle: 'Phase Multiplier',
       multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x10\nEnd Game (Turns 11-15): Multiplier x100'
-    }
+    },
+    shareText: 'I reached Rank {rank} with a score of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
@@ -188,7 +189,8 @@ const translations = {
       archiveDesc: 'カードを破棄することで、次に使うカードのパワーを2倍にします。重ねがけも可能です。',
       multiplierTitle: 'フェーズ倍率',
       multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x10\n終盤（11~15ターン）：倍率x100'
-    }
+    },
+    shareText: 'プロジェクトスカイでランク{rank}、スコア{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   }
 };
 
