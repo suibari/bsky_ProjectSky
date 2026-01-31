@@ -52,7 +52,8 @@ const translations = {
     mvpCard: 'MVP Card',
     mvpUser: 'Top User',
     mvpPost: 'Top Post',
-    copyImageInstruction: 'Copy or save the image and paste it on Bluesky!'
+    copyImageInstruction: 'Copy or save the image and paste it on Bluesky!',
+    share: 'Share'
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
@@ -102,7 +103,8 @@ const translations = {
     mvpCard: 'MVPカード',
     mvpUser: 'Top User',
     mvpPost: 'Top Post',
-    copyImageInstruction: '画像のコピーまたは保存をして、Blueskyに貼り付けてください！'
+    copyImageInstruction: '画像のコピーまたは保存をして、Blueskyに貼り付けてください！',
+    share: 'シェア'
   }
 };
 

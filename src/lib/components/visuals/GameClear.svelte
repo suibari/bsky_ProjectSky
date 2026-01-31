@@ -3,7 +3,7 @@
   import { Confetti } from "svelte-confetti";
   import gsap from "gsap";
   import { t } from "$lib/i18n";
-
+  import { formatScore } from "$lib/utils/format";
   import CardComponent from "../Card.svelte";
   import type { UserCard, PostCard } from "../../game/types";
 
@@ -87,7 +87,7 @@
       ctx.fillStyle = "#f472b6"; // Pink
     else ctx.fillStyle = "#60a5fa"; // Blue
 
-    ctx.fillText(`Rank ${rank}`, 540, 300);
+    ctx.fillText(`Rank ${rank}: ${$t(("rank" + rank) as any)}`, 540, 300);
 
     // Cards
     if (mvpCards) {
@@ -177,7 +177,7 @@
         ctx.fillStyle = "#2563eb"; // Blue-600
         ctx.font = "900 40px sans-serif";
         ctx.fillText(
-          String(mvpCards.user.power),
+          formatScore(mvpCards.user.power),
           x + 15,
           cardY + cardHeight - 60,
         );
@@ -277,7 +277,7 @@
         ctx.fillStyle = powerValueColor;
         ctx.font = "900 40px sans-serif";
         ctx.fillText(
-          String(mvpCards.post.playedScore ?? mvpCards.post.power),
+          formatScore(mvpCards.post.playedScore ?? mvpCards.post.power),
           x + 15,
           cardY + cardHeight - 60,
         );
@@ -487,7 +487,7 @@
       class="px-8 py-3 bg-blue-500 text-white font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-white"
       onclick={openShareModal}
     >
-      {$t("share" as any) || "Share"}
+      {$t("share")}
     </button>
     <button
       class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-yellow-400"
