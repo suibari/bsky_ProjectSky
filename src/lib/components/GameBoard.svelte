@@ -36,11 +36,12 @@
     },
   });
 
-  let { did, handle, avatarDeck, contentDeck } = $props<{
+  let { did, handle, avatarDeck, contentDeck, onOpenInfo } = $props<{
     did: string;
     handle: string;
     avatarDeck: any[];
     contentDeck: any[];
+    onOpenInfo?: () => void;
   }>();
 
   // Svelte 5 Reactivity
@@ -273,12 +274,40 @@
         </div>
       </div>
 
-      <!-- PC Settings Button -->
+      <div
+        class="md:col-span-1 md:justify-self-end flex items-center justify-end px-2"
+      >
+        <!-- Settings/Menu could go here -->
+      </div>
     </div>
   </div>
 
   <!-- Main Game Area -->
   <div class="flex-grow flex relative overflow-hidden">
+    <!-- Info Button (Field Top-Right) -->
+    <div class="absolute top-4 right-4 z-10">
+      <button
+        class="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-blue-400 hover:text-white flex items-center justify-center transition-all backdrop-blur-md border border-slate-600 shadow-lg"
+        onclick={onOpenInfo}
+        aria-label="Game Info"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+          />
+        </svg>
+      </button>
+    </div>
+
     <!-- Field -->
     <div
       class="flex-grow relative overflow-y-auto p-2 md:p-8 flex flex-col gap-4 items-center bg-slate-900/50 pb-32"

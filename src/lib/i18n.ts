@@ -53,12 +53,54 @@ const translations = {
     mvpUser: 'Top User',
     mvpPost: 'Top Post',
     copyImageInstruction: 'Copy or save the image and paste it on Bluesky!',
-    share: 'Share'
+    share: 'Share',
+    manual: {
+      title: 'About Project Sky',
+      intro: 'Project Sky is a single-player digital card game.\nNo sign-in required, anyone can play by entering a Bluesky handle.',
+      goalTitle: 'Goal',
+      goalDesc: 'Make Bluesky the hegemonic SNS (100 million users) in 15 turns.\nThe final rank is determined by the total number of users at the end of 15 turns.',
+      screenTitle: 'Game Screen',
+      screenItems: {
+        1: 'Current Turn. The goal is to make Bluesky the top SNS in 15 turns.',
+        2: 'Phase Multiplier. Bonus value that increases towards the end of the game.',
+        3: 'PDS Load. Total cost of usable cards.',
+        4: 'Number of Users. The goal is to reach 100 million.',
+        5: 'Progress Bar. Progress towards 100 million.',
+        6: 'Number of cards in hand.',
+        7: 'Number of cards in deck.',
+        8: 'Number of cards in discard pile.',
+        9: 'Draw Boost Button. Pay cost to draw an extra card.',
+        10: 'End Turn Button.',
+        11: 'PDS Cost. This value adds load to the PDS.',
+        12: 'User Card Power. This value increases users every turn.',
+        13: 'Post Card Power. This value grants users immediately.'
+      },
+      basicTitle: 'Basic',
+      cardTypesTitle: 'Card Types',
+      cardTypesDesc: 'There are two types of cards: User Cards and Post Cards.',
+      userCardTitle: 'User Card',
+      userCardDesc: 'Remains on the field and slightly increases users every turn.\nPower is shown at the bottom right, and cost at the top right.',
+      postCardTitle: 'Post Card',
+      postCardDesc: 'Disposable (moves to discard pile), instantly acquires users.\nPower is shown at the bottom right, and cost at the top right.',
+      deckTitle: 'Deck',
+      deckDesc: 'The deck consists of 140 cards: 70 User Cards and 70 Post Cards.\nThe deck changes based on your recent likes on Bluesky.',
+      resourceTitle: 'Resources',
+      resourceDesc: 'Using a card imposes a PDS load and consumes PDS capacity.\nPDS capacity starts at 10, fully recovers every turn, and the maximum value increases by +1 each turn.\nYou cannot use cards that exceed the current PDS capacity.',
+      turnTitle: 'Turn',
+      turnDesc: 'One turn consists of the Draw Phase, Main Phase, and End Phase.\nDraw Phase: Draw from the deck until you have 5 cards in hand.\nMain Phase: Play as many cards as you like within the PDS capacity.\nPlaying a Post Card grants users immediately equal to Power x Phase Multiplier.\nEnd Phase: Add the total power of User Cards on the field x Phase Multiplier to the user count.',
+      otherTitle: 'Others',
+      boostTitle: 'Boost',
+      boostDesc: 'Spend 5 PDS capacity to draw 1 card.',
+      archiveTitle: 'Archive',
+      archiveDesc: 'Discard a card to double the power of the next card you use. Can be stacked.',
+      multiplierTitle: 'Phase Multiplier',
+      multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x10\nEnd Game (Turns 11-15): Multiplier x100'
+    }
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
     titleSub: '-1億ユーザーへの道-',
-    subtitle: '一人用カードゲーム。アンバサダーとなり、Blueskyを覇権SNSに導こう。',
+    subtitle: '一人用カードゲーム。アンバサダーとなり、Blueskyを覇権SNSに導こう。サインイン不要です。',
     loading: '読み込み中...',
     loadingLikes: 'あなたのいいねを取得中...',
     loadingBuildDeck: 'あなたのいいねからデッキを構築中...',
@@ -104,10 +146,57 @@ const translations = {
     mvpUser: 'Top User',
     mvpPost: 'Top Post',
     copyImageInstruction: '画像のコピーまたは保存をして、Blueskyに貼り付けてください！',
-    share: 'シェア'
+    share: 'シェア',
+    manual: {
+      title: 'このゲームについて',
+      intro: 'プロジェクトスカイは一人用デジタルカードゲームです。\nサインインは不要で、Blueskyのハンドルを入力すればどなたでも楽しめます。',
+      goalTitle: '目標',
+      goalDesc: '15ターンでBlueskyを覇権SNS（ユーザー数1億人）にすることを目指します。\n15ターン終了時の累計ユーザー数によって最終ランクが判定されます。',
+      screenTitle: 'ゲーム画面',
+      screenItems: {
+        1: '経過ターンです。15ターンでBlueskyを覇権SNSにすることが目的です。',
+        2: 'フェーズ倍率です。終盤になるにつれ増加するボーナス値となります。',
+        3: 'PDS負荷です。使えるカードの総コストを表します。',
+        4: 'ユーザー数です。これを1億にすることが目的です。',
+        5: '進捗バーです。1億に対する進捗率を示します。',
+        6: '手札の枚数です。',
+        7: 'デッキの枚数です。',
+        8: '捨て札の枚数です。',
+        9: 'ドロー加速ボタンです。コストを支払い追加ドローを行います。',
+        10: 'ターンエンドボタンです。',
+        11: 'PDSコストです。この数値ぶんPDSに負荷がかかります。',
+        12: 'ユーザーカードのパワーです。この数値ぶん、毎ターンユーザーが増加します。',
+        13: 'ポストカードのパワーです。この数値ぶん、即座にユーザーを獲得します。'
+      },
+      basicTitle: '基本',
+      cardTypesTitle: 'カードの種類',
+      cardTypesDesc: 'カードにはユーザーカードとポストカードがあります。',
+      userCardTitle: 'ユーザーカード',
+      userCardDesc: '場に残り、毎ターンユーザーを微増させる効果を持つカードです。\n右下にパワー、右上にコストが記載されています。',
+      postCardTitle: 'ポストカード',
+      postCardDesc: '使い捨て（捨て札に移動）で、即座にユーザーを獲得します。\n右下にパワー、右上にコストが記載されています。',
+      deckTitle: 'デッキ',
+      deckDesc: 'ユーザーカード70枚とポストカード70枚の140枚で構成されます。\nデッキはBlueskyであなたが行った直近のいいねによって変化します。',
+      resourceTitle: 'リソース',
+      resourceDesc: 'カードを使うたびにPDS負荷がかかり、PDS容量を消費します。\nPDS容量は初期値は10で、毎ターン全回復し、最大値が+1されていきます。\nPDS容量現在値を超えたカードを使うことはできません。',
+      turnTitle: 'ターン',
+      turnDesc: '1ターンはドローフェイズ、メインフェイズ、エンドフェイズで構成されます。\nドローフェイズは、手札が5枚になるようデッキからドローします。\nメインフェイズは、PDS容量の範囲内でカードを好きなだけプレイできます。\nエンドフェイズは、場のユーザーカードのパワー合計値×フェーズ倍率をユーザー数に加算します。',
+      otherTitle: 'その他いろいろ',
+      boostTitle: 'ブースト',
+      boostDesc: 'PDS容量を5使うことで、1枚ドローできます。',
+      archiveTitle: 'アーカイブ',
+      archiveDesc: 'カードを破棄することで、次に使うカードのパワーを2倍にします。重ねがけも可能です。',
+      multiplierTitle: 'フェーズ倍率',
+      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x10\n終盤（11~15ターン）：倍率x100'
+    }
   }
 };
 
-export const t = derived(locale, ($locale) => (key: keyof typeof translations['en']) => {
-  return translations[$locale][key] || key;
+// Helper to access nested properties
+function getNested(obj: any, path: string): any {
+  return path.split('.').reduce((prev, curr) => (prev ? prev[curr] : null), obj) || path;
+}
+
+export const t = derived(locale, ($locale) => (key: string): any => {
+  return getNested(translations[$locale], key);
 });

@@ -4,6 +4,7 @@
   import { fetchGameDecks, type ProgressKey } from "$lib/game/api";
   import type { UserCard, PostCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
+  import InfoModal from "$lib/components/visuals/InfoModal.svelte";
 
   import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api";
@@ -16,6 +17,7 @@
   let avatarDeck = $state<UserCard[]>([]);
   let contentDeck = $state<PostCard[]>([]);
   let readyToPlay = $state(false);
+  let showInfoModal = $state(false);
   let userDid = $state("");
   let userHandle = $state("");
 
@@ -150,7 +152,13 @@
       </p>
     </div>
   {:else if readyToPlay}
-    <GameBoard did={userDid} handle={userHandle} {avatarDeck} {contentDeck} />
+    <GameBoard
+      did={userDid}
+      handle={userHandle}
+      {avatarDeck}
+      {contentDeck}
+      onOpenInfo={() => (showInfoModal = true)}
+    />
   {:else}
     <!-- Landing / Handle Input -->
     <div
@@ -224,35 +232,59 @@
         {/if}
 
         <!-- Handle Input Section -->
-        <div class="w-full max-w-md relative">
-          <input
-            type="text"
-            class="w-full px-6 py-4 bg-slate-900/80 border border-slate-700 rounded-full text-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-xl backdrop-blur-sm"
-            placeholder="Enter Bluesky Handle (e.g. user.bsky.social)"
-            value={inputText}
-            oninput={handleInput}
-            onfocus={() => {
-              if (inputText.length >= 3) showSuggestions = true;
-            }}
-          />
-          <!-- Search Icon -->
-          <div
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <div class="w-full max-w-md relative flex flex-col gap-4">
+          <!-- Game Description Button -->
+          <div class="flex justify-center">
+            <button
+              class="text-blue-300 hover:text-white underline text-sm flex items-center gap-1 transition-colors"
+              onclick={() => (showInfoModal = true)}
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                class="w-4 h-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                />
+              </svg>
+              {$t("manual.title")}
+            </button>
+          </div>
+
+          <div class="relative w-full">
+            <input
+              type="text"
+              class="w-full px-6 py-4 bg-slate-900/80 border border-slate-700 rounded-full text-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-xl backdrop-blur-sm"
+              placeholder="Enter Bluesky Handle (e.g. user.bsky.social)"
+              value={inputText}
+              oninput={handleInput}
+              onfocus={() => {
+                if (inputText.length >= 3) showSuggestions = true;
+              }}
+            />
+            <!-- Search Icon -->
+            <div
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
           </div>
 
           <!-- Typeahead Dropdown -->
@@ -299,5 +331,9 @@
         </button>
       </div>
     </div>
+  {/if}
+
+  {#if showInfoModal}
+    <InfoModal onClose={() => (showInfoModal = false)} />
   {/if}
 </div>
