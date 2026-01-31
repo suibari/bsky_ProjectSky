@@ -249,17 +249,23 @@
       >
         <!-- PDS Meter -->
         <div class="flex items-center gap-2 mb-1">
-          <span class="text-xs font-bold text-slate-400">PDS LOAD</span>
-          <div class="flex gap-0.5">
+          <span class="text-xs font-bold text-slate-400 whitespace-nowrap"
+            >PDS LOAD</span
+          >
+          <!-- Responsive PDS Container -->
+          <div
+            class="flex gap-[2px] h-4 max-w-[120px] md:max-w-[200px] items-center"
+          >
             {#each Array(gameState.player.pdsCapacity) as _, i}
               <div
-                class="w-2 h-4 rounded-sm {i < gameState.player.pdsCurrent
+                class="h-full w-2 shrink rounded-[1px] min-w-[2px] {i <
+                gameState.player.pdsCurrent
                   ? 'bg-pink-500 shadow-[0_0_5px_rgba(236,72,153,0.8)]'
                   : 'bg-slate-700'} transition-all"
               ></div>
             {/each}
           </div>
-          <span class="text-xs font-mono text-pink-400"
+          <span class="text-xs font-mono text-pink-400 whitespace-nowrap"
             >{gameState.player.pdsCurrent}/{gameState.player.pdsCapacity}</span
           >
         </div>
