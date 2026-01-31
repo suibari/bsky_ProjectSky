@@ -207,7 +207,9 @@ async function buildAvatarDeck(ag: Agent, candidates: any[]): Promise<UserCard[]
     if (power < 1) power = 1;
 
     // Cost
-    let rawCost = Math.floor((follows * 5) / (followers + 1)) + 1;
+    const discount = followers > follows * 10 ? -2 : 0;
+    const penalty = follows > followers ? 2 : 0;
+    let rawCost = Math.floor(Math.log10(followers + 1) + discount + penalty);
     let cost = Math.max(1, Math.min(10, rawCost));
 
     deck.push({
