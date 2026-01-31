@@ -138,7 +138,9 @@
 </svelte:head>
 
 <div
-  class="h-dvh w-full bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white flex flex-col overflow-hidden"
+  class="h-dvh w-full bg-slate-950 text-white font-sans selection:bg-blue-500 selection:text-white flex flex-col {readyToPlay
+    ? 'overflow-hidden'
+    : 'overflow-y-auto'}"
 >
   {#if loadingMessageKey}
     <div
@@ -162,7 +164,7 @@
   {:else}
     <!-- Landing / Handle Input -->
     <div
-      class="flex-grow w-full flex flex-col items-center justify-center relative overflow-hidden"
+      class="flex-grow w-full flex flex-col items-center justify-center relative"
     >
       <!-- Background Decoration -->
       <div
@@ -174,28 +176,6 @@
       <div
         class="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse delay-1000"
       ></div>
-
-      <!-- Language Switcher (Bottom Center) -->
-      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-2">
-        <button
-          class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
-          'jp'
-            ? 'bg-blue-600 text-white shadow-lg'
-            : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
-          onclick={() => locale.set("jp")}
-        >
-          JP
-        </button>
-        <button
-          class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
-          'en'
-            ? 'bg-blue-600 text-white shadow-lg'
-            : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
-          onclick={() => locale.set("en")}
-        >
-          EN
-        </button>
-      </div>
 
       <div
         class="z-10 text-center flex flex-col items-center gap-8 max-w-2xl px-4 w-full"
@@ -243,6 +223,8 @@
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
                 class="w-4 h-4"
               >
                 <path
@@ -329,6 +311,28 @@
         >
           Start Game
         </button>
+
+        <!-- Language Switcher -->
+        <div class="flex gap-2 mt-4">
+          <button
+            class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
+            'jp'
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
+            onclick={() => locale.set("jp")}
+          >
+            JP
+          </button>
+          <button
+            class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
+            'en'
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
+            onclick={() => locale.set("en")}
+          >
+            EN
+          </button>
+        </div>
       </div>
     </div>
   {/if}
