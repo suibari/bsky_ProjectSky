@@ -387,10 +387,11 @@
       </button>
 
       <button
-        class="pointer-events-auto px-6 py-2 bg-slate-900/90 hover:bg-red-900/90 text-slate-300 hover:text-white font-bold text-xs rounded-full shadow-lg backdrop-blur-md border border-slate-600 hover:border-red-500 transition-all hover:scale-105"
+        class="pointer-events-auto px-6 py-2 bg-slate-900/90 hover:bg-red-900/90 text-slate-300 hover:text-white font-bold text-xs rounded-full shadow-lg backdrop-blur-md border border-slate-600 hover:border-red-500 transition-all hover:scale-105 disabled:opacity-50 disabled:grayscale"
         onclick={confirmArchive}
+        disabled={gameState.player.pdsCurrent < GAME_CONFIG.pds.archiveCost}
       >
-        ARCHIVE (Discard)
+        ARCHIVE<br />(Discard & Cost: {GAME_CONFIG.pds.archiveCost})
       </button>
     </div>
   {/if}

@@ -147,6 +147,16 @@ export class GameEngine {
     const card = this.state.player.hand[cardIndex];
     if (!card) return;
 
+    // Check Cost
+    const cost = GAME_CONFIG.pds.archiveCost;
+    if (this.state.player.pdsCurrent < cost) {
+      console.warn("Not enough PDS to archive");
+      return;
+    }
+
+    // Pay Cost
+    this.state.player.pdsCurrent -= cost;
+
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
 

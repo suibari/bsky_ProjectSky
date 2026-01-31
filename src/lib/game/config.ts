@@ -14,6 +14,7 @@ export const GAME_CONFIG = {
     initialCapacity: 10,
     maxCapacityIncrement: 1, // How much capacity increases per turn
     drawCost: 5, // Cost to draw an extra card
+    archiveCost: 2, // Cost to archive a card
   },
 
   archiveMultiplier: 2, // Multiplier when archiving a card
