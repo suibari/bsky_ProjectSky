@@ -387,7 +387,7 @@
 </script>
 
 <div
-  class="fixed inset-0 z-[300] pointer-events-none flex items-center justify-center overflow-hidden"
+  class="fixed inset-0 z-[300] overflow-y-auto overflow-x-hidden pointer-events-auto touch-pan-y"
 >
   <!-- Confetti Cannon -->
   {#if rank === "SS"}
@@ -412,10 +412,10 @@
   <!-- Text -->
   <div
     bind:this={textElement}
-    class="relative z-10 flex flex-col items-center justify-center p-8 text-center h-full pb-32 pointer-events-auto"
+    class="relative z-10 flex flex-col items-center justify-start min-h-full py-16 px-4 md:p-8 text-center w-full max-w-5xl mx-auto"
   >
     <h1
-      class="text-6xl md:text-9xl font-black text-white italic tracking-tighter mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+      class="text-5xl md:text-9xl font-black text-white italic tracking-tighter mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mt-8 md:mt-0"
     >
       {#if rank === "SS"}
         GAME CLEAR!!
@@ -425,14 +425,14 @@
     </h1>
 
     <div
-      class="text-xl md:text-3xl text-gray-300 font-bold tracking-widest mb-12 uppercase"
+      class="text-lg md:text-3xl text-gray-300 font-bold tracking-widest mb-8 md:mb-12 uppercase"
     >
       Score: {score.toLocaleString()}
     </div>
 
     <!-- Rank Title -->
     <div
-      class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-[0_0_30px_rgba(168,85,247,0.5)] mb-16 tracking-tight"
+      class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-[0_0_30px_rgba(168,85,247,0.5)] mb-8 md:mb-16 tracking-tight"
     >
       {$t(("rank" + rank) as any)}
     </div>
@@ -440,7 +440,7 @@
     <!-- MVP Cards -->
     {#if mvpCards}
       <div
-        class="flex flex-col md:flex-row gap-8 items-center justify-center mb-32"
+        class="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 md:mb-16 w-full"
       >
         {#if mvpCards.user}
           <div class="flex flex-col items-center gap-2">
@@ -448,7 +448,7 @@
               {$t("mvpUser")}
             </div>
             <div
-              class="pointer-events-auto hover:scale-110 transition-transform duration-300"
+              class="pointer-events-auto hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
             >
               <CardComponent
                 card={mvpCards.user}
@@ -465,7 +465,7 @@
               {$t("mvpPost")}
             </div>
             <div
-              class="pointer-events-auto hover:scale-110 transition-transform duration-300"
+              class="pointer-events-auto hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
             >
               <CardComponent
                 card={mvpCards.post}
@@ -477,24 +477,22 @@
         {/if}
       </div>
     {/if}
-  </div>
 
-  <!-- Button Fixed Bottom -->
-  <div
-    class="fixed bottom-16 left-1/2 -translate-x-1/2 z-[310] pointer-events-auto flex gap-4"
-  >
-    <button
-      class="px-8 py-3 bg-blue-500 text-white font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-white"
-      onclick={openShareModal}
-    >
-      {$t("share")}
-    </button>
-    <button
-      class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-yellow-400"
-      onclick={() => location.reload()}
-    >
-      {$t("playAgain")}
-    </button>
+    <!-- Buttons (In Flow) -->
+    <div class="flex flex-col md:flex-row gap-4 mb-16 pointer-events-auto z-50">
+      <button
+        class="px-8 py-3 bg-blue-500 text-white font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-white w-64"
+        onclick={openShareModal}
+      >
+        {$t("share")}
+      </button>
+      <button
+        class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-yellow-400 w-64"
+        onclick={() => location.reload()}
+      >
+        {$t("playAgain")}
+      </button>
+    </div>
   </div>
 
   <!-- Share Modal -->
