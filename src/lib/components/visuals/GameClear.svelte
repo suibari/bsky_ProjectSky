@@ -7,10 +7,11 @@
   import CardComponent from "../Card.svelte";
   import type { UserCard, PostCard } from "../../game/types";
 
-  let { score, rank, mvpCards } = $props<{
+  let { score, rank, mvpCards, player } = $props<{
     score: number;
     rank: string;
     mvpCards?: { user: UserCard | null; post: PostCard | null };
+    player?: { displayName: string; handle: string; avatarUrl?: string };
   }>();
 
   let textElement: HTMLDivElement;
@@ -75,10 +76,18 @@
     ctx.shadowBlur = 20;
     ctx.fillText($t("titleMain" as any), 540, 80);
 
+    // Ambassador
+    if (player) {
+      ctx.font = "bold 40px sans-serif";
+      ctx.fillStyle = "#94a3b8"; // Slate-400
+      const name = player.displayName || `@${player.handle}`;
+      ctx.fillText(`Ambassador: ${name}`, 540, 180);
+    }
+
     // Rank & Score
     ctx.font = "bold 60px sans-serif";
     ctx.fillStyle = "#cbd5e1"; // Slate-300
-    ctx.fillText(`Score: ${score.toLocaleString()}`, 540, 200);
+    ctx.fillText(`Score: ${score.toLocaleString()}`, 540, 260);
 
     ctx.font = "black 120px sans-serif";
 
@@ -89,11 +98,11 @@
       ctx.fillStyle = "#f472b6"; // Pink
     else ctx.fillStyle = "#60a5fa"; // Blue
 
-    ctx.fillText(`Rank ${rank}: ${$t(("rank" + rank) as any)}`, 540, 300);
+    ctx.fillText(`Rank ${rank}: ${$t(("rank" + rank) as any)}`, 540, 340);
 
     // Cards
     if (mvpCards) {
-      const cardY = 450;
+      const cardY = 480;
       const cardWidth = 350;
       const cardHeight = 520;
 

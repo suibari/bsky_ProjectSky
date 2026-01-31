@@ -62,7 +62,7 @@ export class GameEngine {
     return cards;
   }
 
-  static createInitialState(did: string, handle: string, avatarDeck: any[], contentDeck: any[]): GameState {
+  static createInitialState(did: string, handle: string, displayName: string, avatarDeck: any[], contentDeck: any[]): GameState {
     const allCards = GameEngine.convertCards(did, avatarDeck, contentDeck);
 
     // Ensure we have enough cards or truncate? 
@@ -90,6 +90,7 @@ export class GameEngine {
       player: {
         did,
         handle,
+        displayName,
         deck,
         hand,
         discard: [],

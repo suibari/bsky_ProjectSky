@@ -36,18 +36,21 @@
     },
   });
 
-  let { did, handle, avatarDeck, contentDeck, onOpenInfo } = $props<{
-    did: string;
-    handle: string;
-    avatarDeck: any[];
-    contentDeck: any[];
-    onOpenInfo?: () => void;
-  }>();
+  let { did, handle, displayName, avatarDeck, contentDeck, onOpenInfo } =
+    $props<{
+      did: string;
+      handle: string;
+      displayName: string;
+      avatarDeck: any[];
+      contentDeck: any[];
+      onOpenInfo?: () => void;
+    }>();
 
   // Svelte 5 Reactivity
   const initialState = GameEngine.createInitialState(
     did,
     handle,
+    displayName,
     avatarDeck,
     contentDeck,
   );
@@ -462,6 +465,11 @@
       score={gameState.player.buzzPoints}
       rank={gameState.finalRank}
       mvpCards={gameState.mvpCards}
+      player={{
+        displayName: gameState.player.displayName,
+        handle: gameState.player.handle,
+        avatarUrl: gameState.player.avatarUrl,
+      }}
     />
   {/if}
 

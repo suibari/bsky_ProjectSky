@@ -20,6 +20,7 @@
   let showInfoModal = $state(false);
   let userDid = $state("");
   let userHandle = $state("");
+  let userDisplayName = $state("");
 
   // Input & Typeahead
   let inputText = $state("");
@@ -61,7 +62,11 @@
     }, 300);
   }
 
-  async function selectHandle(handle: string, did?: string) {
+  async function selectHandle(
+    handle: string,
+    did?: string,
+    displayName?: string,
+  ) {
     inputText = handle;
     showSuggestions = false;
 
@@ -70,6 +75,13 @@
       try {
         const res = await publicAgent.resolveHandle({ handle });
         did = res.data.did;
+        // Try to fetch profile for display name if not provided
+        try {
+          const profileRes = await publicAgent.getProfile({ actor: did });
+          displayName = profileRes.data.displayName || handle;
+        } catch (e) {
+          displayName = handle;
+        }
       } catch (e) {
         error = $t("errorAuth"); // Reuse auth error or generic
         return;
@@ -80,11 +92,13 @@
     localStorage.setItem("bsky_handle", handle);
 
     // Start Game
-    await startGame(handle, did!);
+    await startGame(handle, did!, displayName || handle);
   }
 
-  async function startGame(handle: string, did: string) {
+  async function startGame(handle: string, did: string, displayName: string) {
     userHandle = handle;
+    userDid = did;
+    userDisplayName = displayName;
     userDid = did;
     agent = publicAgent; // Use public agent for game queries
 
@@ -157,6 +171,7 @@
     <GameBoard
       did={userDid}
       handle={userHandle}
+      displayName={userDisplayName}
       {avatarDeck}
       {contentDeck}
       onOpenInfo={() => (showInfoModal = true)}
@@ -277,7 +292,8 @@
               {#each suggestions as actor}
                 <button
                   class="w-full px-4 py-3 text-left hover:bg-slate-800 flex items-center gap-3 transition-colors border-b border-slate-800 last:border-0"
-                  onclick={() => selectHandle(actor.handle, actor.did)}
+                  onclick={() =>
+                    selectHandle(actor.handle, actor.did, actor.displayName)}
                 >
                   {#if actor.avatar}
                     <img

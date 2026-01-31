@@ -1,6 +1,7 @@
 export interface Player {
   did: string;
   handle: string;
+  displayName: string;
   avatarUrl?: string;
   deck: Card[];
   hand: Card[];

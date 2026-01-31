@@ -40,5 +40,15 @@
 </script>
 
 <div class="w-full h-dvh bg-slate-900 flex items-center justify-center">
-  <GameClear score={12345} rank="SS" {mvpCards} />
+  <GameClear
+    score={12345}
+    rank="SS"
+    {mvpCards}
+    player={{
+      displayName: "Debug User",
+      handle: "debug_user.bsky.social",
+      avatarUrl:
+        "https://bsky.social/xrpc/com.atproto.sync.getBlob?did=did:plc:ragtjsm2j2vknwkz3zp4oxrd&cid=bafkreihqj36b7p2k6k6q6q6q6q6q6q6q6q6q6q6q6q6q6q6q6",
+    }}
+  />
 </div>
