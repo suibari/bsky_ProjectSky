@@ -87,7 +87,7 @@
     // Rank & Score
     ctx.font = "bold 60px sans-serif";
     ctx.fillStyle = "#cbd5e1"; // Slate-300
-    ctx.fillText(`Score: ${score.toLocaleString()}`, 540, 260);
+    ctx.fillText(`User Count: ${score.toLocaleString()}`, 540, 260);
 
     ctx.font = "black 120px sans-serif";
 
@@ -438,7 +438,7 @@
     <div
       class="text-lg md:text-3xl text-gray-300 font-bold tracking-widest mb-8 md:mb-12 uppercase"
     >
-      Score: {score.toLocaleString()}
+      User Count: {score.toLocaleString()}
     </div>
 
     <!-- Rank Title -->

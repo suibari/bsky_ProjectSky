@@ -99,7 +99,7 @@ const translations = {
       multiplierTitle: 'Phase Multiplier',
       multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x10\nEnd Game (Turns 11-15): Multiplier x100'
     },
-    shareText: 'I reached Rank {rank} with a score of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
+    shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
@@ -196,7 +196,7 @@ const translations = {
       multiplierTitle: 'フェーズ倍率',
       multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x10\n終盤（11~15ターン）：倍率x100'
     },
-    shareText: 'プロジェクトスカイでランク{rank}、スコア{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
+    shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   }
 };
 
