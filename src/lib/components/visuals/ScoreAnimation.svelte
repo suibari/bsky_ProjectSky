@@ -122,21 +122,27 @@
           {#each lanes as lane}
             <div class="score-item flex flex-col items-center gap-1 group">
               <!-- Avatar -->
+              <!-- Avatar -->
               <div
-                class="w-12 h-12 rounded-full border-2 border-blue-500 overflow-hidden relative shadow-lg group-hover:scale-110 transition-transform"
+                class="relative w-12 h-12 group-hover:scale-110 transition-transform"
               >
-                {#if lane.card.avatarUrl}
-                  <img
-                    src={lane.card.avatarUrl}
-                    alt=""
-                    class="w-full h-full object-cover"
-                  />
-                {:else}
-                  <div class="w-full h-full bg-slate-700"></div>
-                {/if}
+                <!-- Avatar Image Container -->
+                <div
+                  class="w-full h-full rounded-full border-2 border-blue-500 overflow-hidden shadow-lg"
+                >
+                  {#if lane.card.avatarUrl}
+                    <img
+                      src={lane.card.avatarUrl}
+                      alt=""
+                      class="w-full h-full object-cover"
+                    />
+                  {:else}
+                    <div class="w-full h-full bg-slate-700"></div>
+                  {/if}
+                </div>
                 <!-- Power Badge -->
                 <div
-                  class="absolute bottom-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-1 rounded-tl-md"
+                  class="absolute bottom-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-1 rounded-tl-md shadow-sm z-10"
                 >
                   {lane.card.power}
                 </div>
