@@ -9,6 +9,12 @@ export const GAME_CONFIG = {
   initialHandSize: 5,
   maxTurns: 15,
 
+  phases: [
+    { duration: 5, multiplier: 1 },
+    { duration: 5, multiplier: 10 },
+    { duration: 5, multiplier: 100 },
+  ],
+
   // Resources
   pds: {
     initialCapacity: 10,
