@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from './config';
 import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
+import { getRank } from './ranks';
 
 export class GameEngine {
   state: GameState;
@@ -266,18 +267,9 @@ export class GameEngine {
     this.state.gameOver = true;
 
     // Calculate Rank
-    const users = this.state.player.buzzPoints;
-    if (users >= GAME_CONFIG.ranks.SS) {
-      this.state.finalRank = 'SS';
+    this.state.finalRank = getRank(this.state.player.buzzPoints);
+    if (this.state.finalRank === 'SS') {
       this.state.victory = true; // "Clear"
-    } else if (users >= GAME_CONFIG.ranks.S) {
-      this.state.finalRank = 'S';
-    } else if (users >= GAME_CONFIG.ranks.A) {
-      this.state.finalRank = 'A';
-    } else if (users >= GAME_CONFIG.ranks.B) {
-      this.state.finalRank = 'B';
-    } else {
-      this.state.finalRank = 'C';
     }
 
     // Determine MVP Cards

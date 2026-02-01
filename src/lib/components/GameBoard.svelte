@@ -13,9 +13,11 @@
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t } from "$lib/i18n";
 
-  import ScoreAnimation from "$lib/components/visuals/ScoreAnimation.svelte";
-  import TurnTransition from "$lib/components/visuals/TurnTransition.svelte";
-  import GameClear from "$lib/components/visuals/GameClear.svelte";
+  import ScoreAnimation from "./visuals/ScoreAnimation.svelte";
+  import GameClear from "./visuals/GameClear.svelte";
+  import TurnTransition from "./visuals/TurnTransition.svelte";
+  import RankUp from "$lib/components/visuals/RankUp.svelte";
+  import { getRank } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
 
@@ -65,6 +67,65 @@
   let showTurnTransition = $state(false);
   let animationLanes = $state<{ card: any }[]>([]);
   let menuPosition = $state<{ x: number; y: number } | null>(null);
+
+  // Rank Animation State
+  let currentRank = $state(getRank(gameState.player.buzzPoints));
+  let rankUpQueue = $state<string[]>([]);
+  let showRankUp = $state(false);
+  let displayingRank = $state("");
+
+  // Watch for Rank Up
+  $effect(() => {
+    const newRank = getRank(gameState.player.buzzPoints);
+    if (newRank !== currentRank) {
+      // Logic: If we jumped multiple ranks (e.g. G -> D), newRank is D.
+      // We just want to show D.
+      // So we simply queue/show the newRank.
+      // But we should only show if we play animation.
+      // If we are already showing an animation, what do we do?
+      // User says "Stopping is fine"? Or "Show the bigger one".
+      // If we update `currentRank`, the effect fires.
+
+      // Let's just track the "highest seen rank".
+      // If newRank is higher than currentRank (which it should be), trigger animation.
+      // We need a way to compare ranks strictly to be safe, or just assume buzzPoints always goes up.
+      // Assuming buzzPoints goes up:
+
+      // Prevent G animation on load (currentRank init matches newRank)
+
+      currentRank = newRank;
+      rankUpQueue.push(newRank);
+    }
+  });
+
+  // Process Queue
+  $effect(() => {
+    if (rankUpQueue.length > 0 && !showRankUp) {
+      // Take the latest rank (highest) if multiple in queue?
+      // Or just FIFO?
+      // User said: "If 2 or more ranks up, play the bigger one".
+      // This implies if I go G -> F -> E in one update, I show E.
+      // My effect above updates `currentRank` effectively immediately on score change.
+      // If score changes big, it calls effect once with new big score => new big rank.
+      // So we just get D directly.
+
+      // However, if we process queue slowly, we might have [D, C] ?? No, rank only goes up.
+      // Actually if we jump G -> D, queue has [D].
+      // If we go G -> F then F -> E quickly?
+      // Let's just take the last element of queue and clear queue?
+      // No, maybe safer to shift.
+
+      const nextRank = rankUpQueue[rankUpQueue.length - 1]; // Take the latest (highest)
+      rankUpQueue = []; // Clear intermediate
+
+      displayingRank = nextRank;
+      showRankUp = true;
+    }
+  });
+
+  function handleRankUpComplete() {
+    showRankUp = false;
+  }
 
   // Actions
   function startGame() {
@@ -199,6 +260,10 @@
       turn={gameState.turnCount}
       onComplete={handleTurnTransitionComplete}
     />
+  {/if}
+
+  {#if showRankUp}
+    <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
   {/if}
 
   <!-- HUD -->

@@ -70,7 +70,7 @@ export interface GameState {
 
   gameOver: boolean;
   victory: boolean; // Not used strictly as boolean anymore, rank determines result
-  finalRank?: 'SS' | 'S' | 'A' | 'B' | 'C';
+  finalRank?: 'SS' | 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 
   buzzHistory: number[];
 }
