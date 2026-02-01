@@ -13,78 +13,68 @@ export async function fetchGameDecks(
 
   onProgress?.('loadingLikes');
 
-  const uniqueAuthorDids = new Set<string>();
-  const likedPostUris: string[] = [];
+  // --- 1. Fetch "My Likes" (Depth 1) ---
+  const myLikes = await fetchAuthorLikes(ag, actor, GAME_CONFIG.deck.avatarCount); // Fetch enough to find authors
+  const myLikedAuthors = Array.from(myLikes.authors);
 
-  let cursor: string | undefined;
-  let loopCount = 0;
+  // --- 2. Fetch "Extended Likes" (Depth 2) ---
+  // Select random authors from my likes to fetch their likes
+  const extendedLikesUris: string[] = [];
+  const extendedAuthors = new Set<string>();
 
-  // 1. Resolve PDS Endpoint & Create Agent for Repo operations
-  let repoAgent = ag;
-  try {
-    const endpoint = await getPdsEndpoint(actor);
-    if (endpoint) {
-      repoAgent = new Agent(endpoint);
-    }
-  } catch (e) {
-    console.warn("Failed to resolve PDS endpoint, falling back to public agent", e);
-  }
+  if (myLikedAuthors.length > 0) {
+    // Pick random 5 authors
+    const shuffledAuthors = myLikedAuthors.sort(() => Math.random() - 0.5).slice(0, 5);
 
-  // 2. Fetch Likes using listRecords (Targeting PDS)
-  // Ensure we get enough unique authors and enough posts
-  // We want ideally 100 User Cards (unique authors)
-  while ((uniqueAuthorDids.size < GAME_CONFIG.deck.avatarCount || likedPostUris.length < GAME_CONFIG.deck.contentCount) && loopCount < 10) {
-    loopCount++;
-    try {
-      const res = await repoAgent.com.atproto.repo.listRecords({
-        repo: actor,
-        collection: 'app.bsky.feed.like',
-        limit: 100,
-        cursor
-      });
-
-      const records = res.data.records;
-      if (!records || records.length === 0) break;
-
-      for (const record of records) {
-        // @ts-ignore
-        const subjectUri = record.value.subject?.uri;
-        if (subjectUri && typeof subjectUri === 'string') {
-          likedPostUris.push(subjectUri);
-
-          // Extract DID from URI: at://did:plc:xyz/...
-          // The format is at://<did>/<collection>/<rkey>
-          const match = subjectUri.match(/^at:\/\/([^\/]+)/);
-          if (match && match[1]) {
-            uniqueAuthorDids.add(match[1]);
-          }
-        }
+    for (const targetUser of shuffledAuthors) {
+      try {
+        // Fetch a smaller batch from each extended user to get variety
+        const extendedRes = await fetchAuthorLikes(ag, targetUser, 5);
+        // console.log(`Fetched likes for extended user ${targetUser}`, extendedRes);
+        extendedRes.uris.forEach(u => extendedLikesUris.push(u));
+        extendedRes.authors.forEach(a => extendedAuthors.add(a));
+      } catch (e) {
+        console.warn(`Failed to fetch likes for extended user ${targetUser}`, e);
       }
-
-      cursor = res.data.cursor;
-      if (!cursor) break;
-
-    } catch (e) {
-      console.warn("Error fetching likes records", e);
-      break;
     }
   }
 
-  // 3. Hydrate Posts using getPosts (Batch fetch) for Content Deck
+  // --- 3. Mix & Build Content Deck ---
   onProgress?.('loadingBuildDeck');
 
+  const halfDeckSize = Math.floor(GAME_CONFIG.deck.contentCount / 2);
+
+  // Shuffle pools
+  const pool1 = myLikes.uris.sort(() => Math.random() - 0.5);
+  const pool2 = extendedLikesUris.sort(() => Math.random() - 0.5);
+  // console.log(pool1, pool2);
+
+  // Take 50% from each (or fill from other if one is empty)
+  // If pool2 is empty, pool1 takes all.
+  const take1 = pool2.length > 0 ? halfDeckSize : GAME_CONFIG.deck.contentCount;
+  const take2 = GAME_CONFIG.deck.contentCount - take1;
+
+  const selectedUris = [
+    ...pool1.slice(0, take1),
+    ...pool2.slice(0, take2)
+  ];
+
+  // Fill up if we are short
+  if (selectedUris.length < GAME_CONFIG.deck.contentCount) {
+    const remainingNeeded = GAME_CONFIG.deck.contentCount - selectedUris.length;
+    // Try to take more from pool1 if available (excluding what we already took)
+    const moreFrom1 = pool1.slice(take1, take1 + remainingNeeded);
+    selectedUris.push(...moreFrom1);
+  }
+
+  // Hydrate Posts
   const allLikes: any[] = [];
-  // Use Set to dedup URIs just in case
-  const uniqueUris = [...new Set(likedPostUris)];
+  const uniqueUrisToHydrate = [...new Set(selectedUris)];
+  // Should roughly be contentCount, maybe less if dups.
+
   const chunkSize = 25;
-
-  // Only hydrate enough posts for the deck. 
-  // If we fetched 1000 likes to find 100 authors, we don't need to hydrate all 1000.
-  // We just need GAME_CONFIG.deck.contentCount (100).
-  const postsToFetch = uniqueUris.slice(0, GAME_CONFIG.deck.contentCount + 10); // +10 buffer
-
-  for (let i = 0; i < postsToFetch.length; i += chunkSize) {
-    const chunk = postsToFetch.slice(i, i + chunkSize);
+  for (let i = 0; i < uniqueUrisToHydrate.length; i += chunkSize) {
+    const chunk = uniqueUrisToHydrate.slice(i, i + chunkSize);
     try {
       const postsRes = await ag.getPosts({ uris: chunk });
       const posts = postsRes.data.posts;
@@ -96,35 +86,117 @@ export async function fetchGameDecks(
 
   const contentDeck = buildContentDeck(allLikes);
 
-  // 4. Build Avatar Deck from Unique Authors found
+
+  // --- 4. Mix & Build Avatar Deck ---
   onProgress?.('loadingAnalysis');
 
-  // Convert collected DIDs to candidate objects
-  // We need to fetch their profiles to get handle, avatar, etc.
-  let avatarCandidates = Array.from(uniqueAuthorDids).map(did => ({ did }));
+  const halfAvatarCount = Math.floor(GAME_CONFIG.deck.avatarCount / 2);
 
-  // If we still don't have enough unique authors from likes, fall back to "follows"
-  // This addresses the issue where a user only likes posts from a few people.
+  // Candidates
+  // pool1Authors is myLikedAuthors
+  // pool2Authors is Array.from(extendedAuthors)
+
+  // Filter out myself from candidates if present? user cards usually ok.
+
+  const pool1Authors = myLikedAuthors.sort(() => Math.random() - 0.5);
+  const pool2Authors = Array.from(extendedAuthors).sort(() => Math.random() - 0.5);
+
+  const takeAv1 = pool2Authors.length > 0 ? halfAvatarCount : GAME_CONFIG.deck.avatarCount;
+  const takeAv2 = GAME_CONFIG.deck.avatarCount - takeAv1;
+
+  let avatarCandidatesRaw = [
+    ...pool1Authors.slice(0, takeAv1),
+    ...pool2Authors.slice(0, takeAv2)
+  ];
+
+  // Fill up logic
+  if (avatarCandidatesRaw.length < GAME_CONFIG.deck.avatarCount) {
+    const remaining = GAME_CONFIG.deck.avatarCount - avatarCandidatesRaw.length;
+    const moreFrom1 = pool1Authors.slice(takeAv1, takeAv1 + remaining);
+    avatarCandidatesRaw.push(...moreFrom1);
+  }
+
+  // Map to object structure for buildAvatarDeck
+  let avatarCandidates = avatarCandidatesRaw.map(did => ({ did }));
+
+  // Fallback to follows if we are STILL short (e.g. very new user, no extended network)
   if (avatarCandidates.length < GAME_CONFIG.deck.avatarCount) {
     try {
-      // Fetch user's follows to fill the gap
-      // We can fetch up to 100 to fill checks
       const followsRes = await ag.getFollows({ actor: actor, limit: 100 });
       const newFollows = followsRes.data.follows
-        .filter(f => !uniqueAuthorDids.has(f.did))
+        .filter(f => !avatarCandidatesRaw.includes(f.did))
         .map(f => ({ did: f.did }));
-
       avatarCandidates.push(...newFollows);
     } catch (e) {
       console.warn("Failed to fetch follows for fallback", e);
     }
   }
 
-  // Slice to limit before fetching profiles to save requests?
-  // Actually buildAvatarDeck handles slicing.
   const avatarDeck = await buildAvatarDeck(ag, avatarCandidates);
 
   return { avatarDeck, contentDeck };
+}
+
+async function fetchAuthorLikes(
+  baseAgent: Agent,
+  actor: string,
+  limit: number
+): Promise<{ uris: string[], authors: Set<string> }> {
+
+  const authors = new Set<string>();
+  const uris: string[] = [];
+
+  let repoAgent = baseAgent;
+  try {
+    const endpoint = await getPdsEndpoint(actor);
+    if (endpoint) {
+      repoAgent = new Agent(endpoint);
+    }
+  } catch (e) {
+    // console.warn(`Failed to resolve PDS for ${actor}, using default`, e);
+  }
+
+  let cursor: string | undefined;
+  let count = 0;
+
+  // Limit max loops to avoid infinite hanging if something is weird
+  // If limit is 100, we need 1 loop (100 items). 
+  // We'll loop until we hit 'limit' number of items or run out.
+
+  try {
+    while (count < limit) {
+      const res = await repoAgent.com.atproto.repo.listRecords({
+        repo: actor,
+        collection: 'app.bsky.feed.like',
+        limit: 100, // Max page size
+        cursor
+      });
+
+      const records = res.data.records;
+      if (!records || records.length === 0) break;
+
+      for (const record of records) {
+        // @ts-ignore
+        const subjectUri = record.value.subject?.uri;
+        if (subjectUri && typeof subjectUri === 'string') {
+          uris.push(subjectUri);
+          count++;
+
+          const match = subjectUri.match(/^at:\/\/([^\/]+)/);
+          if (match && match[1]) {
+            authors.add(match[1]);
+          }
+        }
+      }
+
+      cursor = res.data.cursor;
+      if (!cursor) break;
+    }
+  } catch (e) {
+    console.warn(`Error fetching likes for ${actor}`, e);
+  }
+
+  return { uris, authors };
 }
 
 function buildContentDeck(likes: any[]): PostCard[] {
