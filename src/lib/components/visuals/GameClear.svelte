@@ -454,12 +454,28 @@
         class="flex flex-col md:flex-row gap-8 items-center justify-center mb-12 md:mb-16 w-full"
       >
         {#if mvpCards.user}
-          <div class="flex flex-col items-center gap-2">
-            <div class="text-yellow-400 font-bold text-xl drop-shadow-md">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            class="flex flex-col items-center gap-2 cursor-pointer group"
+            role="button"
+            tabindex="0"
+            onclick={() => {
+              window.open(
+                `https://bsky.app/profile/${mvpCards.user?.handle}`,
+                "_blank",
+              );
+            }}
+          >
+            <div
+              class="text-yellow-400 font-bold text-xl drop-shadow-md group-hover:text-yellow-300 transition-colors"
+            >
               {$t("mvpUser")}
+              <span class="text-sm font-normal text-white/70 ml-2"
+                >(Open Profile)</span
+              >
             </div>
             <div
-              class="pointer-events-auto hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
+              class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
             >
               <CardComponent
                 card={mvpCards.user}
@@ -471,12 +487,29 @@
         {/if}
 
         {#if mvpCards.post}
-          <div class="flex flex-col items-center gap-2">
-            <div class="text-cyan-400 font-bold text-xl drop-shadow-md">
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <div
+            class="flex flex-col items-center gap-2 cursor-pointer group"
+            role="button"
+            tabindex="0"
+            onclick={() => {
+              const rkey = mvpCards.post?.id.split("/").pop();
+              window.open(
+                `https://bsky.app/profile/${mvpCards.post?.handle}/post/${rkey}`,
+                "_blank",
+              );
+            }}
+          >
+            <div
+              class="text-cyan-400 font-bold text-xl drop-shadow-md group-hover:text-cyan-300 transition-colors"
+            >
               {$t("mvpPost")}
+              <span class="text-sm font-normal text-white/70 ml-2"
+                >(Open Post)</span
+              >
             </div>
             <div
-              class="pointer-events-auto hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
+              class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
             >
               <CardComponent
                 card={mvpCards.post}
