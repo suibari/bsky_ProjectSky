@@ -18,7 +18,7 @@
   import TurnTransition from "./visuals/TurnTransition.svelte";
   import RankUp from "$lib/components/visuals/RankUp.svelte";
   import PostCardAnimation from "$lib/components/visuals/PostCardAnimation.svelte";
-  import { getRank } from "$lib/game/ranks";
+  import { getRank, getRankProgress } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
 
@@ -263,7 +263,7 @@
 
   // Computed
   let progressPercent = $derived(
-    Math.min(100, (gameState.player.buzzPoints / 100_000_000) * 100),
+    getRankProgress(gameState.player.buzzPoints).percent,
   );
 </script>
 
