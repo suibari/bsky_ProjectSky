@@ -137,15 +137,6 @@ function buildContentDeck(likes: any[]): PostCard[] {
     const likeCount = post.likeCount || 0;
     const textLen = (post.record as any).text?.length || 0;
 
-    // Power
-    // Cost
-    let power = Math.floor((100 * likeCount ^ 0.4) / (textLen + 10));
-    let cost = Math.floor(1 + (textLen / 40));
-
-    // Clamp
-    if (cost < 1) cost = 1;
-    if (power < 10) power = 10;
-
     // Image check
     let imageUrl = undefined;
     if (post.embed?.images?.length > 0) {
@@ -153,6 +144,20 @@ function buildContentDeck(likes: any[]): PostCard[] {
     } else if (post.embed?.media?.images?.length > 0) {
       imageUrl = post.embed.media.images[0].fullsize;
     }
+
+    // Power
+    // Cost
+    let power = Math.floor((100 * likeCount ^ 0.4) / (textLen + 10));
+    let cost = Math.floor(1 + (textLen / 40));
+
+    // Increase cost for image posts
+    if (imageUrl) {
+      cost += 2;
+    }
+
+    // Clamp
+    if (cost < 1) cost = 1;
+    if (power < 10) power = 10;
 
     return {
       id: post.uri,
