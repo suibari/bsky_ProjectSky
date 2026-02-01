@@ -32,7 +32,8 @@ export class GameEngine {
         avatarUrl: a.avatarUrl,
         description: a.description,
         power,
-        cost
+        cost,
+        origin: a.origin
       };
       cards.push(card);
     });
@@ -55,7 +56,8 @@ export class GameEngine {
         imageUrl: c.imageUrl,
         power,
         cost,
-        originalLikes: likes
+        originalLikes: likes,
+        origin: c.origin
       };
       cards.push(card);
     });

@@ -162,6 +162,10 @@
     <div
       class="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400 rounded-full blur-2xl opacity-20 pointer-events-none"
     ></div>
+
+    {#if card.origin === "extended"}
+      <div class="shiny-overlay pointer-events-none"></div>
+    {/if}
   </div>
 
   <!-- Back -->
@@ -186,5 +190,40 @@
   }
   .rotate-y-180 {
     transform: rotateY(180deg);
+  }
+
+  .shiny-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      105deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.2) 40%,
+      rgba(255, 255, 255, 0.8) 45%,
+      rgba(255, 230, 120, 0.6) 50%,
+      /* Gold tint */ rgba(255, 255, 255, 0.8) 55%,
+      rgba(255, 255, 255, 0.2) 60%,
+      transparent 80%
+    );
+    transform: rotate(-30deg) translate(-100%, -100%);
+    animation: shine 6s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+    pointer-events: none;
+    z-index: 50;
+    mix-blend-mode: overlay;
+  }
+
+  @keyframes shine {
+    0% {
+      transform: rotate(-30deg) translate(-150%, -150%);
+    }
+    15% {
+      transform: rotate(-30deg) translate(50%, 50%);
+    }
+    100% {
+      transform: rotate(-30deg) translate(50%, 50%);
+    }
   }
 </style>
