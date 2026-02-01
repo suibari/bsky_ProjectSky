@@ -17,6 +17,7 @@
   import GameClear from "./visuals/GameClear.svelte";
   import TurnTransition from "./visuals/TurnTransition.svelte";
   import RankUp from "$lib/components/visuals/RankUp.svelte";
+  import PostCardAnimation from "$lib/components/visuals/PostCardAnimation.svelte";
   import { getRank } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
@@ -73,6 +74,10 @@
   let rankUpQueue = $state<string[]>([]);
   let showRankUp = $state(false);
   let displayingRank = $state("");
+
+  // Post Card Animation State
+  let playingPostCardIndex = $state<number | null>(null);
+  let playingPostCard = $state<Card | null>(null);
 
   // Watch for Rank Up
   $effect(() => {
@@ -138,6 +143,8 @@
 
   function startTurn() {
     selectedCardIndex = null;
+    playingPostCardIndex = null;
+    playingPostCard = null;
     showTurnTransition = true;
     engine.startTurn();
   }
@@ -185,8 +192,16 @@
     // Only if affordable
     const card = gameState.player.hand[selectedCardIndex];
     if (gameState.player.pdsCurrent >= card.cost) {
-      engine.playCard(selectedCardIndex);
-      selectedCardIndex = null;
+      if (card.type === "post") {
+        // Intercept for animation
+        playingPostCardIndex = selectedCardIndex;
+        playingPostCard = card;
+        selectedCardIndex = null;
+        menuPosition = null;
+      } else {
+        engine.playCard(selectedCardIndex);
+        selectedCardIndex = null;
+      }
     } else {
       // Visualize error
       const el = document.getElementById(`hand-card-${selectedCardIndex}`);
@@ -264,6 +279,19 @@
 
   {#if showRankUp}
     <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
+  {/if}
+
+  {#if playingPostCard && playingPostCardIndex !== null}
+    <PostCardAnimation
+      card={playingPostCard}
+      onComplete={() => {
+        if (playingPostCardIndex !== null) {
+          engine.playCard(playingPostCardIndex);
+          playingPostCard = null;
+          playingPostCardIndex = null;
+        }
+      }}
+    />
   {/if}
 
   <!-- HUD -->
