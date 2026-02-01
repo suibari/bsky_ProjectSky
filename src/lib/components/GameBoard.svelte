@@ -323,7 +323,7 @@
     >
       {#if gameState.player.field.length === 0}
         <div class="text-slate-600 font-bold text-2xl mt-20">
-          No Active Users on Field
+          {$t("noActiveUsers")}
         </div>
       {/if}
 
@@ -414,11 +414,11 @@
       tabindex="0"
       onkeydown={(e) => e.stopPropagation()}
     >
-      <span>Hand: {gameState.player.hand.length}</span>
-      <span>Deck: {gameState.player.deck.length}</span>
-      <span>Discard: {gameState.player.discard.length}</span>
+      <span>{$t("hand")}: {gameState.player.hand.length}</span>
+      <span>{$t("deck")}: {gameState.player.deck.length}</span>
+      <span>{$t("discard")}: {gameState.player.discard.length}</span>
       <span class="text-slate-500 font-normal ml-auto hidden md:block"
-        >Click card to Select</span
+        >{$t("clickCardToSelect")}</span
       >
     </div>
 
