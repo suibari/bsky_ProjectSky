@@ -282,7 +282,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor((100 * likeCount ^ 0.4) / (textLen + 10));
+    let basePower = Math.floor((120 * likeCount ^ 0.4) / (textLen + 10));
 
     // Apply Multiplier
     // A (Direct): 0.7x
@@ -345,7 +345,7 @@ async function buildAvatarDeck(ag: Agent, candidates: { did: string, origin: 'di
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor(20 * Math.log10(followers + 1) + Math.sqrt(followers));
+    let basePower = Math.floor(30 * Math.log10(followers + 1) + Math.sqrt(followers));
 
     // Apply Multiplier
     const multiplier = candidate.origin === 'direct' ? 0.7 : 1.5;

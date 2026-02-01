@@ -1,18 +1,18 @@
 export const GAME_CONFIG = {
   // Deck Construction
   deck: {
-    avatarCount: 70,
-    contentCount: 70,
+    avatarCount: 40,
+    contentCount: 40,
   },
 
   // Game Loop
   initialHandSize: 5,
-  maxTurns: 15,
+  maxTurns: 10,
 
   phases: [
-    { duration: 5, multiplier: 1 },
-    { duration: 5, multiplier: 10 },
-    { duration: 5, multiplier: 100 },
+    { duration: 3, multiplier: 1 },
+    { duration: 3, multiplier: 20 },
+    { duration: 4, multiplier: 300 },
   ],
 
   // Resources

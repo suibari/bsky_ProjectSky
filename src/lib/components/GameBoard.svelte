@@ -316,7 +316,7 @@
           class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 whitespace-nowrap"
         >
           {$t("turn")}
-          {gameState.turnCount}/15
+          {gameState.turnCount}/{GAME_CONFIG.maxTurns}
         </h1>
         <div class="w-px h-8 bg-slate-700 mx-1"></div>
         <div class="flex flex-col justify-center">
