@@ -522,7 +522,7 @@
       {#each gameState.player.hand as card, i (card.uuid)}
         <div
           id="hand-card-{i}"
-          class="relative transition-all duration-300 z-0 {selectedCardIndex ===
+          class="relative transition-all duration-300 z-0 shrink-0 {selectedCardIndex ===
           i
             ? 'z-20 scale-110'
             : 'hover:z-10 group'}"
