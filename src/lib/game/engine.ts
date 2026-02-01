@@ -32,7 +32,8 @@ export class GameEngine {
         avatarUrl: a.avatarUrl,
         description: a.description,
         power,
-        cost
+        cost,
+        origin: a.origin
       };
       cards.push(card);
     });
@@ -55,7 +56,8 @@ export class GameEngine {
         imageUrl: c.imageUrl,
         power,
         cost,
-        originalLikes: likes
+        originalLikes: likes,
+        origin: c.origin
       };
       cards.push(card);
     });
@@ -111,9 +113,15 @@ export class GameEngine {
   }
 
   getPhaseMultiplier(turn: number): number {
-    if (turn >= 11) return 100;
-    if (turn >= 6) return 10;
-    return 1;
+    let currentTurnCuttoff = 0;
+    for (const phase of GAME_CONFIG.phases) {
+      currentTurnCuttoff += phase.duration;
+      if (turn <= currentTurnCuttoff) {
+        return phase.multiplier;
+      }
+    }
+    // If we exceed configured phases, default to last known or 1
+    return GAME_CONFIG.phases[GAME_CONFIG.phases.length - 1]?.multiplier ?? 1;
   }
 
   startTurn() {

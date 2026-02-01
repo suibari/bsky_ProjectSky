@@ -18,7 +18,7 @@
   import TurnTransition from "./visuals/TurnTransition.svelte";
   import RankUp from "$lib/components/visuals/RankUp.svelte";
   import PostCardAnimation from "$lib/components/visuals/PostCardAnimation.svelte";
-  import { getRank } from "$lib/game/ranks";
+  import { getRank, getRankProgress } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
 
@@ -263,7 +263,7 @@
 
   // Computed
   let progressPercent = $derived(
-    Math.min(100, (gameState.player.buzzPoints / 100_000_000) * 100),
+    getRankProgress(gameState.player.buzzPoints).percent,
   );
 </script>
 
@@ -284,6 +284,9 @@
   {#if playingPostCard && playingPostCardIndex !== null}
     <PostCardAnimation
       card={playingPostCard}
+      displayPower={playingPostCard.power *
+        gameState.phaseMultiplier *
+        gameState.archiveMultiplier}
       onComplete={() => {
         if (playingPostCardIndex !== null) {
           engine.playCard(playingPostCardIndex);
@@ -316,7 +319,7 @@
           class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 whitespace-nowrap"
         >
           {$t("turn")}
-          {gameState.turnCount}/15
+          {gameState.turnCount}/{GAME_CONFIG.maxTurns}
         </h1>
         <div class="w-px h-8 bg-slate-700 mx-1"></div>
         <div class="flex flex-col justify-center">

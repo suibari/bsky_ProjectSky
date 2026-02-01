@@ -441,6 +441,17 @@
       User Count: {score.toLocaleString()}
     </div>
 
+    <!-- Rank Display -->
+    <div
+      class="text-6xl md:text-8xl font-black mb-2 md:mb-4 drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+      class:text-amber-400={rank === "SS" || rank === "S"}
+      class:text-pink-400={rank === "A" || rank === "B"}
+      class:text-blue-400={rank === "C" || rank === "D" || rank === "E"}
+      class:text-slate-400={rank === "F" || rank === "G"}
+    >
+      RANK {rank}
+    </div>
+
     <!-- Rank Title -->
     <div
       class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 drop-shadow-[0_0_30px_rgba(168,85,247,0.5)] mb-8 md:mb-16 tracking-tight"

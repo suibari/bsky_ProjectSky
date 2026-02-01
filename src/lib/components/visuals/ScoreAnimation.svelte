@@ -4,6 +4,7 @@
   import type { UserCard } from "../../game/types";
   import { GAME_CONFIG } from "$lib/game/config";
   import { t } from "$lib/i18n";
+  import { getRankProgress } from "$lib/game/ranks";
 
   let {
     lanes,
@@ -24,13 +25,24 @@
   let totalScoreElement = $state<HTMLDivElement>();
   let displayScore = $state(0);
   let progressBar = $state<HTMLDivElement>();
-  let progressLabel = $state<HTMLSpanElement>();
 
   // Pre-calculate totals
   let totalPower = $derived(
     lanes.reduce((acc: number, l: { card: UserCard }) => acc + l.card.power, 0),
   );
   let finalScore = $derived(totalPower * phaseMultiplier);
+
+  // Rank Progress Logic
+  let currentTotal = $derived(currentTotalScore + displayScore);
+  let rankInfo = $derived(getRankProgress(currentTotal));
+
+  // Initial State for Ghost Bar
+  const initialRankInfo = getRankProgress(currentTotalScore);
+
+  // Ghost bar is only visible if we are still in the same rank
+  let ghostPercent = $derived(
+    rankInfo.rank === initialRankInfo.rank ? initialRankInfo.percent : 0,
+  );
 
   onMount(() => {
     const tl = gsap.timeline({
@@ -61,27 +73,12 @@
     // 3. Animate Score Calculation
     tl.to({}, { duration: 0.2 }); // small pause
 
-    // Animate Score & Progress
-    const goal = GAME_CONFIG.ranks.SS;
-    const startProgress = Math.min(100, (currentTotalScore / goal) * 100);
-    const endProgress = Math.min(
-      100,
-      ((currentTotalScore + finalScore) / goal) * 100,
-    );
-
-    // Set initial
-    gsap.set(progressBar!, { width: `${startProgress}%` });
-
     tl.to(proxy, {
       val: finalScore,
-      progress: endProgress,
       duration: 0.8,
       ease: "power2.out",
       onUpdate: () => {
         displayScore = Math.round(proxy.val);
-        if (progressBar) {
-          progressBar.style.width = `${proxy.progress}%`;
-        }
       },
     });
 
@@ -93,11 +90,7 @@
     );
   });
 
-  const proxy = { val: 0, progress: 0 };
-
-  // Calculate initial progress for SSR/hydration
-  const goal = GAME_CONFIG.ranks.SS;
-  const initialProgress = Math.min(100, (currentTotalScore / goal) * 100);
+  const proxy = { val: 0 };
 </script>
 
 <div
@@ -121,7 +114,6 @@
         >
           {#each lanes as lane}
             <div class="score-item flex flex-col items-center gap-1 group">
-              <!-- Avatar -->
               <!-- Avatar -->
               <div
                 class="relative w-12 h-12 group-hover:scale-110 transition-transform"
@@ -200,13 +192,8 @@
         <div
           class="flex justify-between text-xs font-bold uppercase text-slate-400 tracking-wider"
         >
-          <span>Progress to Goal</span>
-          <span
-            >{Math.min(
-              100,
-              ((currentTotalScore + displayScore) / GAME_CONFIG.ranks.SS) * 100,
-            ).toFixed(1)}%</span
-          >
+          <span>Progress to Next Rank ({rankInfo.rank} -> Next)</span>
+          <span>{rankInfo.percent.toFixed(1)}%</span>
         </div>
         <div
           class="h-3 w-full bg-slate-700/50 rounded-full overflow-hidden border border-slate-600/50 relative"
@@ -214,25 +201,23 @@
           <!-- Previous Progress (Ghost) -->
           <div
             class="absolute top-0 left-0 h-full bg-slate-600"
-            style="width: {initialProgress}%"
+            style="width: {ghostPercent}%"
           ></div>
+
           <!-- Active Progress -->
           <div
             bind:this={progressBar}
             class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500"
-            style="width: {initialProgress}%"
+            style="width: {rankInfo.percent}%"
           ></div>
           <!-- Glow Effect on Tip -->
           <div
             class="absolute top-0 h-full w-1 bg-white/50 blur-[2px]"
-            style="left: {Math.min(
-              100,
-              ((currentTotalScore + displayScore) / GAME_CONFIG.ranks.SS) * 100,
-            )}%; transform: translateX(-100%);"
+            style="left: {rankInfo.percent}%; transform: translateX(-100%);"
           ></div>
         </div>
         <div class="text-xs text-right text-slate-500 font-mono">
-          {GAME_CONFIG.ranks.SS.toLocaleString()} Users Goal
+          {rankInfo.ceiling.toLocaleString()} Next Goal
         </div>
       </div>
     </div>
