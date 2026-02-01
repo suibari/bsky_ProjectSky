@@ -22,9 +22,14 @@ export const GAME_CONFIG = {
   // Ranking Thresholds (Buzz Points)
   ranks: {
     SS: 100_000_000,
-    S: 50_000_000,
-    A: 10_000_000,
-    B: 1_000_000,
+    S: 80_000_000,
+    A: 40_000_000,
+    B: 20_000_000,
+    C: 10_000_000,
+    D: 1_000_000,
+    E: 100_000,
+    F: 1_000,
+    G: 0,
   },
 
   // API Limits
