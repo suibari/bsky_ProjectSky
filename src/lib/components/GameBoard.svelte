@@ -284,6 +284,9 @@
   {#if playingPostCard && playingPostCardIndex !== null}
     <PostCardAnimation
       card={playingPostCard}
+      displayPower={playingPostCard.power *
+        gameState.phaseMultiplier *
+        gameState.archiveMultiplier}
       onComplete={() => {
         if (playingPostCardIndex !== null) {
           engine.playCard(playingPostCardIndex);

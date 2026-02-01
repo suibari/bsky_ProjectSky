@@ -5,6 +5,7 @@
     import CardComponent from "../Card.svelte";
 
     export let card: Card;
+    export let displayPower: number | undefined = undefined;
     export let onComplete = () => {};
 
     let container: HTMLDivElement;
@@ -63,7 +64,7 @@
         ></div>
 
         <div class="pointer-events-none">
-            <CardComponent {card} interactive={false} />
+            <CardComponent {card} {displayPower} interactive={false} />
         </div>
     </div>
 </div>
