@@ -303,7 +303,7 @@ export class GameEngine {
 
     // Post MVP: Highest Played Score in Discard
     let mvpPost: PostCard | null = null;
-    const playedPostCards = this.state.player.discard.filter(c => c.type === 'post') as PostCard[];
+    const playedPostCards = this.state.player.discard.filter(c => c.type === 'post' && c.playedScore !== undefined) as PostCard[];
     if (playedPostCards.length > 0) {
       mvpPost = playedPostCards.reduce((prev, current) =>
         ((current.playedScore || 0) > (prev.playedScore || 0)) ? current : prev
