@@ -298,8 +298,8 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Clamp
     if (cost < 1) cost = 1;
-    if (GAME_CONFIG.pds.initialCapacity + GAME_CONFIG.maxTurns * GAME_CONFIG.pds.maxCapacityIncrement < cost) {
-      cost = GAME_CONFIG.pds.initialCapacity + GAME_CONFIG.maxTurns * GAME_CONFIG.pds.maxCapacityIncrement;
+    if (GAME_CONFIG.pds.initialCapacity + (GAME_CONFIG.maxTurns - 1) * GAME_CONFIG.pds.maxCapacityIncrement < cost) {
+      cost = GAME_CONFIG.pds.initialCapacity + (GAME_CONFIG.maxTurns - 1) * GAME_CONFIG.pds.maxCapacityIncrement;
     } // Maximum cost
     if (power < 1) power = 1; // Minimum power 1 
 

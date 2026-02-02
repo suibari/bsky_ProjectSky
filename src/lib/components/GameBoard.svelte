@@ -306,7 +306,7 @@
     );
     // Reset local state
     gameState = newState;
-    engine.state = newState; // Important: Update engine reference!
+    engine.state = gameState; // Important: Update engine reference!
     selectedCardIndex = null;
     showScoreCalculation = false;
     showTurnTransition = false;
