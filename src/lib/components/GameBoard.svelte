@@ -130,6 +130,21 @@
 
   function handleRankUpComplete() {
     showRankUp = false;
+    // If we were in the middle of ending a turn (waiting for this animation), verify next step
+    if (gameState.phase === "end" && !gameState.gameOver) {
+      // Check if there are more rank ups?
+      // The queue logic above automatically sets showRankUp = true if queue > 0.
+      // So if queue is empty (processed all), we can proceed to startTurn.
+      // We need to wait for the effect to potentially re-trigger showRankUp?
+      // Actually, the effect runs synchronously on state change? No, effect runs after.
+      // But we just finished this one. Queue should be empty or handled.
+
+      // Optimization: Wait a tick to ensure no new rank up triggered (though unlikely here)
+      // Just proceed.
+      if (rankUpQueue.length === 0) {
+        startTurn();
+      }
+    }
   }
 
   // Actions
@@ -142,6 +157,7 @@
   });
 
   function startTurn() {
+    if (showRankUp) return; // Guard clause just in case
     selectedCardIndex = null;
     playingPostCardIndex = null;
     playingPostCard = null;
@@ -253,10 +269,23 @@
     showScoreCalculation = true;
   }
 
-  function handleScoreAnimationComplete() {
+  async function handleScoreAnimationComplete() {
     showScoreCalculation = false;
     engine.endTurn();
-    if (!gameState.gameOver) {
+
+    // engine.endTurn updates buzzPoints -> triggers effect -> checks Rank
+    // Wait for Svelte to process reactivity
+    await tick();
+
+    // If game over, do nothing (GameClear will show)
+    if (gameState.gameOver) return;
+
+    // Check if Rank Up is pending/active
+    if (showRankUp || rankUpQueue.length > 0) {
+      // Do NOT start turn yet.
+      // Wait for handleRankUpComplete to call startTurn.
+      console.log("Rank Up pending, pausing Turn Switch");
+    } else {
       startTurn();
     }
   }
