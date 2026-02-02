@@ -481,9 +481,6 @@
               class="text-yellow-400 font-bold text-xl drop-shadow-md group-hover:text-yellow-300 transition-colors"
             >
               {$t("mvpUser")}
-              <span class="text-sm font-normal text-white/70 ml-2"
-                >(Open Profile)</span
-              >
             </div>
             <div
               class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
@@ -515,9 +512,6 @@
               class="text-cyan-400 font-bold text-xl drop-shadow-md group-hover:text-cyan-300 transition-colors"
             >
               {$t("mvpPost")}
-              <span class="text-sm font-normal text-white/70 ml-2"
-                >(Open Post)</span
-              >
             </div>
             <div
               class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
