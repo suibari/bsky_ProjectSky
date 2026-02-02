@@ -386,7 +386,7 @@
             <span
               class="text-[10px] text-red-400 whitespace-nowrap animate-pulse font-black leading-tight"
             >
-              Next: x{gameState.archiveMultiplier}
+              Label: x{gameState.archiveMultiplier}
             </span>
           {/if}
         </div>
