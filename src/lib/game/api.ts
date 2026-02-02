@@ -291,7 +291,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
     let power = Math.floor(basePower * multiplier);
 
     // Cost
-    let cost = Math.floor(1 + (textLen / 40) + Math.sqrt(likeCount) / 10);
+    let cost = Math.floor(1 + (textLen / 50) + 3 * Math.log10(likeCount + 1));
     if (imageUrl) {
       cost += 2;
     }
