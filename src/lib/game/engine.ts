@@ -269,6 +269,15 @@ export class GameEngine {
 
     // Reset Archive Multiplier at end of turn (do not carry over)
     this.state.archiveMultiplier = 1;
+
+    // Apply "Moderation" Rule
+    // Cards held in hand have their power halved
+    for (const card of this.state.player.hand) {
+      if (card.power > 0) {
+        card.power = Math.floor(card.power / 2);
+        card.lastModeratedTurn = this.state.turnCount;
+      }
+    }
   }
 
   finishGame() {

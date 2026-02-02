@@ -40,6 +40,7 @@ export interface BaseCard {
   text?: string;
   imageUrl?: string;
   origin?: 'direct' | 'extended'; // 'direct' = My Likes (A), 'extended' = Extended Likes (B)
+  lastModeratedTurn?: number;
 }
 
 export interface UserCard extends BaseCard {

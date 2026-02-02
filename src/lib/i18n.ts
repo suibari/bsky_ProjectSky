@@ -100,6 +100,8 @@ const translations = {
       boostDesc: 'Spend 5 PDS capacity to draw 1 card.',
       archiveTitle: 'Archive',
       archiveDesc: 'Discard a card for 2 PDS cost to double the power of the next card you use. Can be stacked.',
+      moderationTitle: 'Moderation',
+      moderationDesc: 'Cards carried over to the next turn (held in hand) will have their Power halved.',
       multiplierTitle: 'Phase Multiplier',
       multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x10\nEnd Game (Turns 11-15): Multiplier x100'
     },
@@ -201,6 +203,8 @@ const translations = {
       boostDesc: 'PDS容量を5使うことで、1枚ドローできます。',
       archiveTitle: 'アーカイブ',
       archiveDesc: 'PDS容量を2支払い、カードを破棄することで、次に使うカードのパワーを2倍にします。重ねがけも可能です。',
+      moderationTitle: 'モデレーション',
+      moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
       multiplierTitle: 'フェーズ倍率',
       multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x10\n終盤（11~15ターン）：倍率x100'
     },
