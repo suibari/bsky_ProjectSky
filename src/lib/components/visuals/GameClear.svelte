@@ -215,7 +215,7 @@
           try {
             const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(mvpCards.post.imageUrl)}`;
             const img = await loadImage(proxyUrl);
-            ctx.drawImage(img, x, cardY, cardWidth, cardHeight);
+            drawImageCover(ctx, img, x, cardY, cardWidth, cardHeight);
 
             // Overlay
             ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
@@ -395,6 +395,36 @@
       }
     }
     ctx.fillText(line, x, y);
+  }
+
+  function drawImageCover(
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) {
+    const imgRatio = img.width / img.height;
+    const targetRatio = w / h;
+
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = img.width;
+    let sourceHeight = img.height;
+
+    // sourceWidth / sourceHeight > targetRatio
+    // If image is wider than target (relative to height), clip width
+    if (imgRatio > targetRatio) {
+      sourceWidth = img.height * targetRatio;
+      sourceX = (img.width - sourceWidth) / 2;
+    } else {
+      // Image is taller than target, clip height
+      sourceHeight = img.width / targetRatio;
+      sourceY = (img.height - sourceHeight) / 2;
+    }
+
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, x, y, w, h);
   }
 </script>
 
