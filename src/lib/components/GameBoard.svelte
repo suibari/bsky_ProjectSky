@@ -17,7 +17,7 @@
   import GameClear from "./visuals/GameClear.svelte";
   import TurnTransition from "./visuals/TurnTransition.svelte";
   import RankUp from "$lib/components/visuals/RankUp.svelte";
-  import PostCardAnimation from "$lib/components/visuals/PostCardAnimation.svelte";
+  import PlayCardAnimation from "$lib/components/visuals/PlayCardAnimation.svelte";
   import { getRank, getRankProgress } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
@@ -75,9 +75,9 @@
   let showRankUp = $state(false);
   let displayingRank = $state("");
 
-  // Post Card Animation State
-  let playingPostCardIndex = $state<number | null>(null);
-  let playingPostCard = $state<Card | null>(null);
+  // Card Animation State
+  let playingCardIndex = $state<number | null>(null);
+  let playingCard = $state<Card | null>(null);
 
   // Watch for Rank Up
   $effect(() => {
@@ -130,6 +130,21 @@
 
   function handleRankUpComplete() {
     showRankUp = false;
+    // If we were in the middle of ending a turn (waiting for this animation), verify next step
+    if (gameState.phase === "end" && !gameState.gameOver) {
+      // Check if there are more rank ups?
+      // The queue logic above automatically sets showRankUp = true if queue > 0.
+      // So if queue is empty (processed all), we can proceed to startTurn.
+      // We need to wait for the effect to potentially re-trigger showRankUp?
+      // Actually, the effect runs synchronously on state change? No, effect runs after.
+      // But we just finished this one. Queue should be empty or handled.
+
+      // Optimization: Wait a tick to ensure no new rank up triggered (though unlikely here)
+      // Just proceed.
+      if (rankUpQueue.length === 0) {
+        startTurn();
+      }
+    }
   }
 
   // Actions
@@ -142,9 +157,10 @@
   });
 
   function startTurn() {
+    if (showRankUp) return; // Guard clause just in case
     selectedCardIndex = null;
-    playingPostCardIndex = null;
-    playingPostCard = null;
+    playingCardIndex = null;
+    playingCard = null;
     showTurnTransition = true;
     engine.startTurn();
   }
@@ -192,16 +208,11 @@
     // Only if affordable
     const card = gameState.player.hand[selectedCardIndex];
     if (gameState.player.pdsCurrent >= card.cost) {
-      if (card.type === "post") {
-        // Intercept for animation
-        playingPostCardIndex = selectedCardIndex;
-        playingPostCard = card;
-        selectedCardIndex = null;
-        menuPosition = null;
-      } else {
-        engine.playCard(selectedCardIndex);
-        selectedCardIndex = null;
-      }
+      // Intercept for animation (ALL cards now)
+      playingCardIndex = selectedCardIndex;
+      playingCard = card;
+      selectedCardIndex = null;
+      menuPosition = null;
     } else {
       // Visualize error
       const el = document.getElementById(`hand-card-${selectedCardIndex}`);
@@ -253,10 +264,23 @@
     showScoreCalculation = true;
   }
 
-  function handleScoreAnimationComplete() {
+  async function handleScoreAnimationComplete() {
     showScoreCalculation = false;
     engine.endTurn();
-    if (!gameState.gameOver) {
+
+    // engine.endTurn updates buzzPoints -> triggers effect -> checks Rank
+    // Wait for Svelte to process reactivity
+    await tick();
+
+    // If game over, do nothing (GameClear will show)
+    if (gameState.gameOver) return;
+
+    // Check if Rank Up is pending/active
+    if (showRankUp || rankUpQueue.length > 0) {
+      // Do NOT start turn yet.
+      // Wait for handleRankUpComplete to call startTurn.
+      console.log("Rank Up pending, pausing Turn Switch");
+    } else {
       startTurn();
     }
   }
@@ -265,6 +289,32 @@
   let progressPercent = $derived(
     getRankProgress(gameState.player.buzzPoints).percent,
   );
+
+  function handlePlayAgain() {
+    // Re-initialize Game State
+    const newState = GameEngine.createInitialState(
+      did,
+      handle,
+      displayName,
+      avatarDeck,
+      contentDeck,
+    );
+    // Reset local state
+    gameState = newState;
+    engine.state = gameState; // Important: Update engine reference!
+    selectedCardIndex = null;
+    showScoreCalculation = false;
+    showTurnTransition = false;
+    animationLanes = [];
+    menuPosition = null;
+    currentRank = "G";
+    rankUpQueue = [];
+    showRankUp = false;
+    displayingRank = "";
+
+    // Start
+    startTurn();
+  }
 </script>
 
 <div
@@ -281,17 +331,17 @@
     <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
   {/if}
 
-  {#if playingPostCard && playingPostCardIndex !== null}
-    <PostCardAnimation
-      card={playingPostCard}
-      displayPower={playingPostCard.power *
+  {#if playingCard && playingCardIndex !== null}
+    <PlayCardAnimation
+      card={playingCard}
+      displayPower={playingCard.power *
         gameState.phaseMultiplier *
         gameState.archiveMultiplier}
       onComplete={() => {
-        if (playingPostCardIndex !== null) {
-          engine.playCard(playingPostCardIndex);
-          playingPostCard = null;
-          playingPostCardIndex = null;
+        if (playingCardIndex !== null) {
+          engine.playCard(playingCardIndex);
+          playingCard = null;
+          playingCardIndex = null;
         }
       }}
     />
@@ -336,7 +386,7 @@
             <span
               class="text-[10px] text-red-400 whitespace-nowrap animate-pulse font-black leading-tight"
             >
-              Next: x{gameState.archiveMultiplier}
+              Label: x{gameState.archiveMultiplier}
             </span>
           {/if}
         </div>
@@ -566,6 +616,7 @@
         handle: gameState.player.handle,
         avatarUrl: gameState.player.avatarUrl,
       }}
+      onPlayAgain={handlePlayAgain}
     />
   {/if}
 

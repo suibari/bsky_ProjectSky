@@ -40,11 +40,13 @@ export interface BaseCard {
   text?: string;
   imageUrl?: string;
   origin?: 'direct' | 'extended'; // 'direct' = My Likes (A), 'extended' = Extended Likes (B)
+  lastModeratedTurn?: number;
 }
 
 export interface UserCard extends BaseCard {
   type: 'user';
   description?: string;
+  playedScore?: number; // Score per turn at end of game (Power * Phase Multiplier)
 }
 
 export interface PostCard extends BaseCard {

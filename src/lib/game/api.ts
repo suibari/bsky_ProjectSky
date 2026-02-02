@@ -282,7 +282,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor((120 * likeCount ^ 0.4) / (textLen + 10));
+    let basePower = Math.floor((100 * likeCount ^ 0.4) / (textLen + 10));
 
     // Apply Multiplier
     // A (Direct): 0.7x
@@ -291,14 +291,17 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
     let power = Math.floor(basePower * multiplier);
 
     // Cost
-    let cost = Math.floor(1 + (textLen / 40));
+    let cost = Math.floor(1 + (textLen / 50) + 3 * Math.log10(likeCount + 1));
     if (imageUrl) {
       cost += 2;
     }
 
     // Clamp
     if (cost < 1) cost = 1;
-    if (power < 1) power = 1; // Minimum power 1
+    if (GAME_CONFIG.pds.initialCapacity + (GAME_CONFIG.maxTurns - 1) * GAME_CONFIG.pds.maxCapacityIncrement < cost) {
+      cost = GAME_CONFIG.pds.initialCapacity + (GAME_CONFIG.maxTurns - 1) * GAME_CONFIG.pds.maxCapacityIncrement;
+    } // Maximum cost
+    if (power < 1) power = 1; // Minimum power 1 
 
     return {
       id: post.uri,
@@ -354,10 +357,19 @@ async function buildAvatarDeck(ag: Agent, candidates: { did: string, origin: 'di
     if (power < 1) power = 1;
 
     // Cost
+    // 1. 基本となる規模コスト (Scale Cost)
+    // フォロワーの桁数に強い重みを付ける（係数 2.0）
+    let scaleCost = Math.floor(2.0 * Math.log10(followers + 1));
+
+    // 2. 効率性による補正 (Discount / Penalty)
     const discount = followers > follows * 10 ? -2 : 0;
     const penalty = follows > followers ? 2 : 0;
-    let rawCost = Math.floor(Math.log10(followers + 1) + discount + penalty);
-    let cost = Math.max(1, Math.min(10, rawCost));
+
+    // 3. 最終コストの算出
+    let rawCost = scaleCost + discount + penalty;
+
+    // 最小 1、最大 15 の範囲にクランプ
+    let cost = Math.max(1, Math.min(15, rawCost));
 
     deck.push({
       id: candidate.did,

@@ -7,11 +7,12 @@
   import CardComponent from "../Card.svelte";
   import type { UserCard, PostCard } from "../../game/types";
 
-  let { score, rank, mvpCards, player } = $props<{
+  let { score, rank, mvpCards, player, onPlayAgain } = $props<{
     score: number;
     rank: string;
     mvpCards?: { user: UserCard | null; post: PostCard | null };
     player?: { displayName: string; handle: string; avatarUrl?: string };
+    onPlayAgain?: () => void;
   }>();
 
   let textElement: HTMLDivElement;
@@ -188,7 +189,7 @@
         ctx.fillStyle = "#2563eb"; // Blue-600
         ctx.font = "900 40px sans-serif";
         ctx.fillText(
-          formatScore(mvpCards.user.power),
+          formatScore(mvpCards.user.playedScore ?? mvpCards.user.power),
           x + 15,
           cardY + cardHeight - 60,
         );
@@ -214,7 +215,7 @@
           try {
             const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(mvpCards.post.imageUrl)}`;
             const img = await loadImage(proxyUrl);
-            ctx.drawImage(img, x, cardY, cardWidth, cardHeight);
+            drawImageCover(ctx, img, x, cardY, cardWidth, cardHeight);
 
             // Overlay
             ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
@@ -395,6 +396,36 @@
     }
     ctx.fillText(line, x, y);
   }
+
+  function drawImageCover(
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) {
+    const imgRatio = img.width / img.height;
+    const targetRatio = w / h;
+
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = img.width;
+    let sourceHeight = img.height;
+
+    // sourceWidth / sourceHeight > targetRatio
+    // If image is wider than target (relative to height), clip width
+    if (imgRatio > targetRatio) {
+      sourceWidth = img.height * targetRatio;
+      sourceX = (img.width - sourceWidth) / 2;
+    } else {
+      // Image is taller than target, clip height
+      sourceHeight = img.width / targetRatio;
+      sourceY = (img.height - sourceHeight) / 2;
+    }
+
+    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, x, y, w, h);
+  }
 </script>
 
 <div
@@ -481,9 +512,6 @@
               class="text-yellow-400 font-bold text-xl drop-shadow-md group-hover:text-yellow-300 transition-colors"
             >
               {$t("mvpUser")}
-              <span class="text-sm font-normal text-white/70 ml-2"
-                >(Open Profile)</span
-              >
             </div>
             <div
               class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
@@ -491,7 +519,7 @@
               <CardComponent
                 card={mvpCards.user}
                 interactive={false}
-                displayPower={mvpCards.user.power}
+                displayPower={mvpCards.user.playedScore ?? mvpCards.user.power}
               />
             </div>
           </div>
@@ -515,9 +543,6 @@
               class="text-cyan-400 font-bold text-xl drop-shadow-md group-hover:text-cyan-300 transition-colors"
             >
               {$t("mvpPost")}
-              <span class="text-sm font-normal text-white/70 ml-2"
-                >(Open Post)</span
-              >
             </div>
             <div
               class="pointer-events-auto group-hover:scale-110 transition-transform duration-300 origin-center scale-90 md:scale-100"
@@ -543,7 +568,7 @@
       </button>
       <button
         class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-yellow-400 w-64"
-        onclick={() => location.reload()}
+        onclick={onPlayAgain}
       >
         {$t("playAgain")}
       </button>

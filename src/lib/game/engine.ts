@@ -269,6 +269,15 @@ export class GameEngine {
 
     // Reset Archive Multiplier at end of turn (do not carry over)
     this.state.archiveMultiplier = 1;
+
+    // Apply "Moderation" Rule
+    // Cards held in hand have their power halved
+    for (const card of this.state.player.hand) {
+      if (card.power > 0) {
+        card.power = Math.floor(card.power / 2);
+        card.lastModeratedTurn = this.state.turnCount;
+      }
+    }
   }
 
   finishGame() {
@@ -290,11 +299,18 @@ export class GameEngine {
       mvpUser = this.state.player.field.reduce((prev, current) =>
         (current.card.power > prev.card.power) ? current : prev
         , this.state.player.field[0]).card;
+
+      // Calculate effective end-game score for display
+      if (mvpUser) {
+        // Clone to avoid mutating original card state excessively if that matters, 
+        // but here we just want to attach the property for the result screen.
+        mvpUser.playedScore = mvpUser.power * this.state.phaseMultiplier;
+      }
     }
 
     // Post MVP: Highest Played Score in Discard
     let mvpPost: PostCard | null = null;
-    const playedPostCards = this.state.player.discard.filter(c => c.type === 'post') as PostCard[];
+    const playedPostCards = this.state.player.discard.filter(c => c.type === 'post' && c.playedScore !== undefined) as PostCard[];
     if (playedPostCards.length > 0) {
       mvpPost = playedPostCards.reduce((prev, current) =>
         ((current.playedScore || 0) > (prev.playedScore || 0)) ? current : prev

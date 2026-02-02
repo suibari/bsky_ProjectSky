@@ -1,8 +1,8 @@
 export const GAME_CONFIG = {
   // Deck Construction
   deck: {
-    avatarCount: 40,
-    contentCount: 40,
+    avatarCount: 30,
+    contentCount: 30,
   },
 
   // Game Loop

@@ -38,10 +38,18 @@
         // 2. Pause for reading/impact
         tl.to({}, { duration: 0.8 });
 
-        // 3. Absorb Animation
-        // Move to top center (Score Bar area) and scale down
+        // 3. Absorb/Move Animation
+        const isPost = card.type === "post";
+
+        // Target position
+        // Post: Top Center (Score Bar) -> move Up
+        // User: Slightly Above Center (Field)
+        const targetY = isPost
+            ? -window.innerHeight / 2 + 50
+            : -window.innerHeight / 6;
+
         tl.to(cardContainer, {
-            y: -window.innerHeight / 2 + 50, // Move towards top
+            y: targetY,
             scale: 0.1,
             opacity: 0,
             duration: 0.5,
