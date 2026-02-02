@@ -46,6 +46,7 @@ export interface BaseCard {
 export interface UserCard extends BaseCard {
   type: 'user';
   description?: string;
+  playedScore?: number; // Score per turn at end of game (Power * Phase Multiplier)
 }
 
 export interface PostCard extends BaseCard {

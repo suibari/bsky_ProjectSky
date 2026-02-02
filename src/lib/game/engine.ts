@@ -299,6 +299,13 @@ export class GameEngine {
       mvpUser = this.state.player.field.reduce((prev, current) =>
         (current.card.power > prev.card.power) ? current : prev
         , this.state.player.field[0]).card;
+
+      // Calculate effective end-game score for display
+      if (mvpUser) {
+        // Clone to avoid mutating original card state excessively if that matters, 
+        // but here we just want to attach the property for the result screen.
+        mvpUser.playedScore = mvpUser.power * this.state.phaseMultiplier;
+      }
     }
 
     // Post MVP: Highest Played Score in Discard

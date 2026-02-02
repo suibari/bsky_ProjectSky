@@ -189,7 +189,7 @@
         ctx.fillStyle = "#2563eb"; // Blue-600
         ctx.font = "900 40px sans-serif";
         ctx.fillText(
-          formatScore(mvpCards.user.power),
+          formatScore(mvpCards.user.playedScore ?? mvpCards.user.power),
           x + 15,
           cardY + cardHeight - 60,
         );
@@ -519,7 +519,7 @@
               <CardComponent
                 card={mvpCards.user}
                 interactive={false}
-                displayPower={mvpCards.user.power}
+                displayPower={mvpCards.user.playedScore ?? mvpCards.user.power}
               />
             </div>
           </div>
