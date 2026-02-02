@@ -196,6 +196,7 @@ export async function fetchGameDecks(
       avatarUrl: profile.avatar,
       description: profile.description,
       power,
+      originalPower: power,
       cost,
       origin
     });
@@ -312,6 +313,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
       text: (post.record as any).text,
       imageUrl,
       power,
+      originalPower: power,
       cost,
       originalLikes: likeCount,
       origin
@@ -380,6 +382,7 @@ async function buildAvatarDeck(ag: Agent, candidates: { did: string, origin: 'di
       avatarUrl: profile.avatar,
       description: profile.description,
       power,
+      originalPower: power,
       cost,
       origin: candidate.origin
     });

@@ -31,6 +31,7 @@ export interface BaseCard {
 
   // Stats
   power: number; // Users gain (User: per turn, Post: instant)
+  originalPower: number; // Base power at creation (unmodified by game buffs/nerfs)
   cost: number;  // PDS cost
 
   // Display

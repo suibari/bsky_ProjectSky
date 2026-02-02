@@ -5,20 +5,33 @@
   import { t } from "$lib/i18n";
   import { formatScore } from "$lib/utils/format";
   import CardComponent from "../Card.svelte";
-  import type { UserCard, PostCard } from "../../game/types";
+  import type { UserCard, PostCard, Card } from "../../game/types";
 
-  let { score, rank, mvpCards, player, onPlayAgain } = $props<{
+  let { score, rank, mvpCards, player, allCards, onPlayAgain } = $props<{
     score: number;
     rank: string;
     mvpCards?: { user: UserCard | null; post: PostCard | null };
     player?: { displayName: string; handle: string; avatarUrl?: string };
+    allCards?: Card[];
     onPlayAgain?: () => void;
   }>();
 
   let textElement: HTMLDivElement;
   let canvas: HTMLCanvasElement;
   let showShareModal = $state(false);
+  let showDeckModal = $state(false);
   let shareImageUrl = $state("");
+
+  let sortedDeck = $derived(
+    [...(allCards || [])].sort((a, b) => {
+      // 1. Sort by type (User first)
+      if (a.type !== b.type) {
+        return a.type === "user" ? -1 : 1;
+      }
+      // 2. Sort by power (descending)
+      return b.power - a.power;
+    }),
+  );
 
   let shareText = $derived(
     $t("shareText" as any)
@@ -572,6 +585,12 @@
       >
         {$t("playAgain")}
       </button>
+      <button
+        class="px-8 py-3 bg-slate-700 text-white font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-slate-500 w-64"
+        onclick={() => (showDeckModal = true)}
+      >
+        {$t("deckCheck")}
+      </button>
     </div>
   </div>
 
@@ -627,6 +646,91 @@
           >
             Open Bluesky
           </a>
+        </div>
+      </div>
+    </div>
+  {/if}
+  {#if showDeckModal}
+    <div
+      class="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4 pointer-events-auto"
+      onclick={() => (showDeckModal = false)}
+      role="button"
+      tabindex="0"
+      onkeydown={(e) => e.key === "Escape" && (showDeckModal = false)}
+    >
+      <div
+        class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-6xl h-[80vh] flex flex-col gap-6"
+        onclick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+      >
+        <div class="flex justify-between items-center shrink-0">
+          <h2 class="text-2xl font-bold text-white">
+            {$t("deckCheck") || "デッキ確認"} ({sortedDeck.length})
+          </h2>
+          <button
+            class="text-slate-400 hover:text-white"
+            onclick={() => (showDeckModal = false)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto p-4 bg-slate-950/50 rounded-xl">
+          <div
+            class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-6 gap-4"
+          >
+            {#each sortedDeck as card (card.uuid)}
+              <!-- svelte-ignore a11y_click_events_have_key_events -->
+              <div
+                class="transform hover:scale-105 transition-transform duration-200 cursor-pointer"
+                role="button"
+                tabindex="0"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  if (card.type === "user") {
+                    window.open(
+                      `https://bsky.app/profile/${card.handle}`,
+                      "_blank",
+                    );
+                  } else if (card.type === "post") {
+                    const rkey = card.id.split("/").pop();
+                    window.open(
+                      `https://bsky.app/profile/${card.handle}/post/${rkey}`,
+                      "_blank",
+                    );
+                  }
+                }}
+              >
+                <!-- Mini Card Wrapper -->
+                <div
+                  class="w-full aspect-[2/3] relative flex items-center justify-center overflow-hidden"
+                >
+                  <div class="origin-center scale-75 transform">
+                    <CardComponent
+                      {card}
+                      interactive={false}
+                      displayPower={card.originalPower ?? card.power}
+                    />
+                  </div>
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
     </div>

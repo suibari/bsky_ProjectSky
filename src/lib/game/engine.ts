@@ -32,6 +32,7 @@ export class GameEngine {
         avatarUrl: a.avatarUrl,
         description: a.description,
         power,
+        originalPower: power,
         cost,
         origin: a.origin
       };
@@ -55,6 +56,7 @@ export class GameEngine {
         text: c.text,
         imageUrl: c.imageUrl,
         power,
+        originalPower: power,
         cost,
         originalLikes: likes,
         origin: c.origin
