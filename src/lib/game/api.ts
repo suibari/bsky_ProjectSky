@@ -357,10 +357,19 @@ async function buildAvatarDeck(ag: Agent, candidates: { did: string, origin: 'di
     if (power < 1) power = 1;
 
     // Cost
+    // 1. 基本となる規模コスト (Scale Cost)
+    // フォロワーの桁数に強い重みを付ける（係数 2.0）
+    let scaleCost = Math.floor(2.0 * Math.log10(followers + 1));
+
+    // 2. 効率性による補正 (Discount / Penalty)
     const discount = followers > follows * 10 ? -2 : 0;
     const penalty = follows > followers ? 2 : 0;
-    let rawCost = Math.floor(Math.log10(followers + 1) + discount + penalty);
-    let cost = Math.max(1, Math.min(10, rawCost));
+
+    // 3. 最終コストの算出
+    let rawCost = scaleCost + discount + penalty;
+
+    // 最小 1、最大 15 の範囲にクランプ
+    let cost = Math.max(1, Math.min(15, rawCost));
 
     deck.push({
       id: candidate.did,
