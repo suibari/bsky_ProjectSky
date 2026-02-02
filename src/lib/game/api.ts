@@ -282,7 +282,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor((120 * likeCount ^ 0.4) / (textLen + 10));
+    let basePower = Math.floor((500 * Math.log10(likeCount + 1)) / (textLen + 10));
 
     // Apply Multiplier
     // A (Direct): 0.7x
