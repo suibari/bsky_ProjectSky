@@ -294,6 +294,32 @@
   let progressPercent = $derived(
     getRankProgress(gameState.player.buzzPoints).percent,
   );
+
+  function handlePlayAgain() {
+    // Re-initialize Game State
+    const newState = GameEngine.createInitialState(
+      did,
+      handle,
+      displayName,
+      avatarDeck,
+      contentDeck,
+    );
+    // Reset local state
+    gameState = newState;
+    engine.state = newState; // Important: Update engine reference!
+    selectedCardIndex = null;
+    showScoreCalculation = false;
+    showTurnTransition = false;
+    animationLanes = [];
+    menuPosition = null;
+    currentRank = "G";
+    rankUpQueue = [];
+    showRankUp = false;
+    displayingRank = "";
+
+    // Start
+    startTurn();
+  }
 </script>
 
 <div
@@ -595,6 +621,7 @@
         handle: gameState.player.handle,
         avatarUrl: gameState.player.avatarUrl,
       }}
+      onPlayAgain={handlePlayAgain}
     />
   {/if}
 

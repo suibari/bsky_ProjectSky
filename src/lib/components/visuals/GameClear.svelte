@@ -7,11 +7,12 @@
   import CardComponent from "../Card.svelte";
   import type { UserCard, PostCard } from "../../game/types";
 
-  let { score, rank, mvpCards, player } = $props<{
+  let { score, rank, mvpCards, player, onPlayAgain } = $props<{
     score: number;
     rank: string;
     mvpCards?: { user: UserCard | null; post: PostCard | null };
     player?: { displayName: string; handle: string; avatarUrl?: string };
+    onPlayAgain?: () => void;
   }>();
 
   let textElement: HTMLDivElement;
@@ -537,7 +538,7 @@
       </button>
       <button
         class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-yellow-400 w-64"
-        onclick={() => location.reload()}
+        onclick={onPlayAgain}
       >
         {$t("playAgain")}
       </button>
