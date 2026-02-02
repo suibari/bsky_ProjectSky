@@ -17,7 +17,7 @@
   import GameClear from "./visuals/GameClear.svelte";
   import TurnTransition from "./visuals/TurnTransition.svelte";
   import RankUp from "$lib/components/visuals/RankUp.svelte";
-  import PostCardAnimation from "$lib/components/visuals/PostCardAnimation.svelte";
+  import PlayCardAnimation from "$lib/components/visuals/PlayCardAnimation.svelte";
   import { getRank, getRankProgress } from "$lib/game/ranks";
 
   /* Temporarily disabling visual components to focus on core logic wire-up first, will re-enable after checking them */
@@ -75,9 +75,9 @@
   let showRankUp = $state(false);
   let displayingRank = $state("");
 
-  // Post Card Animation State
-  let playingPostCardIndex = $state<number | null>(null);
-  let playingPostCard = $state<Card | null>(null);
+  // Card Animation State
+  let playingCardIndex = $state<number | null>(null);
+  let playingCard = $state<Card | null>(null);
 
   // Watch for Rank Up
   $effect(() => {
@@ -159,8 +159,8 @@
   function startTurn() {
     if (showRankUp) return; // Guard clause just in case
     selectedCardIndex = null;
-    playingPostCardIndex = null;
-    playingPostCard = null;
+    playingCardIndex = null;
+    playingCard = null;
     showTurnTransition = true;
     engine.startTurn();
   }
@@ -208,16 +208,11 @@
     // Only if affordable
     const card = gameState.player.hand[selectedCardIndex];
     if (gameState.player.pdsCurrent >= card.cost) {
-      if (card.type === "post") {
-        // Intercept for animation
-        playingPostCardIndex = selectedCardIndex;
-        playingPostCard = card;
-        selectedCardIndex = null;
-        menuPosition = null;
-      } else {
-        engine.playCard(selectedCardIndex);
-        selectedCardIndex = null;
-      }
+      // Intercept for animation (ALL cards now)
+      playingCardIndex = selectedCardIndex;
+      playingCard = card;
+      selectedCardIndex = null;
+      menuPosition = null;
     } else {
       // Visualize error
       const el = document.getElementById(`hand-card-${selectedCardIndex}`);
@@ -336,17 +331,17 @@
     <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
   {/if}
 
-  {#if playingPostCard && playingPostCardIndex !== null}
-    <PostCardAnimation
-      card={playingPostCard}
-      displayPower={playingPostCard.power *
+  {#if playingCard && playingCardIndex !== null}
+    <PlayCardAnimation
+      card={playingCard}
+      displayPower={playingCard.power *
         gameState.phaseMultiplier *
         gameState.archiveMultiplier}
       onComplete={() => {
-        if (playingPostCardIndex !== null) {
-          engine.playCard(playingPostCardIndex);
-          playingPostCard = null;
-          playingPostCardIndex = null;
+        if (playingCardIndex !== null) {
+          engine.playCard(playingCardIndex);
+          playingCard = null;
+          playingCardIndex = null;
         }
       }}
     />
