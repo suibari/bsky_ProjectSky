@@ -198,7 +198,7 @@
         <div class="mb-4">
           <div class="flex flex-col items-center">
             <h1
-              class="text-5xl md:text-6xl font-title text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl leading-tight"
+              class="text-5xl md:text-6xl font-title text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-white drop-shadow-2xl leading-tight break-keep"
             >
               {$t("titleMain")}
             </h1>
