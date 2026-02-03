@@ -542,7 +542,7 @@
         onclick={confirmArchive}
         disabled={gameState.player.pdsCurrent < GAME_CONFIG.pds.archiveCost}
       >
-        ARCHIVE<br />(Discard & Cost: {GAME_CONFIG.pds.archiveCost})
+        LABEL<br />(Discard & Cost: {GAME_CONFIG.pds.archiveCost})
       </button>
     </div>
   {/if}
