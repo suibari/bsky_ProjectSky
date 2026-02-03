@@ -616,6 +616,12 @@
         handle: gameState.player.handle,
         avatarUrl: gameState.player.avatarUrl,
       }}
+      allCards={[
+        ...gameState.player.deck,
+        ...gameState.player.hand,
+        ...gameState.player.discard,
+        ...gameState.player.field.map((l) => l.card),
+      ]}
       onPlayAgain={handlePlayAgain}
     />
   {/if}

@@ -31,6 +31,7 @@ export interface BaseCard {
 
   // Stats
   power: number; // Users gain (User: per turn, Post: instant)
+  originalPower: number; // Base power at creation (unmodified by game buffs/nerfs)
   cost: number;  // PDS cost
 
   // Display
@@ -41,6 +42,7 @@ export interface BaseCard {
   imageUrl?: string;
   origin?: 'direct' | 'extended'; // 'direct' = My Likes (A), 'extended' = Extended Likes (B)
   lastModeratedTurn?: number;
+  lastHydratedTrigger?: number; // Timestamp/ID to trigger Hydrated animation
 }
 
 export interface UserCard extends BaseCard {

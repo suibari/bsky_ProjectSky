@@ -45,6 +45,17 @@
       showModeratedLabel = false;
     }, 2000);
   }
+
+  let showHydratedLabel = false;
+  let lastHydratedValue = card.lastHydratedTrigger;
+
+  $: if (card.lastHydratedTrigger !== lastHydratedValue) {
+    lastHydratedValue = card.lastHydratedTrigger;
+    showHydratedLabel = true;
+    setTimeout(() => {
+      showHydratedLabel = false;
+    }, 2000);
+  }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -177,6 +188,18 @@
           class="bg-red-600 text-white font-black text-2xl px-4 py-2 rounded border-4 border-white shadow-xl rotate-12 opacity-90"
         >
           Moderated!!
+        </div>
+      </div>
+    {/if}
+
+    {#if showHydratedLabel}
+      <div
+        class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none animate-bounce"
+      >
+        <div
+          class="bg-blue-500 text-white font-black text-2xl px-4 py-2 rounded border-4 border-white shadow-xl -rotate-12 opacity-90"
+        >
+          Hydrated!!
         </div>
       </div>
     {/if}

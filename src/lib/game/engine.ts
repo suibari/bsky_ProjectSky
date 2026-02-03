@@ -32,6 +32,7 @@ export class GameEngine {
         avatarUrl: a.avatarUrl,
         description: a.description,
         power,
+        originalPower: power,
         cost,
         origin: a.origin
       };
@@ -55,6 +56,7 @@ export class GameEngine {
         text: c.text,
         imageUrl: c.imageUrl,
         power,
+        originalPower: power,
         cost,
         originalLikes: likes,
         origin: c.origin
@@ -212,6 +214,17 @@ export class GameEngine {
       const scoreGain = card.power * this.state.phaseMultiplier * this.state.archiveMultiplier;
       card.playedScore = scoreGain;
       this.state.player.buzzPoints += scoreGain;
+
+      // Relay Effect: Boost all User Cards on Field
+      // "ポストカードを使うと、その時点で場に出ているすべてのユーザーカードのパワーを+100する"
+      const relayBonus = GAME_CONFIG.relayPowerBonus;
+      if (this.state.player.field.length > 0) {
+        const timestamp = Date.now();
+        this.state.player.field.forEach(lane => {
+          lane.card.power += relayBonus;
+          lane.card.lastHydratedTrigger = timestamp;
+        });
+      }
 
       // Move to Discard
       this.state.player.discard.push(card);
