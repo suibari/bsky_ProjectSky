@@ -177,15 +177,30 @@ export async function fetchGameDecks(
     const followers = profile.followersCount || 0;
     const follows = profile.followsCount || 0;
 
-    let basePower = Math.floor(20 * Math.log10(followers + 1) + Math.sqrt(followers));
+    // Power
+    // Base
+    let basePower = Math.floor(30 * Math.log10(followers + 1) + Math.sqrt(followers));
+
+    // Apply Multiplier
     const multiplier = origin === 'direct' ? 0.7 : 1.5;
     let power = Math.floor(basePower * multiplier);
+
     if (power < 1) power = 1;
 
+    // Cost
+    // 1. 基本となる規模コスト (Scale Cost)
+    // フォロワーの桁数に強い重みを付ける（係数 2.0）
+    let scaleCost = Math.floor(2.0 * Math.log10(followers + 1));
+
+    // 2. 効率性による補正 (Discount / Penalty)
     const discount = followers > follows * 10 ? -2 : 0;
     const penalty = follows > followers ? 2 : 0;
-    let rawCost = Math.floor(Math.log10(followers + 1) + discount + penalty);
-    let cost = Math.max(1, Math.min(10, rawCost));
+
+    // 3. 最終コストの算出
+    let rawCost = scaleCost + discount + penalty;
+
+    // 最小 1、最大 15 の範囲にクランプ
+    let cost = Math.max(1, Math.min(15, rawCost));
 
     avatarDeck.push({
       id: profile.did,
@@ -283,7 +298,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor((100 * likeCount ^ 0.4) / (textLen + 10));
+    let basePower = Math.floor((100 * Math.pow(likeCount, 0.4)) / (textLen + 10));
 
     // Apply Multiplier
     // A (Direct): 0.7x
@@ -319,74 +334,4 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
       origin
     };
   });
-}
-
-async function buildAvatarDeck(ag: Agent, candidates: { did: string, origin: 'direct' | 'extended' }[]): Promise<UserCard[]> {
-  if (candidates.length === 0) return [];
-
-  let profilesMap = new Map<string, any>();
-  const dids = candidates.map(c => c.did);
-
-  // Chunk into 25s for profile fetch
-  const chunkSize = 25;
-  for (let i = 0; i < dids.length; i += chunkSize) {
-    const chunk = dids.slice(i, i + chunkSize);
-    try {
-      const profileRes = await ag.getProfiles({ actors: chunk });
-      profileRes.data.profiles.forEach(p => profilesMap.set(p.did, p));
-    } catch (e) {
-      console.warn(`Failed to batch fetch profiles (chunk ${i})`, e);
-    }
-  }
-
-  const deck: UserCard[] = [];
-
-  for (const candidate of candidates) {
-    const profile = profilesMap.get(candidate.did);
-    if (!profile) continue;
-
-    const followers = profile.followersCount || 0;
-    const follows = profile.followsCount || 0;
-
-    // Power Calculation
-    // Base Power
-    let basePower = Math.floor(30 * Math.log10(followers + 1) + Math.sqrt(followers));
-
-    // Apply Multiplier
-    const multiplier = candidate.origin === 'direct' ? 0.7 : 1.5;
-    let power = Math.floor(basePower * multiplier);
-
-    if (power < 1) power = 1;
-
-    // Cost
-    // 1. 基本となる規模コスト (Scale Cost)
-    // フォロワーの桁数に強い重みを付ける（係数 2.0）
-    let scaleCost = Math.floor(2.0 * Math.log10(followers + 1));
-
-    // 2. 効率性による補正 (Discount / Penalty)
-    const discount = followers > follows * 10 ? -2 : 0;
-    const penalty = follows > followers ? 2 : 0;
-
-    // 3. 最終コストの算出
-    let rawCost = scaleCost + discount + penalty;
-
-    // 最小 1、最大 15 の範囲にクランプ
-    let cost = Math.max(1, Math.min(15, rawCost));
-
-    deck.push({
-      id: candidate.did,
-      uuid: crypto.randomUUID(),
-      type: 'user',
-      handle: profile.handle,
-      displayName: profile.displayName || profile.handle,
-      avatarUrl: profile.avatar,
-      description: profile.description,
-      power,
-      originalPower: power,
-      cost,
-      origin: candidate.origin
-    });
-  }
-
-  return deck;
 }
