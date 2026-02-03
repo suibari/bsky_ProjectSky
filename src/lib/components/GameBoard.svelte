@@ -289,7 +289,7 @@
 
   // Computed
   let progressPercent = $derived(
-    getRankProgress(gameState.player.buzzPoints).percent,
+    Math.min(100, (gameState.player.buzzPoints / GAME_CONFIG.ranks.SS) * 100),
   );
 
   let totalUserGain = $derived(
