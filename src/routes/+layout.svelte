@@ -16,5 +16,19 @@
 	<meta property="og:image" content="/ogp.png" />
 	<meta property="og:type" content="website" />
 	<meta name="twitter:card" content="summary_large_image" />
+	<!-- Google tag (gtag.js) -->
+	<script
+		async
+		src="https://www.googletagmanager.com/gtag/js?id=G-G2Z5BK2R9P"
+	></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() {
+			dataLayer.push(arguments);
+		}
+		gtag("js", new Date());
+
+		gtag("config", "G-G2Z5BK2R9P");
+	</script>
 </svelte:head>
 {@render children()}
