@@ -1,7 +1,17 @@
 
 import { writable, derived } from 'svelte/store';
+import { browser } from '$app/environment';
 
-export const locale = writable<'en' | 'jp'>('jp');
+const defaultValue = 'jp';
+const initialValue = browser ? (localStorage.getItem('project_sky_locale') as 'en' | 'jp') || defaultValue : defaultValue;
+
+export const locale = writable<'en' | 'jp'>(initialValue);
+
+if (browser) {
+  locale.subscribe((val) => {
+    localStorage.setItem('project_sky_locale', val);
+  });
+}
 
 const translations = {
   en: {
@@ -74,7 +84,7 @@ const translations = {
         2: 'Phase Multiplier. Bonus value that increases towards the end of the game.',
         3: 'PDS Load. Total cost of usable cards.',
         4: 'Number of Users. The goal is to reach 100 million.',
-        5: 'Progress Bar. Progress towards 100 million.',
+        5: 'Progress Bar. Progress towards the next rank.',
         6: 'Number of cards in hand.',
         7: 'Number of cards in deck.',
         8: 'Number of cards in discard pile.',
@@ -184,11 +194,11 @@ const translations = {
         2: 'フェーズ倍率です。終盤になるにつれ増加するボーナス値となります。',
         3: 'PDS負荷です。使えるカードの総コストを表します。',
         4: 'ユーザー数です。これを1億にすることが目的です。',
-        5: '進捗バーです。1億に対する進捗率を示します。',
+        5: '進捗バーです。次のランクまでの進捗率を示します。',
         6: '手札の枚数です。',
         7: 'デッキの枚数です。',
         8: '捨て札の枚数です。',
-        9: 'ドロー加速ボタンです。コストを支払い追加ドローを行います。',
+        9: 'ジェットストリームボタンです。コストを支払い追加ドローを行います。',
         10: 'ターンエンドボタンです。',
         11: 'PDSコストです。この数値ぶんPDSに負荷がかかります。',
         12: 'ユーザーカードのパワーです。この数値ぶん、毎ターンユーザーが増加します。',
