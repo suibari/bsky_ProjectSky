@@ -42,6 +42,7 @@ export interface BaseCard {
   imageUrl?: string;
   origin?: 'direct' | 'extended'; // 'direct' = My Likes (A), 'extended' = Extended Likes (B)
   lastModeratedTurn?: number;
+  lastHydratedTrigger?: number; // Timestamp/ID to trigger Hydrated animation
 }
 
 export interface UserCard extends BaseCard {

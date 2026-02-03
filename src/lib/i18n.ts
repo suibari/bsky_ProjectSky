@@ -103,6 +103,8 @@ const translations = {
       archiveDesc: 'Discard a card for 2 PDS cost to double the power of the next card you use. Can be stacked.',
       moderationTitle: 'Moderation',
       moderationDesc: 'Cards carried over to the next turn (held in hand) will have their Power halved.',
+      relayTitle: 'Relay',
+      relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +100 Power.',
       multiplierTitle: 'Phase Multiplier',
       multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x20\nEnd Game (Turns 11-15): Multiplier x300'
     },
@@ -207,6 +209,8 @@ const translations = {
       archiveDesc: 'PDS容量を2支払い、カードを破棄することで、そのターン中、次に使うカードのパワーを2倍にします。重ねてラベルを貼ることも可能です。',
       moderationTitle: 'モデレーション',
       moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
+      relayTitle: 'リレー',
+      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+1000します。',
       multiplierTitle: 'フェーズ倍率',
       multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x20\n終盤（11~15ターン）：倍率x300'
     },

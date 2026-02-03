@@ -24,6 +24,7 @@ export const GAME_CONFIG = {
   },
 
   archiveMultiplier: 2, // Multiplier when archiving a card
+  relayPowerBonus: 1000, // Bonus power for user cards when a post card is used
 
   // Ranking Thresholds (Buzz Points)
   ranks: {

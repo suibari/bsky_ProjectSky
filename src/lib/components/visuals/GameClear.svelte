@@ -29,7 +29,7 @@
         return a.type === "user" ? -1 : 1;
       }
       // 2. Sort by power (descending)
-      return b.power - a.power;
+      return b.originalPower - a.originalPower;
     }),
   );
 
