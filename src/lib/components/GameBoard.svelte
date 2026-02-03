@@ -600,6 +600,7 @@
                 gameState.phaseMultiplier *
                 gameState.archiveMultiplier}
               onClick={() => handleCardClick(i)}
+              isTransitioning={showTurnTransition}
             />
           </div>
         </div>

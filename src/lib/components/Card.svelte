@@ -11,6 +11,7 @@
   export let onContextmenu = () => {};
   export let interactive = false;
   export let displayPower: number | undefined = undefined; // For previewing buffs
+  export let isTransitioning = false;
 
   let cardElement: HTMLElement;
 
@@ -37,9 +38,22 @@
 
   let showModeratedLabel = false;
   let lastModeratedValue = card.lastModeratedTurn;
+  let pendingModeration = false;
 
   $: if (card.lastModeratedTurn !== lastModeratedValue) {
     lastModeratedValue = card.lastModeratedTurn;
+    if (isTransitioning) {
+      pendingModeration = true;
+    } else {
+      showModeratedLabel = true;
+      setTimeout(() => {
+        showModeratedLabel = false;
+      }, 2000);
+    }
+  }
+
+  $: if (!isTransitioning && pendingModeration) {
+    pendingModeration = false;
     showModeratedLabel = true;
     setTimeout(() => {
       showModeratedLabel = false;
