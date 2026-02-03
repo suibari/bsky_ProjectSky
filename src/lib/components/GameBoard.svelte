@@ -292,6 +292,11 @@
     getRankProgress(gameState.player.buzzPoints).percent,
   );
 
+  let totalUserGain = $derived(
+    gameState.player.field.reduce((sum, lane) => sum + lane.card.power, 0) *
+      gameState.phaseMultiplier,
+  );
+
   function handlePlayAgain() {
     // Re-initialize Game State
     const newState = GameEngine.createInitialState(
@@ -469,6 +474,18 @@
     <div
       class="flex-grow relative overflow-y-auto p-2 md:p-8 flex flex-col gap-4 items-center bg-slate-900/50 pb-32"
     >
+      {#if gameState.player.field.length > 0}
+        <div
+          class="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border border-slate-600 rounded-full px-6 py-2 shadow-lg mb-2 flex items-center justify-center gap-2"
+          in:fly={{ y: -20, duration: 300 }}
+        >
+          <span
+            class="text-blue-400 font-bold text-sm md:text-base whitespace-nowrap"
+          >
+            Generating +{formatScore(totalUserGain)} Users/Turn
+          </span>
+        </div>
+      {/if}
       {#if gameState.player.field.length === 0}
         <div class="text-slate-600 font-bold text-2xl mt-20">
           {$t("noActiveUsers")}
