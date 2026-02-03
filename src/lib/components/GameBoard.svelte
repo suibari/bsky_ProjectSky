@@ -170,6 +170,8 @@
   }
 
   async function handleCardClick(index: number) {
+    if (playingCardIndex !== null) return;
+
     if (selectedCardIndex === index) {
       selectedCardIndex = null; // Toggle off
       menuPosition = null;

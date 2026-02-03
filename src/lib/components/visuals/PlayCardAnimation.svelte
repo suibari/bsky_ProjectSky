@@ -63,7 +63,7 @@
 
 <div
     bind:this={container}
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none"
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
 >
     <div bind:this={cardContainer} class="relative">
         <!-- Glow Effect -->
