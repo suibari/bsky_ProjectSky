@@ -225,7 +225,7 @@ const translations = {
       moderationTitle: 'モデレーション',
       moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
       relayTitle: 'リレー',
-      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+1000します。',
+      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+100します。',
       multiplierTitle: 'フェーズ倍率',
       multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x20\n終盤（11~15ターン）：倍率x300',
       linksTitle: 'リンク',
