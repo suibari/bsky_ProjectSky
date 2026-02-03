@@ -62,6 +62,7 @@ const translations = {
     mvpPost: 'Top Post',
     copyImageInstruction: 'Copy or save the image and paste it on Bluesky!',
     share: 'Share',
+    shareResult: 'Share Result',
     manual: {
       title: 'About Project Sky',
       intro: 'Project Sky is a single-player digital card game.\nNo sign-in required, anyone can play by entering a Bluesky handle.',
@@ -106,7 +107,10 @@ const translations = {
       relayTitle: 'Relay',
       relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +100 Power.',
       multiplierTitle: 'Phase Multiplier',
-      multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x20\nEnd Game (Turns 11-15): Multiplier x300'
+      multiplierDesc: 'Early Game (Turns 1-5): Multiplier x1\nMid Game (Turns 6-10): Multiplier x20\nEnd Game (Turns 11-15): Multiplier x300',
+      linksTitle: 'Links',
+      bskyText: 'Bluesky: suibari (suibari.com)',
+      githubText: 'GitHub: suibari/bsky_ProjectSky'
     },
     shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   },
@@ -168,6 +172,7 @@ const translations = {
     mvpPost: 'Top Post',
     copyImageInstruction: '画像のコピーまたは保存をして、Blueskyに貼り付けてください！',
     share: 'シェア',
+    shareResult: '結果をシェア',
     manual: {
       title: 'このゲームについて',
       intro: 'プロジェクトスカイは一人用デジタルカードゲームです。\nサインインは不要で、Blueskyのハンドルを入力すればどなたでも楽しめます。',
@@ -212,7 +217,10 @@ const translations = {
       relayTitle: 'リレー',
       relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+1000します。',
       multiplierTitle: 'フェーズ倍率',
-      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x20\n終盤（11~15ターン）：倍率x300'
+      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~5ターン）：倍率x1\n中盤（6～10ターン）：倍率x20\n終盤（11~15ターン）：倍率x300',
+      linksTitle: 'リンク',
+      bskyText: 'すいばり(suibari.com)',
+      githubText: 'GitHub(suibari/bsky_ProjectSky)'
     },
     shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   }
