@@ -2,6 +2,7 @@ import { GAME_CONFIG } from './config';
 import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
 import { getRank } from './ranks';
 import { trackTurnStart, trackCardPlay, trackGameEnd } from '$lib/analytics';
+import { soundManager } from './sound';
 
 export class GameEngine {
   state: GameState;
@@ -108,23 +109,35 @@ export class GameEngine {
       turnCount: 0, // Will be 1 after startTurn
       phase: 'draw',
       phaseMultiplier: 1,
+      extendedCardsPlayed: 0, // Initialize here
       gameOver: false,
       victory: false,
       buzzHistory: [0],
-      archiveMultiplier: 1
+      archiveMultiplier: 1,
+      jetstreamUsedThisTurn: false
     };
   }
 
   getPhaseMultiplier(turn: number): number {
     let currentTurnCuttoff = 0;
-    for (const phase of GAME_CONFIG.phases) {
+    for (let i = 0; i < GAME_CONFIG.phases.length; i++) {
+      const phase = GAME_CONFIG.phases[i];
       currentTurnCuttoff += phase.duration;
       if (turn <= currentTurnCuttoff) {
+        // Phase 4 (Last Phase) Dynamic Multiplier
+        if (i === GAME_CONFIG.phases.length - 1) {
+          return phase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+        }
         return phase.multiplier;
       }
     }
-    // If we exceed configured phases, default to last known or 1
-    return GAME_CONFIG.phases[GAME_CONFIG.phases.length - 1]?.multiplier ?? 1;
+    // If we exceed configured phases, default to last known (with bonus)
+    const distinctPhases = GAME_CONFIG.phases.length;
+    if (distinctPhases > 0) {
+      const lastPhase = GAME_CONFIG.phases[distinctPhases - 1];
+      return lastPhase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+    }
+    return 1;
   }
 
   startTurn() {
@@ -132,6 +145,7 @@ export class GameEngine {
 
     this.state.turnCount++;
     trackTurnStart(this.state.turnCount);
+    soundManager.play('turnchange', 1, GAME_CONFIG.soundDelays.turnchange);
 
     // Apply "Moderation" Rule
     // Cards held in hand have their power halved (carry-over penalty)
@@ -156,6 +170,8 @@ export class GameEngine {
       const drawn = this.state.player.deck.splice(0, cardsNeeded);
       this.state.player.hand.push(...drawn);
 
+      soundManager.play('draw', drawn.length, GAME_CONFIG.soundDelays.draw);
+
       // Deck out check?
       if (this.state.player.deck.length === 0 && drawn.length < cardsNeeded) {
         // Handle deck out - maybe nothing happens, just play with what you have
@@ -163,6 +179,7 @@ export class GameEngine {
     }
 
     this.state.phase = 'main';
+    this.state.jetstreamUsedThisTurn = false;
   }
 
   archiveCard(cardIndex: number) {
@@ -190,6 +207,8 @@ export class GameEngine {
     // Apply Multiplier
     // "Power is *2. Stacking possible."
     this.state.archiveMultiplier *= GAME_CONFIG.archiveMultiplier;
+
+    soundManager.play('label', 1, GAME_CONFIG.soundDelays.label);
   }
 
   playCard(cardIndex: number) {
@@ -208,6 +227,11 @@ export class GameEngine {
     this.state.player.pdsCurrent -= card.cost;
 
     trackCardPlay(card);
+
+    if (card.origin === 'extended') {
+      this.state.extendedCardsPlayed++;
+      // Phase Multiplier is now fixed at start of turn (per user request)
+    }
 
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
@@ -250,27 +274,47 @@ export class GameEngine {
   pdsBoost() {
     if (this.state.phase !== 'main') return;
 
-    // Cost: 3 PDS
-    const cost = GAME_CONFIG.pds.drawCost;
-    if (this.state.player.pdsCurrent < cost) {
-      console.warn("Not enough PDS for Boost");
+    // Check Usage Limit (Once per turn)
+    if (this.state.jetstreamUsedThisTurn) {
+      console.warn("Jetstream already used this turn");
       return;
     }
 
-    // Check deck
-    if (this.state.player.deck.length === 0) {
-      console.warn("Deck empty");
+    // Cost: 4 PDS
+    const cost = GAME_CONFIG.pds.drawCost;
+    if (this.state.player.pdsCurrent < cost) {
+      console.warn("Not enough PDS for Reload");
       return;
     }
+
+    // Check deck existence (if deck empty, we can still discard but draw 0? Or fail? Usually fail if can't draw at all?
+    // User requirement: "Discard hand, draw same amount".
+    // If deck has fewer cards than hand size, we draw as much as possible?
 
     // Pay Cost
     this.state.player.pdsCurrent -= cost;
 
-    // Draw 1 card
-    const card = this.state.player.deck.shift();
-    if (card) {
-      this.state.player.hand.push(card);
+    const handSize = this.state.player.hand.length;
+
+    // Discard all cards
+    // Return all cards to deck
+    this.state.player.deck.push(...this.state.player.hand);
+    this.state.player.hand = [];
+
+    // Shuffle deck
+    this.state.player.deck.sort(() => Math.random() - 0.5);
+
+    // Draw same amount
+    const drawCount = handSize;
+    if (drawCount > 0 && this.state.player.deck.length > 0) {
+      const drawn = this.state.player.deck.splice(0, drawCount);
+      this.state.player.hand.push(...drawn);
+
+      soundManager.play('draw', drawn.length, GAME_CONFIG.soundDelays.draw);
     }
+
+    // Mark used
+    this.state.jetstreamUsedThisTurn = true;
   }
 
   endTurn() {
@@ -292,6 +336,7 @@ export class GameEngine {
     // Check Game End Condition (Turn 15)
     if (this.state.turnCount >= GAME_CONFIG.maxTurns) {
       this.finishGame();
+      soundManager.play('result', 1, GAME_CONFIG.soundDelays.result);
     }
 
     // Reset Archive Multiplier at end of turn (do not carry over)

@@ -4,6 +4,7 @@
   import type { Card } from "../game/types";
   import favicon from "$lib/assets/favicon.svg";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
+  import { t } from "$lib/i18n";
 
   export let card: Card;
   export let faceUp = true;
@@ -40,21 +41,41 @@
   let lastModeratedValue = card.lastModeratedTurn;
   let pendingModeration = false;
 
-  $: if (card.lastModeratedTurn !== lastModeratedValue) {
-    lastModeratedValue = card.lastModeratedTurn;
-    if (isTransitioning) {
-      pendingModeration = true;
+  // Initialize with the current effective power
+  let currentDisplayValue = displayPower ?? card.power;
+
+  // Reactively track the target value (what inputs say we should be)
+  $: targetValue = displayPower ?? card.power;
+
+  $: {
+    // Detect Moderation Event
+    if (card.lastModeratedTurn !== lastModeratedValue) {
+      lastModeratedValue = card.lastModeratedTurn;
+      if (isTransitioning) {
+        pendingModeration = true;
+        // FREEZE: Do not update currentDisplayValue to targetValue
+      } else {
+        // Immediate moderation (no transition)
+        showModeratedLabel = true;
+        currentDisplayValue = targetValue; // Update immediately
+        setTimeout(() => {
+          showModeratedLabel = false;
+        }, 2000);
+      }
     } else {
-      showModeratedLabel = true;
-      setTimeout(() => {
-        showModeratedLabel = false;
-      }, 2000);
+      // No new moderation event this tick
+      if (!pendingModeration) {
+        // Normal behavior: follow the target
+        currentDisplayValue = targetValue;
+      }
     }
   }
 
+  // Handle Unfreeze when transition ends
   $: if (!isTransitioning && pendingModeration) {
     pendingModeration = false;
     showModeratedLabel = true;
+    currentDisplayValue = targetValue; // SNAP/Animate to new value
     setTimeout(() => {
       showModeratedLabel = false;
     }, 2000);
@@ -132,7 +153,7 @@
           Power/Turn
         </div>
         <div class="text-2xl font-black text-blue-600 drop-shadow-sm">
-          <AnimatedNumber value={displayPower ?? card.power} />
+          <AnimatedNumber value={currentDisplayValue} />
         </div>
       </div>
     {:else}
@@ -180,7 +201,7 @@
           Power (Instant)
         </div>
         <div class="text-2xl font-black drop-shadow-md">
-          <AnimatedNumber value={displayPower ?? card.power} />
+          <AnimatedNumber value={currentDisplayValue} />
         </div>
       </div>
     {/if}
@@ -199,9 +220,12 @@
         class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none animate-bounce"
       >
         <div
-          class="bg-red-600 text-white font-black text-2xl px-4 py-2 rounded border-4 border-white shadow-xl rotate-12 opacity-90"
+          class="bg-red-600 text-white font-black px-4 py-2 rounded border-4 border-white shadow-xl rotate-12 opacity-90 flex flex-col items-center leading-tight min-w-[140px]"
         >
-          Moderated!!
+          <div class="text-2xl drop-shadow-md">Moderated!!</div>
+          <div class="text-xs font-bold whitespace-nowrap opacity-90">
+            {$t("handPenalty")}
+          </div>
         </div>
       </div>
     {/if}
@@ -211,9 +235,12 @@
         class="absolute inset-0 flex items-center justify-center z-50 pointer-events-none animate-bounce"
       >
         <div
-          class="bg-blue-500 text-white font-black text-2xl px-4 py-2 rounded border-4 border-white shadow-xl -rotate-12 opacity-90"
+          class="bg-blue-500 text-white font-black px-4 py-2 rounded border-4 border-white shadow-xl -rotate-12 opacity-90 flex flex-col items-center leading-tight min-w-[140px]"
         >
-          Hydrated!!
+          <div class="text-2xl drop-shadow-md">Hydrated!!</div>
+          <div class="text-xs font-bold whitespace-nowrap opacity-90">
+            {$t("postBonus")}
+          </div>
         </div>
       </div>
     {/if}

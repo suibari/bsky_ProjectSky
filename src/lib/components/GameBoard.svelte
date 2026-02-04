@@ -12,6 +12,7 @@
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t } from "$lib/i18n";
+  import { soundManager } from "$lib/game/sound";
 
   import ScoreAnimation from "./visuals/ScoreAnimation.svelte";
   import GameClear from "./visuals/GameClear.svelte";
@@ -100,6 +101,8 @@
 
       currentRank = newRank;
       rankUpQueue.push(newRank);
+
+      soundManager.play("rankup", 1, GAME_CONFIG.soundDelays.rankup);
     }
   });
 
@@ -215,6 +218,13 @@
       playingCard = card;
       selectedCardIndex = null;
       menuPosition = null;
+
+      // Play Sound Immediately
+      if (card.type === "user") {
+        soundManager.play("usercard", 1, GAME_CONFIG.soundDelays.usercard);
+      } else {
+        soundManager.play("postcard", 1, GAME_CONFIG.soundDelays.postcard);
+      }
     } else {
       // Visualize error
       const el = document.getElementById(`hand-card-${selectedCardIndex}`);
@@ -263,6 +273,7 @@
     // Let's pass the *current* score as "previousTotal" just for visual context if needed,
     // but the new ScoreAnimation mostly focuses on the +Gain.
 
+    soundManager.play("score", 1, GAME_CONFIG.soundDelays.score);
     showScoreCalculation = true;
   }
 
@@ -330,6 +341,8 @@
   {#if showTurnTransition}
     <TurnTransition
       turn={gameState.turnCount}
+      isFinalTurn={gameState.turnCount === GAME_CONFIG.maxTurns}
+      multiplier={gameState.phaseMultiplier}
       onComplete={handleTurnTransitionComplete}
     />
   {/if}
@@ -384,9 +397,9 @@
             class="md:text-sm uppercase tracking-widest text-slate-300 font-bold leading-tight"
           >
             <span class="text-yellow-400 whitespace-nowrap">
-              <span class="hidden md:inline"
-                >MULTIPLIER:
-              </span>x{gameState.phaseMultiplier}
+              <span class="hidden md:inline">MULTIPLIER: </span>x<AnimatedNumber
+                value={gameState.phaseMultiplier}
+              />
             </span>
           </div>
           {#if gameState.archiveMultiplier > 1}
@@ -654,9 +667,10 @@
       onclick={pdsBoost}
       disabled={gameState.gameOver ||
         gameState.phase !== "main" ||
+        gameState.jetstreamUsedThisTurn ||
         gameState.player.pdsCurrent < GAME_CONFIG.pds.drawCost}
     >
-      <span class="text-sm">DRAW 1</span>
+      <span class="text-sm">RELOAD</span>
       <span class="text-[10px] opacity-80"
         >(Cost: {GAME_CONFIG.pds.drawCost})</span
       >

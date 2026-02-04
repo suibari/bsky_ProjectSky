@@ -70,6 +70,7 @@ export interface GameState {
   phase: 'draw' | 'main' | 'end';
   phaseMultiplier: number; // 1, 10, 100
   archiveMultiplier: number; // Multiplier from archived cards
+  extendedCardsPlayed: number; // For Phase 4 multiplier calc
 
   mvpCards?: MvpCards;
 
@@ -78,4 +79,7 @@ export interface GameState {
   finalRank?: 'SS' | 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 
   buzzHistory: number[];
+
+  // Turn State
+  jetstreamUsedThisTurn?: boolean;
 }
