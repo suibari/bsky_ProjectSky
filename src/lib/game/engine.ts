@@ -1,6 +1,7 @@
 import { GAME_CONFIG } from './config';
 import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
 import { getRank } from './ranks';
+import { trackTurnStart, trackCardPlay, trackGameEnd } from '$lib/analytics';
 
 export class GameEngine {
   state: GameState;
@@ -130,6 +131,7 @@ export class GameEngine {
     if (this.state.gameOver) return;
 
     this.state.turnCount++;
+    trackTurnStart(this.state.turnCount);
 
     // Apply "Moderation" Rule
     // Cards held in hand have their power halved (carry-over penalty)
@@ -204,6 +206,8 @@ export class GameEngine {
 
     // Pay Cost
     this.state.player.pdsCurrent -= card.cost;
+
+    trackCardPlay(card);
 
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
@@ -302,6 +306,8 @@ export class GameEngine {
     if (this.state.finalRank === 'SS') {
       this.state.victory = true; // "Clear"
     }
+
+    trackGameEnd(this.state.player.buzzPoints, this.state.finalRank);
 
     // Determine MVP Cards
     // User MVP: Highest Power on Field (includes buffs if we had any, currently power is static but archive bonus is applied on play/permanent? Logic check:

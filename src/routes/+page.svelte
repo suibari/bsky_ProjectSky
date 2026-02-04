@@ -8,6 +8,7 @@
 
   import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api";
+  import { trackGameStart } from "$lib/analytics";
 
   let agent = $state<Agent | null>(null);
   let loadingMessageKey = $state<ProgressKey | "loading" | null>(null); // Start null
@@ -106,6 +107,7 @@
     error = null;
 
     try {
+      trackGameStart(handle);
       await loadDecks(did);
     } catch (e) {
       console.error(e);
