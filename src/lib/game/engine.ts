@@ -108,6 +108,7 @@ export class GameEngine {
       turnCount: 0, // Will be 1 after startTurn
       phase: 'draw',
       phaseMultiplier: 1,
+      extendedCardsPlayed: 0, // Initialize here
       gameOver: false,
       victory: false,
       buzzHistory: [0],
@@ -117,14 +118,24 @@ export class GameEngine {
 
   getPhaseMultiplier(turn: number): number {
     let currentTurnCuttoff = 0;
-    for (const phase of GAME_CONFIG.phases) {
+    for (let i = 0; i < GAME_CONFIG.phases.length; i++) {
+      const phase = GAME_CONFIG.phases[i];
       currentTurnCuttoff += phase.duration;
       if (turn <= currentTurnCuttoff) {
+        // Phase 4 (Last Phase) Dynamic Multiplier
+        if (i === GAME_CONFIG.phases.length - 1) {
+          return phase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+        }
         return phase.multiplier;
       }
     }
-    // If we exceed configured phases, default to last known or 1
-    return GAME_CONFIG.phases[GAME_CONFIG.phases.length - 1]?.multiplier ?? 1;
+    // If we exceed configured phases, default to last known (with bonus)
+    const distinctPhases = GAME_CONFIG.phases.length;
+    if (distinctPhases > 0) {
+      const lastPhase = GAME_CONFIG.phases[distinctPhases - 1];
+      return lastPhase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+    }
+    return 1;
   }
 
   startTurn() {
@@ -208,6 +219,11 @@ export class GameEngine {
     this.state.player.pdsCurrent -= card.cost;
 
     trackCardPlay(card);
+
+    if (card.origin === 'extended') {
+      this.state.extendedCardsPlayed++;
+      // Phase Multiplier is now fixed at start of turn (per user request)
+    }
 
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
