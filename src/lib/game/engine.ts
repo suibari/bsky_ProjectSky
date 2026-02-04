@@ -297,7 +297,10 @@ export class GameEngine {
     const handSize = this.state.player.hand.length;
 
     // Discard all cards
-    // Return all cards to deck
+    // Return all cards to deck (Resetting power)
+    this.state.player.hand.forEach(card => {
+      card.power = card.originalPower;
+    });
     this.state.player.deck.push(...this.state.player.hand);
     this.state.player.hand = [];
 
