@@ -2,9 +2,18 @@
   import { onMount } from "svelte";
   import gsap from "gsap";
   import { t } from "$lib/i18n";
+  import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
 
-  let { turn, onCovered, onComplete } = $props<{
+  let {
+    turn,
+    isFinalTurn = false,
+    multiplier = 1,
+    onCovered,
+    onComplete,
+  } = $props<{
     turn: number;
+    isFinalTurn?: boolean;
+    multiplier?: number;
     onCovered?: () => void;
     onComplete: () => void;
   }>();
@@ -81,15 +90,30 @@
     bind:this={textContainer}
     class="relative z-20 flex flex-col items-center justify-center text-white mix-blend-difference"
   >
-    <div
-      class="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-stroke-white"
-    >
-      {$t("turn")}
-    </div>
-    <div
-      class="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-white -mt-4"
-    >
-      {turn}
-    </div>
+    {#if isFinalTurn}
+      <!-- Final Turn Display -->
+      <div
+        class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase text-stroke-white text-center leading-none"
+      >
+        {$t("finalTurn")}
+      </div>
+      <div
+        class="text-xl md:text-3xl font-bold text-yellow-400 mt-4 tracking-widest bg-black/50 px-4 py-1 rounded-full border border-yellow-500/50 backdrop-blur-sm shadow-[0_0_20px_rgba(234,179,8,0.5)]"
+      >
+        {$t("finalTurnBonus")}{multiplier}
+      </div>
+    {:else}
+      <!-- Normal Turn Display -->
+      <div
+        class="text-4xl md:text-6xl font-black italic tracking-tighter uppercase text-stroke-white"
+      >
+        {$t("turn")}
+      </div>
+      <div
+        class="text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-white -mt-4"
+      >
+        {turn}
+      </div>
+    {/if}
   </div>
 </div>

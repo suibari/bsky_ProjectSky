@@ -330,6 +330,8 @@
   {#if showTurnTransition}
     <TurnTransition
       turn={gameState.turnCount}
+      isFinalTurn={gameState.turnCount === GAME_CONFIG.maxTurns}
+      multiplier={gameState.phaseMultiplier}
       onComplete={handleTurnTransitionComplete}
     />
   {/if}
