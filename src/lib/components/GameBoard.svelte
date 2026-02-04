@@ -12,6 +12,7 @@
   import { formatScore } from "$lib/utils/format";
   import AnimatedNumber from "$lib/components/AnimatedNumber.svelte";
   import { t } from "$lib/i18n";
+  import { soundManager } from "$lib/game/sound";
 
   import ScoreAnimation from "./visuals/ScoreAnimation.svelte";
   import GameClear from "./visuals/GameClear.svelte";
@@ -100,6 +101,8 @@
 
       currentRank = newRank;
       rankUpQueue.push(newRank);
+
+      soundManager.play("rankup", 1, GAME_CONFIG.soundDelays.rankup);
     }
   });
 
@@ -215,6 +218,13 @@
       playingCard = card;
       selectedCardIndex = null;
       menuPosition = null;
+
+      // Play Sound Immediately
+      if (card.type === "user") {
+        soundManager.play("usercard", 1, GAME_CONFIG.soundDelays.usercard);
+      } else {
+        soundManager.play("postcard", 1, GAME_CONFIG.soundDelays.postcard);
+      }
     } else {
       // Visualize error
       const el = document.getElementById(`hand-card-${selectedCardIndex}`);
@@ -263,6 +273,7 @@
     // Let's pass the *current* score as "previousTotal" just for visual context if needed,
     // but the new ScoreAnimation mostly focuses on the +Gain.
 
+    soundManager.play("score", 1, GAME_CONFIG.soundDelays.score);
     showScoreCalculation = true;
   }
 

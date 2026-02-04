@@ -2,6 +2,7 @@ import { GAME_CONFIG } from './config';
 import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
 import { getRank } from './ranks';
 import { trackTurnStart, trackCardPlay, trackGameEnd } from '$lib/analytics';
+import { soundManager } from './sound';
 
 export class GameEngine {
   state: GameState;
@@ -144,6 +145,7 @@ export class GameEngine {
 
     this.state.turnCount++;
     trackTurnStart(this.state.turnCount);
+    soundManager.play('turnchange', 1, GAME_CONFIG.soundDelays.turnchange);
 
     // Apply "Moderation" Rule
     // Cards held in hand have their power halved (carry-over penalty)
@@ -167,6 +169,8 @@ export class GameEngine {
     if (cardsNeeded > 0) {
       const drawn = this.state.player.deck.splice(0, cardsNeeded);
       this.state.player.hand.push(...drawn);
+
+      soundManager.play('draw', drawn.length, GAME_CONFIG.soundDelays.draw);
 
       // Deck out check?
       if (this.state.player.deck.length === 0 && drawn.length < cardsNeeded) {
@@ -203,6 +207,8 @@ export class GameEngine {
     // Apply Multiplier
     // "Power is *2. Stacking possible."
     this.state.archiveMultiplier *= GAME_CONFIG.archiveMultiplier;
+
+    soundManager.play('label', 1, GAME_CONFIG.soundDelays.label);
   }
 
   playCard(cardIndex: number) {
@@ -299,6 +305,8 @@ export class GameEngine {
     if (drawCount > 0 && this.state.player.deck.length > 0) {
       const drawn = this.state.player.deck.splice(0, drawCount);
       this.state.player.hand.push(...drawn);
+
+      soundManager.play('draw', drawn.length, GAME_CONFIG.soundDelays.draw);
     }
 
     // Mark used
@@ -324,6 +332,7 @@ export class GameEngine {
     // Check Game End Condition (Turn 15)
     if (this.state.turnCount >= GAME_CONFIG.maxTurns) {
       this.finishGame();
+      soundManager.play('result', 1, GAME_CONFIG.soundDelays.result);
     }
 
     // Reset Archive Multiplier at end of turn (do not carry over)

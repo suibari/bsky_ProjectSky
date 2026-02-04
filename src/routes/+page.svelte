@@ -9,6 +9,9 @@
   import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api";
   import { trackGameStart } from "$lib/analytics";
+  import { soundManager } from "$lib/game/sound";
+
+  const isSoundEnabled = soundManager.isEnabled;
 
   let agent = $state<Agent | null>(null);
   let loadingMessageKey = $state<ProgressKey | "loading" | null>(null); // Start null
@@ -331,7 +334,19 @@
         </button>
 
         <!-- Language Switcher -->
-        <div class="flex gap-2 mt-4">
+        <div class="flex gap-2 mt-4 items-center">
+          <!-- SE Toggle -->
+          <button
+            class="px-3 py-1 rounded-full font-bold text-sm transition-all {$isSoundEnabled
+              ? 'bg-blue-600 text-white shadow-lg'
+              : 'bg-slate-800/50 text-slate-400 hover:text-white backdrop-blur-md'}"
+            onclick={() => soundManager.toggle()}
+          >
+            SE: {$isSoundEnabled ? "ON" : "OFF"}
+          </button>
+
+          <div class="w-px h-4 bg-slate-700 mx-1"></div>
+
           <button
             class="px-3 py-1 rounded-full font-bold text-sm transition-all {$locale ===
             'jp'

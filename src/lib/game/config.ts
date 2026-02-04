@@ -45,5 +45,16 @@ export const GAME_CONFIG = {
   api: {
     likesFetchLimit: 100, // How many likes to fetch per page
     profileChunkSize: 25, // Max actors per getProfiles call
-  }
+  },
+
+  soundDelays: {
+    draw: 0,
+    label: 0,
+    postcard: 0,
+    rankup: 0,
+    result: 0,
+    score: 1000,
+    turnchange: 0,
+    usercard: 0,
+  },
 } as const;
