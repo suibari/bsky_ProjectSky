@@ -297,8 +297,12 @@ export class GameEngine {
     const handSize = this.state.player.hand.length;
 
     // Discard all cards
-    this.state.player.discard.push(...this.state.player.hand);
+    // Return all cards to deck
+    this.state.player.deck.push(...this.state.player.hand);
     this.state.player.hand = [];
+
+    // Shuffle deck
+    this.state.player.deck.sort(() => Math.random() - 0.5);
 
     // Draw same amount
     const drawCount = handSize;
