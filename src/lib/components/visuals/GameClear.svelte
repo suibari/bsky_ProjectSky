@@ -6,6 +6,7 @@
   import { formatScore } from "$lib/utils/format";
   import CardComponent from "../Card.svelte";
   import type { UserCard, PostCard, Card } from "../../game/types";
+  import { trackShare, trackEvent } from "$lib/analytics";
 
   let { score, rank, mvpCards, player, allCards, onPlayAgain } = $props<{
     score: number;
@@ -587,7 +588,10 @@
       </button>
       <button
         class="px-8 py-3 bg-slate-700 text-white font-bold rounded-full hover:scale-110 transition shadow-xl border-4 border-slate-500 w-64"
-        onclick={() => (showDeckModal = true)}
+        onclick={() => {
+          showDeckModal = true;
+          trackEvent("view_deck_result");
+        }}
       >
         {$t("deckCheck")}
       </button>
@@ -643,6 +647,7 @@
             target="_blank"
             rel="noopener noreferrer"
             class="px-6 py-2 bg-blue-500 text-white rounded-full font-bold hover:bg-blue-400 transition"
+            onclick={() => trackShare(rank, score)}
           >
             Open Bluesky
           </a>
