@@ -124,6 +124,8 @@ const translations = {
       bskyText: 'Bluesky: suibari (suibari.com)',
       githubText: 'GitHub: suibari/bsky_ProjectSky'
     },
+    handPenalty: 'Hand Retention Penalty',
+    postBonus: 'Post Bonus',
     shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   },
   jp: {
@@ -236,6 +238,8 @@ const translations = {
       bskyText: 'すいばり(suibari.com)',
       githubText: 'GitHub(suibari/bsky_ProjectSky)'
     },
+    handPenalty: '手札保持ペナルティ',
+    postBonus: 'ポストボーナス',
     shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
   }
 };
