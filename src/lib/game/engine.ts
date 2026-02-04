@@ -112,7 +112,8 @@ export class GameEngine {
       gameOver: false,
       victory: false,
       buzzHistory: [0],
-      archiveMultiplier: 1
+      archiveMultiplier: 1,
+      jetstreamUsedThisTurn: false
     };
   }
 
@@ -174,6 +175,7 @@ export class GameEngine {
     }
 
     this.state.phase = 'main';
+    this.state.jetstreamUsedThisTurn = false;
   }
 
   archiveCard(cardIndex: number) {
@@ -266,27 +268,41 @@ export class GameEngine {
   pdsBoost() {
     if (this.state.phase !== 'main') return;
 
-    // Cost: 3 PDS
-    const cost = GAME_CONFIG.pds.drawCost;
-    if (this.state.player.pdsCurrent < cost) {
-      console.warn("Not enough PDS for Boost");
+    // Check Usage Limit (Once per turn)
+    if (this.state.jetstreamUsedThisTurn) {
+      console.warn("Jetstream already used this turn");
       return;
     }
 
-    // Check deck
-    if (this.state.player.deck.length === 0) {
-      console.warn("Deck empty");
+    // Cost: 4 PDS
+    const cost = GAME_CONFIG.pds.drawCost;
+    if (this.state.player.pdsCurrent < cost) {
+      console.warn("Not enough PDS for Reload");
       return;
     }
+
+    // Check deck existence (if deck empty, we can still discard but draw 0? Or fail? Usually fail if can't draw at all?
+    // User requirement: "Discard hand, draw same amount".
+    // If deck has fewer cards than hand size, we draw as much as possible?
 
     // Pay Cost
     this.state.player.pdsCurrent -= cost;
 
-    // Draw 1 card
-    const card = this.state.player.deck.shift();
-    if (card) {
-      this.state.player.hand.push(card);
+    const handSize = this.state.player.hand.length;
+
+    // Discard all cards
+    this.state.player.discard.push(...this.state.player.hand);
+    this.state.player.hand = [];
+
+    // Draw same amount
+    const drawCount = handSize;
+    if (drawCount > 0 && this.state.player.deck.length > 0) {
+      const drawn = this.state.player.deck.splice(0, drawCount);
+      this.state.player.hand.push(...drawn);
     }
+
+    // Mark used
+    this.state.jetstreamUsedThisTurn = true;
   }
 
   endTurn() {

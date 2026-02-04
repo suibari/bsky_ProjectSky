@@ -656,9 +656,10 @@
       onclick={pdsBoost}
       disabled={gameState.gameOver ||
         gameState.phase !== "main" ||
+        gameState.jetstreamUsedThisTurn ||
         gameState.player.pdsCurrent < GAME_CONFIG.pds.drawCost}
     >
-      <span class="text-sm">DRAW 1</span>
+      <span class="text-sm">RELOAD</span>
       <span class="text-[10px] opacity-80"
         >(Cost: {GAME_CONFIG.pds.drawCost})</span
       >

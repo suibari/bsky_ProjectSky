@@ -79,4 +79,7 @@ export interface GameState {
   finalRank?: 'SS' | 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
 
   buzzHistory: number[];
+
+  // Turn State
+  jetstreamUsedThisTurn?: boolean;
 }
