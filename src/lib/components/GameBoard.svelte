@@ -384,9 +384,9 @@
             class="md:text-sm uppercase tracking-widest text-slate-300 font-bold leading-tight"
           >
             <span class="text-yellow-400 whitespace-nowrap">
-              <span class="hidden md:inline"
-                >MULTIPLIER:
-              </span>x{gameState.phaseMultiplier}
+              <span class="hidden md:inline">MULTIPLIER: </span>x<AnimatedNumber
+                value={gameState.phaseMultiplier}
+              />
             </span>
           </div>
           {#if gameState.archiveMultiplier > 1}
