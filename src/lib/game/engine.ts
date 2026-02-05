@@ -235,7 +235,6 @@ export class GameEngine {
       case 'pds_cap_plus_1':
         this.state.pdsCapBonus += 1;
         this.state.player.pdsCapacity += 1;
-        this.state.player.pdsCurrent += 1; // Immediate fill for the specific instance
         break;
       case 'field_power_plus_500':
         this.state.player.field.forEach(l => {
