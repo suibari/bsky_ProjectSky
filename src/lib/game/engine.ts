@@ -369,7 +369,10 @@ export class GameEngine {
     if (this.state.nextCardCostHalf) {
       this.state.nextCardCostHalf = false; // Consumed
     }
-    this.checkFeedRequests('pds'); // PDS consumed
+
+    if (effectiveCost > 0) {
+      this.checkFeedRequests('pds'); // PDS consumed
+    }
 
     trackCardPlay(card);
 
@@ -478,7 +481,9 @@ export class GameEngine {
 
     // Custom Feed Trigger
     this.checkFeedRequests('jetstream');
-    this.checkFeedRequests('pds'); // PDS consumed
+    if (cost > 0) {
+      this.checkFeedRequests('pds'); // PDS consumed
+    }
   }
 
   endTurn() {
