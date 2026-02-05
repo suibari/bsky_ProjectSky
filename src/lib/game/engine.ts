@@ -148,13 +148,14 @@ export class GameEngine {
   getRandomCustomFeed(): CustomFeed {
     const requests: FeedRequestType[] = [
       'play_3_cards', 'jetstream', 'label_1_time',
-      'field_3_users', 'play_extended', 'reach_0_pds'
+      'field_3_users', 'play_extended', 'reach_0_pds',
+      'post_with_5_users'
     ];
     const effects: FeedEffectType[] = [
       'draw_1',
       'pds_cap_plus_1',
       'field_power_plus_500',
-      'final_multiplier_plus_20',
+      'final_multiplier_plus_10',
       'next_cost_half',
       'clear_moderation'
     ];
@@ -213,6 +214,11 @@ export class GameEngine {
             completed = true;
           }
           break;
+        case 'post_with_5_users':
+          if (triggerAction === 'playCard' && context?.type === 'post' && this.state.player.field.length >= 5) {
+            completed = true;
+          }
+          break;
       }
 
       if (completed) {
@@ -241,8 +247,8 @@ export class GameEngine {
           l.card.power += 500;
         });
         break;
-      case 'final_multiplier_plus_20':
-        this.state.finalPhaseBonus += 20;
+      case 'final_multiplier_plus_10':
+        this.state.finalPhaseBonus += 10;
         // Recalculate multiplier immediately if we are in final phase?
         this.state.phaseMultiplier = this.getPhaseMultiplier(this.state.turnCount);
         break;
@@ -430,7 +436,7 @@ export class GameEngine {
       // Check 'play_extended' (for Post cards too?)
       // User requests usually on User Cards, but user card request can be "Play Extended".
       // Yes.
-      this.checkFeedRequests('playCard', { origin: card.origin, uuid: card.uuid });
+      this.checkFeedRequests('playCard', { origin: card.origin, uuid: card.uuid, type: card.type });
     }
 
     this.state.archiveMultiplier = 1;

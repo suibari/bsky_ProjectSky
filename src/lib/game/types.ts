@@ -51,13 +51,14 @@ export type FeedRequestType =
   | 'label_1_time'
   | 'field_3_users'
   | 'play_extended'
-  | 'reach_0_pds';
+  | 'reach_0_pds'
+  | 'post_with_5_users';
 
 export type FeedEffectType =
   | 'draw_1'
   | 'pds_cap_plus_1'
   | 'field_power_plus_500'
-  | 'final_multiplier_plus_20'
+  | 'final_multiplier_plus_10'
   | 'next_cost_half'
   | 'clear_moderation';
 

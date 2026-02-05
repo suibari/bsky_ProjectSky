@@ -134,13 +134,14 @@ const translations = {
         label_1_time: 'Use Label 1x',
         field_3_users: '3 More Users on Field',
         play_extended: 'Play Shining Card',
-        reach_0_pds: 'Reach 0 PDS'
+        reach_0_pds: 'Reach 0 PDS',
+        post_with_5_users: 'Use Post with 5+ Users'
       },
       effects: {
         draw_1: 'Draw 1 Card',
         pds_cap_plus_1: 'Max PDS +1',
         field_power_plus_500: 'All Field Users +500',
-        final_multiplier_plus_20: 'Final Turn Multiplier +20',
+        final_multiplier_plus_10: 'Final Turn Multiplier +10',
         next_cost_half: 'Next Card Cost 50%',
         clear_moderation: 'Clear Moderation'
       },
@@ -267,13 +268,14 @@ const translations = {
         label_1_time: 'ラベルを1回実行',
         field_3_users: '場にあと3人そろえる',
         play_extended: '光るカードをプレイ',
-        reach_0_pds: 'PDSを0にする'
+        reach_0_pds: 'PDSを0にする',
+        post_with_5_users: '場のユーザー5人以上のときポスト'
       },
       effects: {
         draw_1: '1枚ドロー',
         pds_cap_plus_1: 'PDS容量永続+1',
         field_power_plus_500: '場の全ユーザーのパワー+500',
-        final_multiplier_plus_20: '最終ターン倍率+20',
+        final_multiplier_plus_10: '最終ターン倍率+10',
         next_cost_half: '次のコスト半減',
         clear_moderation: 'モデレーション解除'
       },
