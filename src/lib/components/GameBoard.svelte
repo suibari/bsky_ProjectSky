@@ -41,15 +41,23 @@
     },
   });
 
-  let { did, handle, displayName, avatarDeck, contentDeck, onOpenInfo } =
-    $props<{
-      did: string;
-      handle: string;
-      displayName: string;
-      avatarDeck: any[];
-      contentDeck: any[];
-      onOpenInfo?: () => void;
-    }>();
+  let {
+    did,
+    handle,
+    displayName,
+    avatarDeck,
+    contentDeck,
+    onOpenInfo,
+    onOpenHelp,
+  } = $props<{
+    did: string;
+    handle: string;
+    displayName: string;
+    avatarDeck: any[];
+    contentDeck: any[];
+    onOpenInfo?: () => void;
+    onOpenHelp?: () => void;
+  }>();
 
   // Svelte 5 Reactivity
   const initialState = GameEngine.createInitialState(
@@ -506,18 +514,19 @@
 
   <!-- Main Game Area -->
   <div class="flex-grow flex relative overflow-hidden">
-    <!-- Info Button (Field Top-Right) -->
-    <div class="absolute top-4 right-4 z-10">
+    <!-- Info/Help Buttons (Top-Right) -->
+    <div class="absolute top-4 right-4 z-10 flex gap-2">
+      <!-- INFO ('i') -->
       <button
         class="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-blue-400 hover:text-white flex items-center justify-center transition-all backdrop-blur-md border border-slate-600 shadow-lg"
         onclick={onOpenInfo}
-        aria-label="Game Info"
+        aria-label="Overview"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          stroke-width="1.5"
+          stroke-width="2"
           stroke="currentColor"
           class="w-6 h-6"
         >
@@ -525,6 +534,28 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+          />
+        </svg>
+      </button>
+
+      <!-- HELP ('?') -->
+      <button
+        class="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-yellow-400 hover:text-white flex items-center justify-center transition-all backdrop-blur-md border border-slate-600 shadow-lg"
+        onclick={onOpenHelp}
+        aria-label="Manual"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
           />
         </svg>
       </button>
