@@ -51,21 +51,22 @@
     // Detect Moderation Event
     if (card.lastModeratedTurn !== lastModeratedValue) {
       lastModeratedValue = card.lastModeratedTurn;
-      if (isTransitioning) {
-        pendingModeration = true;
-        // FREEZE: Do not update currentDisplayValue to targetValue
-      } else {
-        // Immediate moderation (no transition)
-        showModeratedLabel = true;
-        currentDisplayValue = targetValue; // Update immediately
-        setTimeout(() => {
-          showModeratedLabel = false;
-        }, 2000);
+
+      // Only show label if moderation actually happened (not cleared)
+      if (card.lastModeratedTurn !== undefined) {
+        if (isTransitioning) {
+          pendingModeration = true;
+        } else {
+          showModeratedLabel = true;
+          currentDisplayValue = targetValue;
+          setTimeout(() => {
+            showModeratedLabel = false;
+          }, 2000);
+        }
       }
     } else {
       // No new moderation event this tick
       if (!pendingModeration) {
-        // Normal behavior: follow the target
         currentDisplayValue = targetValue;
       }
     }

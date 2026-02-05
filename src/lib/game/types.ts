@@ -45,10 +45,35 @@ export interface BaseCard {
   lastHydratedTrigger?: number; // Timestamp/ID to trigger Hydrated animation
 }
 
+export type FeedRequestType =
+  | 'play_3_cards'
+  | 'jetstream'
+  | 'label_1_time'
+  | 'field_3_users'
+  | 'play_extended'
+  | 'reach_0_pds';
+
+export type FeedEffectType =
+  | 'draw_1'
+  | 'pds_cap_plus_1'
+  | 'field_power_plus_500'
+  | 'final_multiplier_plus_20'
+  | 'next_cost_half'
+  | 'clear_moderation';
+
+export interface CustomFeed {
+  request: FeedRequestType;
+  effect: FeedEffectType;
+  isCompleted: boolean;
+  completedTurn?: number;
+  progress: number;
+}
+
 export interface UserCard extends BaseCard {
   type: 'user';
   description?: string;
   playedScore?: number; // Score per turn at end of game (Power * Phase Multiplier)
+  customFeed?: CustomFeed;
 }
 
 export interface PostCard extends BaseCard {
@@ -82,4 +107,10 @@ export interface GameState {
 
   // Turn State
   jetstreamUsedThisTurn?: boolean;
+  cardsPlayedThisTurn: number;
+  labelsUsedThisTurn: number;
+
+  // Custom Feed Bonuses
+  finalPhaseBonus: number;
+  nextCardCostHalf: boolean;
 }

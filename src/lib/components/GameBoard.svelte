@@ -2,7 +2,7 @@
   import { onMount, tick } from "svelte";
   import { GameEngine } from "../game/engine";
   import { GAME_CONFIG } from "../game/config";
-  import type { GameState, Card } from "../game/types";
+  import type { GameState, Card, UserCard } from "../game/types";
   import CardComponent from "./Card.svelte";
   import gsap from "gsap";
   import { crossfade } from "svelte/transition";
@@ -14,6 +14,7 @@
   import { t } from "$lib/i18n";
   import { soundManager } from "$lib/game/sound";
 
+  import ThankYouOverlay from "./visuals/ThankYouOverlay.svelte";
   import ScoreAnimation from "./visuals/ScoreAnimation.svelte";
   import GameClear from "./visuals/GameClear.svelte";
   import TurnTransition from "./visuals/TurnTransition.svelte";
@@ -79,6 +80,34 @@
   // Card Animation State
   let playingCardIndex = $state<number | null>(null);
   let playingCard = $state<Card | null>(null);
+
+  // Custom Feed Animation State
+  let handledFeeds = new Set<string>(); // Tracks UUIDs of completed feeds we've already shown
+  let feedNotificationQueue = $state<UserCard[]>([]);
+  let currentThankYouCard = $derived(
+    feedNotificationQueue.length > 0 ? feedNotificationQueue[0] : null,
+  );
+
+  // Watch for Completed Feeds
+  $effect(() => {
+    gameState.player.field.forEach((lane) => {
+      if (
+        lane.card.customFeed?.isCompleted &&
+        !handledFeeds.has(lane.card.uuid)
+      ) {
+        // New completion!
+        handledFeeds.add(lane.card.uuid);
+        // Push to queue (assignment for reactivity)
+        feedNotificationQueue = [...feedNotificationQueue, lane.card];
+      }
+    });
+  });
+
+  function handleThankYouComplete() {
+    // Remove first item
+    const [_, ...rest] = feedNotificationQueue;
+    feedNotificationQueue = rest;
+  }
 
   // Watch for Rank Up
   $effect(() => {
@@ -330,6 +359,10 @@
     showRankUp = false;
     displayingRank = "";
 
+    // Reset Feed State
+    handledFeeds.clear();
+    feedNotificationQueue = [];
+
     // Start
     startTurn();
   }
@@ -349,6 +382,15 @@
 
   {#if showRankUp}
     <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
+  {/if}
+
+  {#if currentThankYouCard}
+    {#key currentThankYouCard.uuid}
+      <ThankYouOverlay
+        card={currentThankYouCard}
+        onComplete={handleThankYouComplete}
+      />
+    {/key}
   {/if}
 
   {#if playingCard && playingCardIndex !== null}
@@ -532,6 +574,23 @@
                 >Generating +{lane.card.power * gameState.phaseMultiplier} Users/Turn</span
               >
             </div>
+
+            <!-- Custom Feed Request/Effect -->
+            {#if lane.card.customFeed}
+              {@const cf = lane.card.customFeed}
+              <div
+                class="mt-2 text-xs relative {cf.isCompleted
+                  ? 'grayscale opacity-50'
+                  : ''}"
+              >
+                <div class="font-bold text-pink-400">
+                  Request: {$t(`customFeed.requests.${cf.request}`)}
+                </div>
+                <div class="font-bold text-yellow-400">
+                  Effect: {$t(`customFeed.effects.${cf.effect}`)}
+                </div>
+              </div>
+            {/if}
           </div>
         </div>
       {/each}

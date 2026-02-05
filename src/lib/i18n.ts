@@ -126,7 +126,26 @@ const translations = {
     },
     handPenalty: 'Hand Retention Penalty',
     postBonus: 'Post Bonus',
-    shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
+    shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
+    customFeed: {
+      requests: {
+        play_3_cards: 'Play 3+ Cards/turn',
+        jetstream: 'Use Jetstream',
+        label_1_time: 'Use Label 1x',
+        field_3_users: '3 More Users on Field',
+        play_extended: 'Play Shining Card',
+        reach_0_pds: 'Reach 0 PDS'
+      },
+      effects: {
+        draw_1: 'Draw 1 Card',
+        pds_cap_plus_1: 'Max PDS +1',
+        field_power_plus_500: 'All Field Users +500',
+        final_multiplier_plus_20: 'Final Turn Multiplier +20',
+        next_cost_half: 'Next Card Cost 50%',
+        clear_moderation: 'Clear Moderation'
+      },
+      thankYou: 'Thank you!!'
+    }
   },
   jp: {
     titleMain: 'プロジェクト スカイ',
@@ -240,7 +259,26 @@ const translations = {
     },
     handPenalty: '手札保持ペナルティ',
     postBonus: 'ポストボーナス',
-    shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/'
+    shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
+    customFeed: {
+      requests: {
+        play_3_cards: '1ターンに3枚以上プレイ',
+        jetstream: 'ジェットストリームを実行',
+        label_1_time: 'ラベルを1回実行',
+        field_3_users: '場にあと3人そろえる',
+        play_extended: '光るカードをプレイ',
+        reach_0_pds: 'PDSを0にする'
+      },
+      effects: {
+        draw_1: '1枚ドロー',
+        pds_cap_plus_1: 'PDS容量永続+1',
+        field_power_plus_500: '場の全ユーザーのパワー+500',
+        final_multiplier_plus_20: '最終ターン倍率+20',
+        next_cost_half: '次のコスト半減',
+        clear_moderation: 'モデレーション解除'
+      },
+      thankYou: 'Thank you!!'
+    }
   }
 };
 

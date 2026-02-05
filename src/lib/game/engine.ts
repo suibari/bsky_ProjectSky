@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from './config';
-import type { GameState, Player, Card, UserCard, PostCard, Lane } from './types';
+import type { GameState, Player, Card, UserCard, PostCard, Lane, FeedRequestType, FeedEffectType, CustomFeed } from './types';
 import { getRank } from './ranks';
 import { trackTurnStart, trackCardPlay, trackGameEnd } from '$lib/analytics';
 import { soundManager } from './sound';
@@ -114,7 +114,11 @@ export class GameEngine {
       victory: false,
       buzzHistory: [0],
       archiveMultiplier: 1,
-      jetstreamUsedThisTurn: false
+      jetstreamUsedThisTurn: false,
+      cardsPlayedThisTurn: 0,
+      labelsUsedThisTurn: 0,
+      finalPhaseBonus: 0,
+      nextCardCostHalf: false
     };
   }
 
@@ -126,7 +130,7 @@ export class GameEngine {
       if (turn <= currentTurnCuttoff) {
         // Phase 4 (Last Phase) Dynamic Multiplier
         if (i === GAME_CONFIG.phases.length - 1) {
-          return phase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+          return phase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus) + this.state.finalPhaseBonus;
         }
         return phase.multiplier;
       }
@@ -135,9 +139,122 @@ export class GameEngine {
     const distinctPhases = GAME_CONFIG.phases.length;
     if (distinctPhases > 0) {
       const lastPhase = GAME_CONFIG.phases[distinctPhases - 1];
-      return lastPhase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus);
+      return lastPhase.multiplier + (this.state.extendedCardsPlayed * GAME_CONFIG.extendedCardBonus) + this.state.finalPhaseBonus;
     }
     return 1;
+  }
+
+  getRandomCustomFeed(): CustomFeed {
+    const requests: FeedRequestType[] = [
+      'play_3_cards', 'jetstream', 'label_1_time',
+      'field_3_users', 'play_extended', 'reach_0_pds'
+    ];
+    const effects: FeedEffectType[] = [
+      'draw_1',
+      'pds_cap_plus_1',
+      'field_power_plus_500',
+      'final_multiplier_plus_20',
+      'next_cost_half',
+      'clear_moderation'
+    ];
+
+    const request = requests[Math.floor(Math.random() * requests.length)];
+    const effect = effects[Math.floor(Math.random() * effects.length)];
+
+    return {
+      request,
+      effect,
+      isCompleted: false,
+      progress: 0
+    };
+  }
+
+  checkFeedRequests(triggerAction: string, context?: any) {
+    this.state.player.field.forEach(lane => {
+      const card = lane.card;
+      if (!card.customFeed || card.customFeed.isCompleted) return;
+
+      let completed = false;
+      const req = card.customFeed.request;
+
+      switch (req) {
+        case 'play_3_cards':
+          if (triggerAction === 'playCard' && this.state.cardsPlayedThisTurn >= 3) {
+            completed = true;
+          }
+          break;
+        case 'jetstream':
+          if (triggerAction === 'jetstream') {
+            completed = true;
+          }
+          break;
+        case 'label_1_time':
+          if (triggerAction === 'label' && this.state.labelsUsedThisTurn >= 1) {
+            completed = true;
+          }
+          break;
+        case 'field_3_users':
+          if (triggerAction === 'userAdded' && context?.uuid && card.uuid !== context.uuid) {
+            // Increment progress for existing cards when a NEW user is added
+            card.customFeed.progress = (card.customFeed.progress || 0) + 1;
+            if (card.customFeed.progress >= 3) {
+              completed = true;
+            }
+          }
+          break;
+        case 'play_extended':
+          if (triggerAction === 'playCard' && context?.origin === 'extended' && context?.uuid && card.uuid !== context.uuid) {
+            completed = true;
+          }
+          break;
+        case 'reach_0_pds':
+          if (triggerAction === 'pds' && this.state.player.pdsCurrent === 0) {
+            completed = true;
+          }
+          break;
+      }
+
+      if (completed) {
+        card.customFeed.isCompleted = true;
+        card.customFeed.completedTurn = this.state.turnCount;
+        this.applyFeedEffect(card.customFeed.effect);
+      }
+    });
+  }
+
+  applyFeedEffect(effect: FeedEffectType) {
+    switch (effect) {
+      case 'draw_1':
+        if (this.state.player.deck.length > 0) {
+          const drawn = this.state.player.deck.splice(0, 1);
+          this.state.player.hand.push(drawn[0]);
+          soundManager.play('draw', 1, GAME_CONFIG.soundDelays.draw);
+        }
+        break;
+      case 'pds_cap_plus_1':
+        this.state.player.pdsCapacity += 1;
+        // this.state.player.pdsCurrent += 1; // "Fill" the new slot immediately? Usually yes for capacity upgrades.
+        break;
+      case 'field_power_plus_500':
+        this.state.player.field.forEach(l => {
+          l.card.power += 500;
+        });
+        break;
+      case 'final_multiplier_plus_20':
+        this.state.finalPhaseBonus += 20;
+        // Recalculate multiplier immediately if we are in final phase?
+        this.state.phaseMultiplier = this.getPhaseMultiplier(this.state.turnCount);
+        break;
+      case 'next_cost_half':
+        this.state.nextCardCostHalf = true;
+        break;
+      case 'clear_moderation':
+        this.state.player.hand.forEach(c => {
+          c.power = c.originalPower;
+          c.lastModeratedTurn = undefined;
+        });
+        break;
+    }
   }
 
   startTurn() {
@@ -146,6 +263,11 @@ export class GameEngine {
     this.state.turnCount++;
     trackTurnStart(this.state.turnCount);
     soundManager.play('turnchange', 1, GAME_CONFIG.soundDelays.turnchange);
+
+    // Reset Turn Stats
+    this.state.cardsPlayedThisTurn = 0;
+    this.state.labelsUsedThisTurn = 0;
+    // Jetstream reset is done at end of startTurn or here? Done below.
 
     // Apply "Moderation" Rule
     // Cards held in hand have their power halved (carry-over penalty)
@@ -174,12 +296,20 @@ export class GameEngine {
 
       // Deck out check?
       if (this.state.player.deck.length === 0 && drawn.length < cardsNeeded) {
-        // Handle deck out - maybe nothing happens, just play with what you have
+        // Handle deck out
       }
     }
 
     this.state.phase = 'main';
     this.state.jetstreamUsedThisTurn = false;
+
+    // Check 'field_3_users' at start of turn? It might trigger if we already have 3 users.
+    // But usually triggered by ACTION.
+    // Just in case, check existing specific conditions?
+    // "End turn 0 PDS" -> checked at end.
+    // "Play 3 cards" -> checked on play.
+    // "3 Users on field" -> checked on user play.
+
   }
 
   archiveCard(cardIndex: number) {
@@ -209,6 +339,11 @@ export class GameEngine {
     this.state.archiveMultiplier *= GAME_CONFIG.archiveMultiplier;
 
     soundManager.play('label', 1, GAME_CONFIG.soundDelays.label);
+
+    // Custom Feed Trigger
+    this.state.labelsUsedThisTurn++;
+    this.checkFeedRequests('label');
+    this.checkFeedRequests('pds'); // PDS consumed
   }
 
   playCard(cardIndex: number) {
@@ -217,14 +352,24 @@ export class GameEngine {
     const card = this.state.player.hand[cardIndex];
     if (!card) return;
 
+    // Calculate effective cost (Halved?)
+    let effectiveCost = card.cost;
+    if (this.state.nextCardCostHalf) {
+      effectiveCost = Math.floor(effectiveCost / 2);
+    }
+
     // Check Cost
-    if (this.state.player.pdsCurrent < card.cost) {
+    if (this.state.player.pdsCurrent < effectiveCost) {
       console.warn("Not enough PDS");
       return;
     }
 
     // Pay Cost
-    this.state.player.pdsCurrent -= card.cost;
+    this.state.player.pdsCurrent -= effectiveCost;
+    if (this.state.nextCardCostHalf) {
+      this.state.nextCardCostHalf = false; // Consumed
+    }
+    this.checkFeedRequests('pds'); // PDS consumed
 
     trackCardPlay(card);
 
@@ -236,16 +381,27 @@ export class GameEngine {
     // Remove from hand
     this.state.player.hand.splice(cardIndex, 1);
 
+    // Custom Feed Trigger (Part 1: Count)
+    this.state.cardsPlayedThisTurn++;
+
     if (card.type === 'user') {
       // User Card: Place on Field
       // Apply Archive Multiplier permanently to this card instance
       card.power *= this.state.archiveMultiplier;
+
+      // Assign Custom Feed if User Card!
+      card.customFeed = this.getRandomCustomFeed();
 
       this.state.player.field.unshift({
         id: crypto.randomUUID(),
         card: card as UserCard,
         turnCreated: this.state.turnCount
       });
+
+      // Check 'field_3_users'
+      this.checkFeedRequests('userAdded', { uuid: card.uuid });
+      this.checkFeedRequests('playCard', { origin: card.origin, uuid: card.uuid }); // Passed origin for 'play_extended' check
+
     } else if (card.type === 'post') {
       // Post Card: Instant Score
       // Power * Phase Multiplier * Archive Multiplier
@@ -266,6 +422,11 @@ export class GameEngine {
 
       // Move to Discard
       this.state.player.discard.push(card);
+
+      // Check 'play_extended' (for Post cards too?)
+      // User requests usually on User Cards, but user card request can be "Play Extended".
+      // Yes.
+      this.checkFeedRequests('playCard', { origin: card.origin });
     }
 
     this.state.archiveMultiplier = 1;
@@ -286,10 +447,6 @@ export class GameEngine {
       console.warn("Not enough PDS for Reload");
       return;
     }
-
-    // Check deck existence (if deck empty, we can still discard but draw 0? Or fail? Usually fail if can't draw at all?
-    // User requirement: "Discard hand, draw same amount".
-    // If deck has fewer cards than hand size, we draw as much as possible?
 
     // Pay Cost
     this.state.player.pdsCurrent -= cost;
@@ -318,6 +475,10 @@ export class GameEngine {
 
     // Mark used
     this.state.jetstreamUsedThisTurn = true;
+
+    // Custom Feed Trigger
+    this.checkFeedRequests('jetstream');
+    this.checkFeedRequests('pds'); // PDS consumed
   }
 
   endTurn() {
