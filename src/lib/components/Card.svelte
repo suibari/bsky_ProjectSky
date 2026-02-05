@@ -63,6 +63,9 @@
             showModeratedLabel = false;
           }, 2000);
         }
+      } else {
+        // Moderation Cleared
+        currentDisplayValue = targetValue;
       }
     } else {
       // No new moderation event this tick
