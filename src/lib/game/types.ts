@@ -113,4 +113,5 @@ export interface GameState {
   // Custom Feed Bonuses
   finalPhaseBonus: number;
   nextCardCostHalf: boolean;
+  pdsCapBonus: number;
 }

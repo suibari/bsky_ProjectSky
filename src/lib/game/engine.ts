@@ -118,7 +118,8 @@ export class GameEngine {
       cardsPlayedThisTurn: 0,
       labelsUsedThisTurn: 0,
       finalPhaseBonus: 0,
-      nextCardCostHalf: false
+      nextCardCostHalf: false,
+      pdsCapBonus: 0
     };
   }
 
@@ -232,8 +233,9 @@ export class GameEngine {
         }
         break;
       case 'pds_cap_plus_1':
+        this.state.pdsCapBonus += 1;
         this.state.player.pdsCapacity += 1;
-        // this.state.player.pdsCurrent += 1; // "Fill" the new slot immediately? Usually yes for capacity upgrades.
+        this.state.player.pdsCurrent += 1; // Immediate fill for the specific instance
         break;
       case 'field_power_plus_500':
         this.state.player.field.forEach(l => {
@@ -282,7 +284,7 @@ export class GameEngine {
     this.state.phaseMultiplier = this.getPhaseMultiplier(this.state.turnCount);
 
     // PDS Recovery & Growth
-    this.state.player.pdsCapacity = GAME_CONFIG.pds.initialCapacity + (this.state.turnCount - 1) * GAME_CONFIG.pds.maxCapacityIncrement;
+    this.state.player.pdsCapacity = GAME_CONFIG.pds.initialCapacity + (this.state.turnCount - 1) * GAME_CONFIG.pds.maxCapacityIncrement + this.state.pdsCapBonus;
     this.state.player.pdsCurrent = this.state.player.pdsCapacity;
 
     // Draw Phase: Draw until hand has 5 cards
