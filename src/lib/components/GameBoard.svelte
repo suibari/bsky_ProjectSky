@@ -2,7 +2,7 @@
   import { onMount, tick } from "svelte";
   import { GameEngine } from "../game/engine";
   import { GAME_CONFIG } from "../game/config";
-  import type { GameState, Card } from "../game/types";
+  import type { GameState, Card, UserCard } from "../game/types";
   import CardComponent from "./Card.svelte";
   import gsap from "gsap";
   import { crossfade } from "svelte/transition";
@@ -14,6 +14,7 @@
   import { t } from "$lib/i18n";
   import { soundManager } from "$lib/game/sound";
 
+  import ThankYouOverlay from "./visuals/ThankYouOverlay.svelte";
   import ScoreAnimation from "./visuals/ScoreAnimation.svelte";
   import GameClear from "./visuals/GameClear.svelte";
   import TurnTransition from "./visuals/TurnTransition.svelte";
@@ -40,15 +41,23 @@
     },
   });
 
-  let { did, handle, displayName, avatarDeck, contentDeck, onOpenInfo } =
-    $props<{
-      did: string;
-      handle: string;
-      displayName: string;
-      avatarDeck: any[];
-      contentDeck: any[];
-      onOpenInfo?: () => void;
-    }>();
+  let {
+    did,
+    handle,
+    displayName,
+    avatarDeck,
+    contentDeck,
+    onOpenInfo,
+    onOpenHelp,
+  } = $props<{
+    did: string;
+    handle: string;
+    displayName: string;
+    avatarDeck: any[];
+    contentDeck: any[];
+    onOpenInfo?: () => void;
+    onOpenHelp?: () => void;
+  }>();
 
   // Svelte 5 Reactivity
   const initialState = GameEngine.createInitialState(
@@ -79,6 +88,34 @@
   // Card Animation State
   let playingCardIndex = $state<number | null>(null);
   let playingCard = $state<Card | null>(null);
+
+  // Custom Feed Animation State
+  let handledFeeds = new Set<string>(); // Tracks UUIDs of completed feeds we've already shown
+  let feedNotificationQueue = $state<UserCard[]>([]);
+  let currentThankYouCard = $derived(
+    feedNotificationQueue.length > 0 ? feedNotificationQueue[0] : null,
+  );
+
+  // Watch for Completed Feeds
+  $effect(() => {
+    gameState.player.field.forEach((lane) => {
+      if (
+        lane.card.customFeed?.isCompleted &&
+        !handledFeeds.has(lane.card.uuid)
+      ) {
+        // New completion!
+        handledFeeds.add(lane.card.uuid);
+        // Push to queue (assignment for reactivity)
+        feedNotificationQueue = [...feedNotificationQueue, lane.card];
+      }
+    });
+  });
+
+  function handleThankYouComplete() {
+    // Remove first item
+    const [_, ...rest] = feedNotificationQueue;
+    feedNotificationQueue = rest;
+  }
 
   // Watch for Rank Up
   $effect(() => {
@@ -212,7 +249,12 @@
 
     // Only if affordable
     const card = gameState.player.hand[selectedCardIndex];
-    if (gameState.player.pdsCurrent >= card.cost) {
+    let effectiveCost = card.cost;
+    if (gameState.nextCardCostHalf) {
+      effectiveCost = Math.floor(effectiveCost / 2);
+    }
+
+    if (gameState.player.pdsCurrent >= effectiveCost) {
       // Intercept for animation (ALL cards now)
       playingCardIndex = selectedCardIndex;
       playingCard = card;
@@ -330,6 +372,10 @@
     showRankUp = false;
     displayingRank = "";
 
+    // Reset Feed State
+    handledFeeds.clear();
+    feedNotificationQueue = [];
+
     // Start
     startTurn();
   }
@@ -349,6 +395,15 @@
 
   {#if showRankUp}
     <RankUp rank={displayingRank} onComplete={handleRankUpComplete} />
+  {/if}
+
+  {#if currentThankYouCard}
+    {#key currentThankYouCard.uuid}
+      <ThankYouOverlay
+        card={currentThankYouCard}
+        onComplete={handleThankYouComplete}
+      />
+    {/key}
   {/if}
 
   {#if playingCard && playingCardIndex !== null}
@@ -459,18 +514,19 @@
 
   <!-- Main Game Area -->
   <div class="flex-grow flex relative overflow-hidden">
-    <!-- Info Button (Field Top-Right) -->
-    <div class="absolute top-4 right-4 z-10">
+    <!-- Info/Help Buttons (Top-Right) -->
+    <div class="absolute top-4 right-4 z-10 flex gap-2">
+      <!-- INFO ('i') -->
       <button
         class="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-blue-400 hover:text-white flex items-center justify-center transition-all backdrop-blur-md border border-slate-600 shadow-lg"
         onclick={onOpenInfo}
-        aria-label="Game Info"
+        aria-label="Overview"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          stroke-width="1.5"
+          stroke-width="2"
           stroke="currentColor"
           class="w-6 h-6"
         >
@@ -478,6 +534,28 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+          />
+        </svg>
+      </button>
+
+      <!-- HELP ('?') -->
+      <button
+        class="w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-yellow-400 hover:text-white flex items-center justify-center transition-all backdrop-blur-md border border-slate-600 shadow-lg"
+        onclick={onOpenHelp}
+        aria-label="Manual"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
           />
         </svg>
       </button>
@@ -532,6 +610,23 @@
                 >Generating +{lane.card.power * gameState.phaseMultiplier} Users/Turn</span
               >
             </div>
+
+            <!-- Custom Feed Request/Effect -->
+            {#if lane.card.customFeed}
+              {@const cf = lane.card.customFeed}
+              <div
+                class="mt-2 text-xs relative {cf.isCompleted
+                  ? 'grayscale opacity-50'
+                  : ''}"
+              >
+                <div class="font-bold text-pink-400">
+                  Request: {$t(`customFeed.requests.${cf.request}`)}
+                </div>
+                <div class="font-bold text-yellow-400">
+                  Effect: {$t(`customFeed.effects.${cf.effect}`)}
+                </div>
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
@@ -559,11 +654,15 @@
         class="pointer-events-auto w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xl rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.5)] border-2 border-blue-400 disabled:opacity-50 disabled:grayscale transition-all hover:scale-105 active:scale-95 flex flex-col items-center"
         onclick={confirmPlay}
         disabled={gameState.player.pdsCurrent <
-          gameState.player.hand[selectedCardIndex].cost}
+          (gameState.nextCardCostHalf
+            ? Math.floor(gameState.player.hand[selectedCardIndex].cost / 2)
+            : gameState.player.hand[selectedCardIndex].cost)}
       >
         PLAY
         <span class="text-xs font-normal opacity-90"
-          >Cost: {gameState.player.hand[selectedCardIndex].cost}</span
+          >Cost: {gameState.nextCardCostHalf
+            ? Math.floor(gameState.player.hand[selectedCardIndex].cost / 2)
+            : gameState.player.hand[selectedCardIndex].cost}</span
         >
       </button>
 

@@ -5,6 +5,7 @@
   import type { UserCard, PostCard } from "$lib/game/types";
   import GameBoard from "$lib/components/GameBoard.svelte";
   import InfoModal from "$lib/components/visuals/InfoModal.svelte";
+  import HelpModal from "$lib/components/visuals/HelpModal.svelte";
 
   import { t, locale } from "$lib/i18n";
   import { Agent } from "@atproto/api";
@@ -22,6 +23,7 @@
   let contentDeck = $state<PostCard[]>([]);
   let readyToPlay = $state(false);
   let showInfoModal = $state(false);
+  let showHelpModal = $state(false);
   let userDid = $state("");
   let userHandle = $state("");
   let userDisplayName = $state("");
@@ -180,6 +182,7 @@
       {avatarDeck}
       {contentDeck}
       onOpenInfo={() => (showInfoModal = true)}
+      onOpenHelp={() => (showHelpModal = true)}
     />
   {:else}
     <!-- Landing / Handle Input -->
@@ -372,5 +375,9 @@
 
   {#if showInfoModal}
     <InfoModal onClose={() => (showInfoModal = false)} />
+  {/if}
+
+  {#if showHelpModal}
+    <HelpModal onClose={() => (showHelpModal = false)} />
   {/if}
 </div>
