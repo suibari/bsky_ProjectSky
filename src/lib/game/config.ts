@@ -53,7 +53,7 @@ export const GAME_CONFIG = {
     postcard: 0,
     rankup: 0,
     result: 0,
-    score: 800,
+    score: 1000,
     turnchange: 0,
     usercard: 0,
   },

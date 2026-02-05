@@ -241,7 +241,12 @@
 
     // Only if affordable
     const card = gameState.player.hand[selectedCardIndex];
-    if (gameState.player.pdsCurrent >= card.cost) {
+    let effectiveCost = card.cost;
+    if (gameState.nextCardCostHalf) {
+      effectiveCost = Math.floor(effectiveCost / 2);
+    }
+
+    if (gameState.player.pdsCurrent >= effectiveCost) {
       // Intercept for animation (ALL cards now)
       playingCardIndex = selectedCardIndex;
       playingCard = card;
@@ -618,11 +623,15 @@
         class="pointer-events-auto w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black text-xl rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.5)] border-2 border-blue-400 disabled:opacity-50 disabled:grayscale transition-all hover:scale-105 active:scale-95 flex flex-col items-center"
         onclick={confirmPlay}
         disabled={gameState.player.pdsCurrent <
-          gameState.player.hand[selectedCardIndex].cost}
+          (gameState.nextCardCostHalf
+            ? Math.floor(gameState.player.hand[selectedCardIndex].cost / 2)
+            : gameState.player.hand[selectedCardIndex].cost)}
       >
         PLAY
         <span class="text-xs font-normal opacity-90"
-          >Cost: {gameState.player.hand[selectedCardIndex].cost}</span
+          >Cost: {gameState.nextCardCostHalf
+            ? Math.floor(gameState.player.hand[selectedCardIndex].cost / 2)
+            : gameState.player.hand[selectedCardIndex].cost}</span
         >
       </button>
 

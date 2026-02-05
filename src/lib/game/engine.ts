@@ -431,7 +431,7 @@ export class GameEngine {
       // Check 'play_extended' (for Post cards too?)
       // User requests usually on User Cards, but user card request can be "Play Extended".
       // Yes.
-      this.checkFeedRequests('playCard', { origin: card.origin });
+      this.checkFeedRequests('playCard', { origin: card.origin, uuid: card.uuid });
     }
 
     this.state.archiveMultiplier = 1;
