@@ -118,8 +118,10 @@ const translations = {
       moderationDesc: 'Cards carried over to the next turn (held in hand) will have their Power halved.',
       relayTitle: 'Relay',
       relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +500 Power.',
+      feedTitle: 'Feed',
+      feedDesc: 'When you play a User Card, it will appear on the feed with various "requests". Completing these requests will grant rewards.',
       multiplierTitle: 'Phase Multiplier',
-      multiplierDesc: 'Early Game (Turns 1-3): Multiplier x1\nMid Game (Turns 4-6): Multiplier x20\nEnd Game (Turns 7-9): Multiplier x300\nFinal Turn: Multiplier x300 + (Number of Stella Cards Used x10)',
+      multiplierDesc: 'Early Game (Turns 1-3): Multiplier x1\nMid Game (Turns 4-6): Multiplier x20\nEnd Game (Turns 7-9): Multiplier x300\nFinal Turn: Multiplier x300over',
       linksTitle: 'Links',
       bskyText: 'Bluesky: suibari (suibari.com)',
       githubText: 'GitHub: suibari/bsky_ProjectSky'
@@ -252,8 +254,10 @@ const translations = {
       moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
       relayTitle: 'リレー',
       relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+500します。',
+      feedTitle: 'フィード',
+      feedDesc: '場に出したユーザーカードはさまざまな「おねがい」をフィードとして表示します。おねがいを達成すると報酬が貰えます。',
       multiplierTitle: 'フェーズ倍率',
-      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~3ターン）：倍率x1\n中盤（4～6ターン）：倍率x20\n終盤（7~9ターン）：倍率x300\n最終ターン：倍率x300+ゲーム中に使用したステラカードの枚数×10',
+      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~3ターン）：倍率x1\n中盤（4～6ターン）：倍率x20\n終盤（7~9ターン）：倍率x300\n最終ターン：倍率x300over',
       linksTitle: 'リンク',
       bskyText: 'すいばり(suibari.com)',
       githubText: 'GitHub(suibari/bsky_ProjectSky)'
