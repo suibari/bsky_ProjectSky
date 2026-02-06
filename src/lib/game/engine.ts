@@ -225,6 +225,7 @@ export class GameEngine {
         card.customFeed.isCompleted = true;
         card.customFeed.completedTurn = this.state.turnCount;
         this.applyFeedEffect(card.customFeed.effect);
+        soundManager.play('feed');
       }
     });
   }
