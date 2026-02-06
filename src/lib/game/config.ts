@@ -5,6 +5,7 @@ export const GAME_CONFIG = {
   deck: {
     avatarCount: 20,
     contentCount: 20,
+    extendedDataRatio: 0.25, // Ratio of "shiny" (extended) cards in the deck
   },
 
   // Game Loop
