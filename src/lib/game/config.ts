@@ -1,4 +1,6 @@
 export const GAME_CONFIG = {
+  version: "0.0.1",
+
   // Deck Construction
   deck: {
     avatarCount: 20,
