@@ -147,9 +147,9 @@ export class GameEngine {
 
   getRandomCustomFeed(): CustomFeed {
     const requests: FeedRequestType[] = [
-      'play_3_cards', 'jetstream', 'label_1_time',
+      'play_4_cards', 'jetstream', 'label_2_times',
       'field_3_users', 'play_extended', 'reach_0_pds',
-      'post_with_5_users'
+      'post_with_8_users'
     ];
     const effects: FeedEffectType[] = [
       'draw_1',
@@ -180,8 +180,8 @@ export class GameEngine {
       const req = card.customFeed.request;
 
       switch (req) {
-        case 'play_3_cards':
-          if (triggerAction === 'playCard' && this.state.cardsPlayedThisTurn >= 3) {
+        case 'play_4_cards':
+          if (triggerAction === 'playCard' && this.state.cardsPlayedThisTurn >= 4) {
             completed = true;
           }
           break;
@@ -190,8 +190,8 @@ export class GameEngine {
             completed = true;
           }
           break;
-        case 'label_1_time':
-          if (triggerAction === 'label' && this.state.labelsUsedThisTurn >= 1) {
+        case 'label_2_times':
+          if (triggerAction === 'label' && this.state.labelsUsedThisTurn >= 2) {
             completed = true;
           }
           break;
@@ -214,8 +214,8 @@ export class GameEngine {
             completed = true;
           }
           break;
-        case 'post_with_5_users':
-          if (triggerAction === 'playCard' && context?.type === 'post' && this.state.player.field.length >= 5) {
+        case 'post_with_8_users':
+          if (triggerAction === 'playCard' && context?.type === 'post' && this.state.player.field.length >= 8) {
             completed = true;
           }
           break;

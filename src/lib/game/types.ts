@@ -46,13 +46,13 @@ export interface BaseCard {
 }
 
 export type FeedRequestType =
-  | 'play_3_cards'
+  | 'play_4_cards'
   | 'jetstream'
-  | 'label_1_time'
+  | 'label_2_times'
   | 'field_3_users'
   | 'play_extended'
   | 'reach_0_pds'
-  | 'post_with_5_users';
+  | 'post_with_8_users';
 
 export type FeedEffectType =
   | 'draw_1'
