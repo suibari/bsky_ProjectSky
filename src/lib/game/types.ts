@@ -57,7 +57,7 @@ export type FeedRequestType =
 export type FeedEffectType =
   | 'draw_1'
   | 'pds_cap_plus_1'
-  | 'field_power_plus_500'
+  | 'field_power_plus_300'
   | 'final_multiplier_plus_10'
   | 'next_cost_half'
   | 'clear_moderation';

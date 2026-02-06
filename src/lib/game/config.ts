@@ -27,7 +27,7 @@ export const GAME_CONFIG = {
   },
 
   archiveMultiplier: 2, // Multiplier when archiving a card
-  relayPowerBonus: 500, // Bonus power for user cards when a post card is used
+  relayPowerBonus: 300, // Bonus power for user cards when a post card is used
   extendedCardBonus: 10, // Bonus to final turn multiplier per extended card played
 
   // Ranking Thresholds (Buzz Points)

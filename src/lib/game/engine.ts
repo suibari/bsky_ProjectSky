@@ -154,7 +154,7 @@ export class GameEngine {
     const effects: FeedEffectType[] = [
       'draw_1',
       'pds_cap_plus_1',
-      'field_power_plus_500',
+      'field_power_plus_300',
       'final_multiplier_plus_10',
       'next_cost_half',
       'clear_moderation'
@@ -243,9 +243,9 @@ export class GameEngine {
         this.state.pdsCapBonus += 1;
         this.state.player.pdsCapacity += 1;
         break;
-      case 'field_power_plus_500':
+      case 'field_power_plus_300':
         this.state.player.field.forEach(l => {
-          l.card.power += 500;
+          l.card.power += 300;
         });
         break;
       case 'final_multiplier_plus_10':

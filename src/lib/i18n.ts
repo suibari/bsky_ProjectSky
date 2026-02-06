@@ -117,7 +117,7 @@ const translations = {
       moderationTitle: 'Moderation',
       moderationDesc: 'Cards carried over to the next turn (held in hand) will have their Power halved.',
       relayTitle: 'Relay',
-      relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +500 Power.',
+      relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +300 Power.',
       feedTitle: 'Feed',
       feedDesc: 'When you play a User Card, it will appear on the feed with various "requests". Completing these requests will grant rewards.',
       multiplierTitle: 'Phase Multiplier',
@@ -142,7 +142,7 @@ const translations = {
       effects: {
         draw_1: 'Draw 1 Card',
         pds_cap_plus_1: 'Max PDS +1',
-        field_power_plus_500: 'All Field Users +500',
+        field_power_plus_300: 'All Field Users +300',
         final_multiplier_plus_10: 'Final Turn Multiplier +10',
         next_cost_half: 'Next Card Cost 50%',
         clear_moderation: 'Clear Moderation'
@@ -253,7 +253,7 @@ const translations = {
       moderationTitle: 'モデレーション',
       moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
       relayTitle: 'リレー',
-      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+500します。',
+      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+300します。',
       feedTitle: 'フィード',
       feedDesc: '場に出したユーザーカードはさまざまな「おねがい」をフィードとして表示します。おねがいを達成すると報酬が貰えます。',
       multiplierTitle: 'フェーズ倍率',
@@ -278,7 +278,7 @@ const translations = {
       effects: {
         draw_1: '1枚ドロー',
         pds_cap_plus_1: 'PDS容量永続+1',
-        field_power_plus_500: '場の全ユーザーのパワー+500',
+        field_power_plus_300: '場の全ユーザーのパワー+300',
         final_multiplier_plus_10: '最終ターン倍率+10',
         next_cost_half: '次のコスト半減',
         clear_moderation: 'モデレーション解除'
@@ -286,7 +286,7 @@ const translations = {
       thankYou: 'Thank you!!'
     },
     info: {
-      intro: 'プロジェクトスカイはBlueskyのユーザーを増やすカードゲームです。\n10ターンで1億人のユーザーを集めよう！',
+      intro: 'プロジェクトスカイはBlueskyのユーザーを増やし、覇権SNSを目指すカードゲームです。\n10ターンで1億人のユーザーを集めよう！',
       step1: '序盤はユーザーのカードを並べよう！',
       step2: '並べたユーザーのお願いを叶えよう！',
       step3: 'お願いを叶えたり、ポストのカードを使ってユーザーを強化！',
