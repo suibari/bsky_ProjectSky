@@ -226,6 +226,12 @@
                         <p>{$t("manual.relayDesc")}</p>
                     </div>
                     <div class="bg-slate-800 p-4 rounded-lg md:col-span-2">
+                        <h4 class="font-bold text-teal-400 mb-1">
+                            {$t("manual.feedTitle")}
+                        </h4>
+                        <p>{$t("manual.feedDesc")}</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-lg md:col-span-2">
                         <h4 class="font-bold text-yellow-400 mb-1">
                             {$t("manual.multiplierTitle")}
                         </h4>

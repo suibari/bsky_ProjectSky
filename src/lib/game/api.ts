@@ -50,12 +50,16 @@ export async function fetchGameDecks(
     .filter(uri => !myLikesSet.has(uri))
     .sort(() => Math.random() - 0.5);
 
-  // Enforce 50/50 Split with BUFFER
+  // Enforce Split based on Config
   // We want to fetch MORE than needed to account for deleted posts (hydration failures)
   // But we still need to respect the available pool size.
-  const targetHalfPost = Math.floor(GAME_CONFIG.deck.contentCount / 2);
+  const targetExtendedPost = Math.floor(GAME_CONFIG.deck.contentCount * GAME_CONFIG.deck.extendedDataRatio);
+  // Ensure we have at least 1 if ratio > 0, but logical max is contentCount
+  const targetDirectPost = GAME_CONFIG.deck.contentCount - targetExtendedPost;
+
   const BUFFER_RATIO = 1.5;
-  const bufferTarget = Math.ceil(targetHalfPost * BUFFER_RATIO);
+  const bufferTargetExtended = Math.ceil(targetExtendedPost * BUFFER_RATIO);
+  const bufferTargetDirect = Math.ceil(targetDirectPost * BUFFER_RATIO);
 
   // Available in pools
   const availableA = poolPostA.length;
@@ -63,8 +67,8 @@ export async function fetchGameDecks(
 
   // We take up to bufferTarget from each, but we can't take more than available.
   // We don't limit by Min(A, B) yet, we try to get as many candidates as possible up to the buffer.
-  const candidatesA = poolPostA.slice(0, bufferTarget).map(uri => ({ uri, origin: 'direct' as const }));
-  const candidatesB = poolPostB.slice(0, bufferTarget).map(uri => ({ uri, origin: 'extended' as const }));
+  const candidatesA = poolPostA.slice(0, bufferTargetDirect).map(uri => ({ uri, origin: 'direct' as const }));
+  const candidatesB = poolPostB.slice(0, bufferTargetExtended).map(uri => ({ uri, origin: 'extended' as const }));
 
   const combinedCandidatesPost = [...candidatesA, ...candidatesB]; // Not shuffled heavily yet, we can shuffle after hydration? Or shuffle now for batching?
   // Batching doesn't care about order.
@@ -100,10 +104,12 @@ export async function fetchGameDecks(
   const validPostB = allPostItems.filter(p => p.origin === 'extended');
 
   // New Min Check
-  const finalPairsCount = Math.min(validPostA.length, validPostB.length, targetHalfPost);
+  const finalCountB = Math.min(validPostB.length, targetExtendedPost);
+  const remainingSlots = GAME_CONFIG.deck.contentCount - finalCountB;
+  const finalCountA = Math.min(validPostA.length, remainingSlots);
 
-  const finalPostA = validPostA.slice(0, finalPairsCount);
-  const finalPostB = validPostB.slice(0, finalPairsCount);
+  const finalPostA = validPostA.slice(0, finalCountA);
+  const finalPostB = validPostB.slice(0, finalCountB);
 
   const finalDeckItems = [...finalPostA, ...finalPostB].sort(() => Math.random() - 0.5);
 
@@ -122,15 +128,18 @@ export async function fetchGameDecks(
     .sort(() => Math.random() - 0.5);
 
   // Buffer Selection for Users
-  const targetHalfUser = Math.floor(GAME_CONFIG.deck.avatarCount / 2);
-  const bufferTargetUser = Math.ceil(targetHalfUser * BUFFER_RATIO);
+  const targetExtendedUser = Math.floor(GAME_CONFIG.deck.avatarCount * GAME_CONFIG.deck.extendedDataRatio);
+  const targetDirectUser = GAME_CONFIG.deck.avatarCount - targetExtendedUser;
+
+  const bufferTargetExtendedUser = Math.ceil(targetExtendedUser * BUFFER_RATIO);
+  const bufferTargetDirectUser = Math.ceil(targetDirectUser * BUFFER_RATIO);
 
   // Available
   const availUserA = poolUserA.length;
   const availUserB = poolUserB.length;
 
-  const userCandidatesA = poolUserA.slice(0, bufferTargetUser).map(did => ({ did, origin: 'direct' as const }));
-  const userCandidatesB = poolUserB.slice(0, bufferTargetUser).map(did => ({ did, origin: 'extended' as const }));
+  const userCandidatesA = poolUserA.slice(0, bufferTargetDirectUser).map(did => ({ did, origin: 'direct' as const }));
+  const userCandidatesB = poolUserB.slice(0, bufferTargetExtendedUser).map(did => ({ did, origin: 'extended' as const }));
 
   console.log(`[DeckBuild] User Candidates (Buffer ${BUFFER_RATIO}x): A=${userCandidatesA.length}/${availUserA}, B=${userCandidatesB.length}/${availUserB}`);
 
@@ -161,10 +170,12 @@ export async function fetchGameDecks(
   const validUserA = allUserItems.filter(p => p.origin === 'direct');
   const validUserB = allUserItems.filter(p => p.origin === 'extended');
 
-  const finalUserPairs = Math.min(validUserA.length, validUserB.length, targetHalfUser);
+  const finalUserCountB = Math.min(validUserB.length, targetExtendedUser);
+  const remainingUserSlots = GAME_CONFIG.deck.avatarCount - finalUserCountB;
+  const finalUserCountA = Math.min(validUserA.length, remainingUserSlots);
 
-  const finalUserA = validUserA.slice(0, finalUserPairs);
-  const finalUserB = validUserB.slice(0, finalUserPairs);
+  const finalUserA = validUserA.slice(0, finalUserCountA);
+  const finalUserB = validUserB.slice(0, finalUserCountB);
 
   const finalUserDeckItems = [...finalUserA, ...finalUserB].sort(() => Math.random() - 0.5);
 
@@ -298,7 +309,7 @@ function buildContentDeck(items: { post: any, origin: 'direct' | 'extended' }[])
 
     // Power Calculation
     // Base Power
-    let basePower = Math.floor((6400 * Math.pow(likeCount, 0.4)) / (textLen + 10));
+    let basePower = Math.floor((4800 * Math.pow(likeCount, 0.4)) / (textLen + 10));
 
     // Apply Multiplier
     // A (Direct): 0.7x

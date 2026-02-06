@@ -1,8 +1,11 @@
 export const GAME_CONFIG = {
+  version: "0.0.1",
+
   // Deck Construction
   deck: {
     avatarCount: 20,
     contentCount: 20,
+    extendedDataRatio: 0.25, // Ratio of "shiny" (extended) cards in the deck
   },
 
   // Game Loop
@@ -25,7 +28,7 @@ export const GAME_CONFIG = {
   },
 
   archiveMultiplier: 2, // Multiplier when archiving a card
-  relayPowerBonus: 500, // Bonus power for user cards when a post card is used
+  relayPowerBonus: 300, // Bonus power for user cards when a post card is used
   extendedCardBonus: 10, // Bonus to final turn multiplier per extended card played
 
   // Ranking Thresholds (Buzz Points)

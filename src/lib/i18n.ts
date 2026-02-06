@@ -117,9 +117,11 @@ const translations = {
       moderationTitle: 'Moderation',
       moderationDesc: 'Cards carried over to the next turn (held in hand) will have their Power halved.',
       relayTitle: 'Relay',
-      relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +500 Power.',
+      relayDesc: 'When you play a Post Card, all User Cards currently on the field gain +300 Power.',
+      feedTitle: 'Feed',
+      feedDesc: 'When you play a User Card, it will appear on the feed with various "requests". Completing these requests will grant rewards.',
       multiplierTitle: 'Phase Multiplier',
-      multiplierDesc: 'Early Game (Turns 1-3): Multiplier x1\nMid Game (Turns 4-6): Multiplier x20\nEnd Game (Turns 7-9): Multiplier x300\nFinal Turn: Multiplier x300 + (Number of Stella Cards Used x10)',
+      multiplierDesc: 'Early Game (Turns 1-3): Multiplier x1\nMid Game (Turns 4-6): Multiplier x20\nEnd Game (Turns 7-9): Multiplier x300\nFinal Turn: Multiplier x300over',
       linksTitle: 'Links',
       bskyText: 'Bluesky: suibari (suibari.com)',
       githubText: 'GitHub: suibari/bsky_ProjectSky'
@@ -129,18 +131,18 @@ const translations = {
     shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_3_cards: 'Play 3+ Cards/turn',
+        play_4_cards: 'Play 4+ Cards/turn',
         jetstream: 'Use Jetstream',
-        label_1_time: 'Use Label 1x',
+        label_2_times: 'Use Label 2x',
         field_3_users: '3 More Users on Field',
         play_extended: 'Play Shining Card',
         reach_0_pds: 'Reach 0 PDS',
-        post_with_5_users: 'Use Post with 5+ Users'
+        post_with_8_users: 'Use Post with 8+ Users'
       },
       effects: {
         draw_1: 'Draw 1 Card',
         pds_cap_plus_1: 'Max PDS +1',
-        field_power_plus_500: 'All Field Users +500',
+        field_power_plus_300: 'All Field Users +300',
         final_multiplier_plus_10: 'Final Turn Multiplier +10',
         next_cost_half: 'Next Card Cost 50%',
         clear_moderation: 'Clear Moderation'
@@ -251,9 +253,11 @@ const translations = {
       moderationTitle: 'モデレーション',
       moderationDesc: '次のターンまで手札に持ち越したカードは、パワーが半減します。',
       relayTitle: 'リレー',
-      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+500します。',
+      relayDesc: 'ポストカードを使用した際、その時点で場に出ている全てのユーザーカードのパワーを+300します。',
+      feedTitle: 'フィード',
+      feedDesc: '場に出したユーザーカードはさまざまな「おねがい」をフィードとして表示します。おねがいを達成すると報酬が貰えます。',
       multiplierTitle: 'フェーズ倍率',
-      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~3ターン）：倍率x1\n中盤（4～6ターン）：倍率x20\n終盤（7~9ターン）：倍率x300\n最終ターン：倍率x300+ゲーム中に使用したステラカードの枚数×10',
+      multiplierDesc: 'ターン経過によってすべてのカードに倍率がかかります。\n序盤（1~3ターン）：倍率x1\n中盤（4～6ターン）：倍率x20\n終盤（7~9ターン）：倍率x300\n最終ターン：倍率x300over',
       linksTitle: 'リンク',
       bskyText: 'すいばり(suibari.com)',
       githubText: 'GitHub(suibari/bsky_ProjectSky)'
@@ -263,18 +267,18 @@ const translations = {
     shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_3_cards: '1ターンに3枚以上プレイ',
+        play_4_cards: '1ターンに4枚以上プレイ',
         jetstream: 'ジェットストリームを実行',
-        label_1_time: 'ラベルを1回実行',
+        label_2_times: '1ターンにラベルを2回使用',
         field_3_users: '場にあと3人そろえる',
         play_extended: '光るカードをプレイ',
         reach_0_pds: 'PDSを0にする',
-        post_with_5_users: '場のユーザー5人以上のときポスト'
+        post_with_8_users: '場のユーザー8人以上のときポスト'
       },
       effects: {
         draw_1: '1枚ドロー',
         pds_cap_plus_1: 'PDS容量永続+1',
-        field_power_plus_500: '場の全ユーザーのパワー+500',
+        field_power_plus_300: '場の全ユーザーのパワー+300',
         final_multiplier_plus_10: '最終ターン倍率+10',
         next_cost_half: '次のコスト半減',
         clear_moderation: 'モデレーション解除'
@@ -282,7 +286,7 @@ const translations = {
       thankYou: 'Thank you!!'
     },
     info: {
-      intro: 'プロジェクトスカイはBlueskyのユーザーを増やすカードゲームです。\n10ターンで1億人のユーザーを集めよう！',
+      intro: 'プロジェクトスカイはBlueskyのユーザーを増やし、覇権SNSを目指すカードゲームです。\n10ターンで1億人のユーザーを集めよう！',
       step1: '序盤はユーザーのカードを並べよう！',
       step2: '並べたユーザーのお願いを叶えよう！',
       step3: 'お願いを叶えたり、ポストのカードを使ってユーザーを強化！',

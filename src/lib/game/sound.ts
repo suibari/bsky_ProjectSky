@@ -8,7 +8,8 @@ export type SoundKey =
     | "result"
     | "score"
     | "turnchange"
-    | "usercard";
+    | "usercard"
+    | "feed";
 
 const SOUND_FILES: Record<SoundKey, string> = {
     draw: "/se/draw.mp3",
@@ -19,6 +20,7 @@ const SOUND_FILES: Record<SoundKey, string> = {
     score: "/se/score.mp3",
     turnchange: "/se/turnchange.mp3",
     usercard: "/se/usercard.mp3",
+    feed: "/se/feed.mp3",
 };
 
 class SoundManager {

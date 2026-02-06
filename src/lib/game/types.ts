@@ -46,18 +46,18 @@ export interface BaseCard {
 }
 
 export type FeedRequestType =
-  | 'play_3_cards'
+  | 'play_4_cards'
   | 'jetstream'
-  | 'label_1_time'
+  | 'label_2_times'
   | 'field_3_users'
   | 'play_extended'
   | 'reach_0_pds'
-  | 'post_with_5_users';
+  | 'post_with_8_users';
 
 export type FeedEffectType =
   | 'draw_1'
   | 'pds_cap_plus_1'
-  | 'field_power_plus_500'
+  | 'field_power_plus_300'
   | 'final_multiplier_plus_10'
   | 'next_cost_half'
   | 'clear_moderation';
