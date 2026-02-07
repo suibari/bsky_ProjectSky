@@ -46,7 +46,7 @@ export interface BaseCard {
 }
 
 export type FeedRequestType =
-  | 'play_4_cards'
+  | 'play_3_cards'
   | 'jetstream'
   | 'label_2_times'
   | 'field_3_users'
