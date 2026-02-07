@@ -131,7 +131,7 @@ const translations = {
     shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_4_cards: 'Play 3+ Cards/turn',
+        play_3_cards: 'Play 3+ Cards/turn',
         jetstream: 'Use Jetstream',
         label_2_times: 'Use Label 2x',
         field_3_users: '3 More Users on Field',
@@ -267,7 +267,7 @@ const translations = {
     shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_4_cards: '1ターンに3枚以上プレイ',
+        play_3_cards: '1ターンに3枚以上プレイ',
         jetstream: 'ジェットストリームを実行',
         label_2_times: '1ターンにラベルを2回使用',
         field_3_users: '場にあと3人そろえる',
