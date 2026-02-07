@@ -62,7 +62,7 @@ const translations = {
     slot: 'Slot',
     rankSS: 'Eternal Bluesky',
     rankS: 'All The Blue Utopia',
-    rankA: 'World Changing Blue Wings',
+    rankA: 'Butterfly Wings That Change The World',
     rankB: 'Future Guiding Blue Butterfly',
     rankC: 'Decentralized Compass',
     rankD: 'Spreading Bluesky',
@@ -131,7 +131,7 @@ const translations = {
     shareText: 'I reached Rank {rank} with a user count of {score} in Project Sky!\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_4_cards: 'Play 4+ Cards/turn',
+        play_4_cards: 'Play 3+ Cards/turn',
         jetstream: 'Use Jetstream',
         label_2_times: 'Use Label 2x',
         field_3_users: '3 More Users on Field',
@@ -198,7 +198,7 @@ const translations = {
     slot: 'スロット',
     rankSS: '青空よ永遠に',
     rankS: 'すべて青き理想郷',
-    rankA: '世界を変える青い翼',
+    rankA: '蝶のはばたきが世界を変える',
     rankB: '未来を導く青い蝶',
     rankC: '分散型のみちしるべ',
     rankD: 'ひろがるBluesky',
@@ -267,7 +267,7 @@ const translations = {
     shareText: 'プロジェクトスカイでランク{rank}、ユーザー数{score}を達成しました！\n#ProjectSky\n\nhttps://projectsky.suibari.com/',
     customFeed: {
       requests: {
-        play_4_cards: '1ターンに4枚以上プレイ',
+        play_4_cards: '1ターンに3枚以上プレイ',
         jetstream: 'ジェットストリームを実行',
         label_2_times: '1ターンにラベルを2回使用',
         field_3_users: '場にあと3人そろえる',
